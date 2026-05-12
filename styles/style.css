@@ -1,0 +1,23 @@
+/*Natural Palette */
+:root {
+    --color-principal: #e7f018;
+    --color-secundario:#959366;
+    --color-blanco: #fbfaee;
+    --color-negro: #1d1c0d;
+    --texto-principal: "Cossette Texte", sans-serif;
+}
+*{
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+html{
+    font-size: 62.5%;
+    font-family:var(--texto-principal);
+}
+
+body{
+    height: 100vh;
+    width: 100%;
+}
+
