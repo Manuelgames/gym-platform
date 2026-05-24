@@ -39,10 +39,12 @@ header {
 }
 
 .barra-romana {
+    display: block;
     height: 30px;
     /* Ajusta a la altura real de tu imagen */
-    background-image: url('../assets/patron\ \(1\).png');
+    background-image: url('../assets/world.png');
     background-repeat: repeat-x;
+    object-fit: cover;
     /* Esto hace que se repita solo horizontalmente * /
     background-size: contain;
     /* Mantiene la proporción original */
@@ -51,10 +53,12 @@ header {
 }
 
 nav {
+    position: fixed;
     display: flex;
     justify-content: space-around;
     align-items: center;
     text-align: center;
+    z-index: 5;
     height: 100px;
     width: 100%;
     background-color: var(--color-negro-tema);
@@ -88,6 +92,7 @@ nav>img:last-child {
     object-fit: cover;
     opacity: 90%;
     filter: brightness(0.6);
+    box-shadow: 0px 0px 4px rgb(232, 243, 161);
 }
 
 .main--caracteristicas .caracteristicas__titulo {
@@ -95,6 +100,28 @@ nav>img:last-child {
     top: 130px;
     font-size: 2rem;
     border: none;
+    background-color: var(--color-blanco);
+}
+
+.resplador {
+    animation: resplandor ease 2s infinite;
+}
+
+@keyframes resplandor {
+    0% {
+        border-left: 4px solid var(--color-blanco);
+        border-right: 4px solid var(--color-blanco);
+    }
+
+    50% {
+        border-left: 4px solid var(--color-principal);
+        border-right: 4px solid var(--color-principal);
+    }
+
+    100% {
+        border-left: 4px solid var(--color-blanco);
+        border-right: 4px solid var(--color-blanco);
+    }
 }
 
 .main--caracteristicas h2 {
@@ -200,7 +227,8 @@ nav>img:last-child {
     width: 100%;
     background: linear-gradient(to left, rgba(0, 0, 0, 0) 0%, rgb(41, 41, 41) 100%);
 }
-.main--blog{
+
+.main--blog {
     opacity: 0;
     transform: translateY(-30px);
     transition: opacity 0.6s ease-out, transform 0.6s ease-out;
@@ -210,6 +238,7 @@ nav>img:last-child {
     opacity: 1;
     transform: translateY(0);
 }
+
 .main--blog h2 {
     padding-left: 25px;
     margin-bottom: 10px;
@@ -223,10 +252,33 @@ nav>img:last-child {
     height: auto;
     min-height: 300px;
     margin-bottom: 25px;
+    box-shadow: 0px 0px 4px rgb(232, 243, 161);
 }
 
+.blog--ingreso__imgclick {
+    position: relative;
+    top: 190px;
+    right: 200px;
+    width: 44px;
+    height: 44px;
+    z-index: 2;
+}
 
-.main--blog__ingreso img {
+.pulso {
+    animation: pulso 2s ease infinite;
+}
+
+@keyframes pulso {
+    from {
+        transform: translateY(10px) scaleX(1.1) scaleY(1.1);
+    }
+
+    to {
+        transform: translateY(1px) scaleX(1) scaleY(1);
+    }
+}
+
+.blog--ingreso__imgfondo {
     position: absolute;
     width: 100%;
     height: 300px;
@@ -236,7 +288,7 @@ nav>img:last-child {
 }
 
 
-.main--blog__ingreso h3{
+.main--blog__ingreso h3 {
     display: inline-block;
     position: relative;
     z-index: 2;
@@ -244,7 +296,8 @@ nav>img:last-child {
     left: 40px;
     font-size: 3rem;
 }
-.main--blog__ingreso button{
+
+.main--blog__ingreso button {
     position: relative;
     z-index: 2;
     top: 140px;
@@ -259,6 +312,7 @@ nav>img:last-child {
     box-shadow: 4px 4px 8px 0px var(--color-negro);
     font-size: 3rem;
 }
+
 
 
 .footer--informacion {
@@ -294,4 +348,38 @@ nav>img:last-child {
     background-color: var(--color-secundario);
     color: var(--color-blanco-tema);
     font-size: 2rem;
+}
+
+.main--modal__opciones {
+    display: none;
+    /* position: fixed;
+    top: 0; */
+    text-align: center;
+    width: 100%;
+    height: 100vh;
+    z-index: 4;
+    margin-top: 30px;
+    background-color: var(--color-negro);
+    overflow: hidden;
+}
+
+.main--modal__opciones h2 {
+    text-align: center;
+    width: 100%;
+    height: 50px;
+    font-size: 3rem;
+    margin: 80px 0;
+    padding: 5px 0;
+    box-shadow: 0px 0px 10px var(--color-principal);
+    text-shadow: var(--color-negro) 3px 1px 5px;
+    background-color: var(--color-secundario);
+}
+
+.main--modal__opciones img {
+    width: 80px;
+    height: 80px;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0px 0px 10px var(--color-principal);
+
 }
