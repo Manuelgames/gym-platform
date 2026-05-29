@@ -1,5 +1,20 @@
+//Menu inicial
 const infoDescubre = document.querySelectorAll('.main--introduccionH2');
 const infoBlog = document.querySelectorAll('.main--blog');
+const menuMobile = document.querySelector('#nav__menu');
+const modalOpciones = document.querySelector('.main--modal__opciones');
+const modalOpcioneCerrar = document.querySelector('.modal--opciones__cerrar');
+
+menuMobile.addEventListener('click', aperturaMenu);
+modalOpcioneCerrar.addEventListener('click', aperturaMenu);
+
+function aperturaMenu() {
+    modalOpciones.classList.toggle('main--modal__opcionesActivo');
+}
+
+
+
+
 // 1. Configuramos el vigilante (Observer)
 const observador = new IntersectionObserver((entradas) => {
     entradas.forEach(entrada => {

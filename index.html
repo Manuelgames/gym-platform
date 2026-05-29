@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>gym</title>
-    <link rel="stylesheet" href="./styles/style.css">
-    <link rel="stylesheet" href="./styles/tablet.css" media="(min-width:600px)">
-    <link rel="stylesheet" href="./styles/desktop.css" media="(min-width:900px)">
+    <title>Inicio</title>
+    <link rel="stylesheet" href="./styles/inicio/style.css">
+    <link rel="stylesheet" href="./styles/inicio/tablet.css" media="(min-width:600px)">
+    <link rel="stylesheet" href="./styles/inicio/desktop.css" media="(min-width:900px)">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Fjalla+One&display=swap"
@@ -24,7 +24,7 @@
         <nav>
             <img src="./assets/logosintexto.png" alt="imagen logo de una cabeza de gladiador romano">
             <h1>Roman Colosseum</h1>
-            <img src="./assets/menu.png" alt="icono de menu de opciones">
+            <img id="nav__menu" src="./assets/menu.png" alt="icono de menu de opciones">
         </nav>
     </header>
     <main>
@@ -64,13 +64,11 @@
                 <img class="blog--ingreso__imgclick pulso" src="./assets/tap.png" alt="icono de click con forma de espada">
             </div>
         </section>
-        <section class="main--modal__opciones">
-            <div class="modal__opciones"> 
-            </div>
-            <h2>Iniciar Sesion</h2>
-            <h2>Registrarse</h2>
-            <h2>Blog</h2>
-            <img src="./assets/cancel.png" alt="">
+        <section class="main--modal__opciones main--modal__opcionesActivo">
+            <h2><a href="./pages/ingresar.html">Iniciar Sesion</a></h2>
+            <h2><a href="./pages/registro.html">Registrarse</a></h2>
+            <h2><a href="">Blog</a></h2>
+            <img class="modal--opciones__cerrar" src="./assets/cancel.png" alt="">
         </section>
     </main>
     <footer>

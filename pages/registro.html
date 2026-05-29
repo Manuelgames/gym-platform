@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <link rel="stylesheet" href="../styles/registro/style.css">
+    <link rel="stylesheet" href="../styles/registro/tablet.css" media="(min-width:600px)">
+    <link rel="stylesheet" href="../styles/registro/desktop.css" media="(min-width:900px)">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Fjalla+One&display=swap"
+        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=David+Libre:wght@400;500;700&family=Fjalla+One&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        Roman Colosseum
+    </header>
+    <main>
+        <section class="main--registro">
+            <h2 class="registro__titulo">Registro</h2>
+            <form action=""  class="registro__formulario">
+                <label for="nombre">
+                    Nombre
+                    <input type="text" name="nombre">
+                </label>
+                
+                <label for="correoRegistro">
+                    Correo
+                    <input type="email" name="correoRegistro" id="correoRegistro">
+                </label>
+                <label for="claveRegistro">
+                    Contraseña
+                    <input type="password" name="claveRegistro" id="claveRegistro">
+                </label>
+                <label for="nacimiento">
+                    Nacimiento
+                    <input type="date" name="nacimiento" id="nacimiento">
+                </label>
+
+                <label class="formulario--sexo" for="sexo">
+                    <p>Sexo</p>
+                    <div class="sexo__seleccion">
+                        Mujer
+                        <input type="radio" name="sexo" id="sexo" value="mujer">
+                        Hombre
+                        <input type="radio" name="sexo" id="sexo" value="hombre">
+                    </div>
+                </label>
+            </form>
+        </section>
+        <div class="container--register__button">
+            <button>Registrarme</button>
+        </div>
+    </main>
+</body>
+
+</html>

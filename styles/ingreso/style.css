@@ -1,0 +1,117 @@
+:root {
+    --color-principal: #e7f018;
+    --color-secundario: #959366;
+    --color-blanco-tema: #fbfaee;
+    --color-negro-tema: #1d1c0d;
+    --color-negro: #000000;
+    --color-blanco: #ffffff;
+    --texto-principal: "Cossette Texte", sans-serif;
+    --texto-secundario: "David Libre", serif;
+}
+* {
+    box-sizing: 0;
+    margin: 0;
+    padding: 0;
+}
+html {
+    font-size: 62.5%;
+    font-family: var(--texto-principal);
+}
+
+body {
+    height: 100vh;
+    width: 100%;
+    background-color: var(--color-negro-tema);
+    color: var(--color-blanco-tema);
+}
+
+
+header {
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-end;
+    height: auto;
+    width: 90%;
+    margin: 30px auto;
+    padding: 10px 0 10px 10px;
+    background-color: var(--color-negro);
+    border-bottom: 8px solid var(--color-blanco-tema);
+    font-size: clamp(3rem, 4vw, 6rem);
+    font-weight: 600;
+    font-family: var(--texto-secundario);
+}
+
+
+.main--ingreso {
+    width: 90%;
+    min-height: 50vh;
+    height: auto;
+    margin: 0 auto;
+    padding: 10px 0 10px 10px;
+    border-radius: 10px;
+    background-color: var(--color-negro);
+}
+
+.ingreso__titulo {
+    font-weight: 100;
+    font-family: var(--texto-secundario);
+    font-size: clamp(3rem, 4vw, 6rem);
+    margin-bottom: 20px;
+}
+
+
+.ingreso__formulario {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+}
+
+
+.ingreso__formulario label {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 80%;
+    height: 60px;
+    font-size: clamp(1.8rem, 1.9vw, 3rem);
+    margin-bottom: 10px;
+}
+
+.ingreso__formulario input {
+    width: 90%;
+    height: 50px;
+    border-radius: 10px;
+}
+
+
+.seleccion__alterna{
+    display: flex;
+    flex-direction: column;
+
+}
+.seleccion__alterna label{
+    height: 30px;
+}
+.seleccion__alterna label a{
+    text-decoration: none;
+    font-family: var(--texto-secundario);
+    color: var(--color-blanco-tema);
+}
+.container--ingreso__button{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    margin: 20px 0;
+}
+
+
+.container--ingreso__button button{
+    height: 50px;
+    width: 200px;
+    background-color: var(--color-secundario);
+    color: var(--color-blanco-tema);
+    border: none;
+    border-radius: 10px;
+}
