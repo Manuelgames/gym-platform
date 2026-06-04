@@ -28,9 +28,11 @@ body {
 }
 
 header {
+    position: fixed;
     display: flex;
     justify-content: space-around;
     align-items: center;
+    z-index: 5;
     height: 100px;
     width: 100%;
     background-color: var(--color-negro);
@@ -81,8 +83,7 @@ main {
     width: 100px;
     height: 50px;
     z-index: 2;
-    top: 5px;
-    margin: 0 auto;
+    margin: 150px auto 0 auto;
     text-align: center;
     font-size: 4rem;
     font-family: var(--texto-secundario);
@@ -95,8 +96,7 @@ main {
     width: 250px;
     height: 50px;
     z-index: 2;
-    top: 5px;
-    margin: 0 auto;
+    margin: 10px auto 0 auto;
     text-align: center;
     font-size: 2.5rem;
     font-family: var(--texto-secundario);
@@ -106,11 +106,11 @@ main {
 
 
 .main--seccion__destacado {
+    text-align: center;
     height: auto;
     padding: 10px;
-    width: 100%;
-    max-width: 800px;
-    margin: 15px 0;
+    width: 96vw;
+    margin: 120px 0;
     border: 1px solid var(--color-principal);
 }
 
@@ -124,7 +124,7 @@ main {
 .seccion__destacado {
     display: flex;
     justify-content: flex-start;
-    align-items: flex-start;
+    align-items: center;
     flex-direction: column;
     width: 100%;
     height: auto;
@@ -132,10 +132,18 @@ main {
 
 .seccion--principal {
     display: flex;
+    min-height: 150px;
     padding: 5px;
     border: 1px solid var(--color-secundario);
     border-radius: 5px;
     margin: 15px 0;
+    transition: transform 0.3s;
+}
+
+.seccion--principal:hover{
+    background-color: var(--color-negro);
+    border: 1px solid var(--color-principal);
+    transform: translateY(-10px);
 }
 
 .seccion--principal img {
@@ -149,6 +157,7 @@ main {
 
 .seccion--principal__textos {
     display: flex;
+    text-align: start;
     flex-direction: column;
     padding: 5px;
     width: 50vw;
@@ -164,4 +173,46 @@ main {
     font-size: clamp(0.9rem, 1.1rem, 2rem);
     height: auto;
     padding: 5px;
+}
+
+
+
+
+.main--modal__opcionesActivo {
+    display: none;
+}
+
+.main--modal__opciones {
+    position: fixed;
+    top: 0;
+    text-align: center;
+    width: 100%;
+    height: 100vh;
+    z-index: 4;
+    margin-top: 30px;
+    background-color: var(--color-negro);
+    overflow: hidden;
+}
+.main--modal__opciones a{
+    text-decoration: none;
+    color: var(--color-blanco-tema);
+}
+.main--modal__opciones h2 {
+    text-align: center;
+    width: 100%;
+    height: 50px;
+    font-size: 3rem;
+    margin: 80px 0;
+    padding: 5px 0;
+    box-shadow: 0px 0px 10px var(--color-principal);
+    text-shadow: var(--color-negro) 3px 1px 5px;
+    background-color: var(--color-secundario);
+}
+
+.main--modal__opciones img {
+    width: 80px;
+    height: 80px;
+    border: none;
+    border-radius: 50px;
+    box-shadow: 0px 0px 10px var(--color-principal);
 }

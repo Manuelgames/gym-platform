@@ -21,45 +21,46 @@
 
 <body>
     <header>
-        Roman Colosseum
+        <a href="../index.html"><img src="../assets/back.png" alt="imagen logo de una cabeza de gladiador romano"></a>
+        <h2>Roman Colosseum</h2>
+        <span></span>
     </header>
     <main>
         <section class="main--registro">
             <h2 class="registro__titulo">Registro</h2>
-            <form action=""  class="registro__formulario">
-                <label for="nombre">
+            <form action="" class="registro__formulario">
+                <label for="nombreRegistro">
                     Nombre
-                    <input type="text" name="nombre">
+                    <input type="text" name="nombreRegistro" required id="nombreRegistro">
                 </label>
-                
+
                 <label for="correoRegistro">
                     Correo
-                    <input type="email" name="correoRegistro" id="correoRegistro">
+                    <input type="email" name="correoRegistro" id="correoRegistro" required>
                 </label>
                 <label for="claveRegistro">
                     Contraseña
-                    <input type="password" name="claveRegistro" id="claveRegistro">
+                    <input type="password" name="claveRegistro" id="claveRegistro" required >
                 </label>
-                <label for="nacimiento">
+                <label for="nacimientoRegistro">
                     Nacimiento
-                    <input type="date" name="nacimiento" id="nacimiento">
+                    <input type="date" name="nacimientoRegistro" id="nacimientoRegistro" required>
                 </label>
 
-                <label class="formulario--sexo" for="sexo">
+                <label class="formulario--sexo" for="sexoRegistro">
                     <p>Sexo</p>
                     <div class="sexo__seleccion">
                         Mujer
-                        <input type="radio" name="sexo" id="sexo" value="mujer">
+                        <input type="radio" name="sexoRegistro" id="sexoRegistro" value="mujer" required>
                         Hombre
-                        <input type="radio" name="sexo" id="sexo" value="hombre">
+                        <input type="radio" name="sexoRegistro" id="sexoRegistro" value="hombre" required>
                     </div>
                 </label>
+                <input id="submitRegistro" value="Registrarme" name="submitRegistro" type="submit">
             </form>
         </section>
-        <div class="container--register__button">
-            <button>Registrarme</button>
-        </div>
     </main>
+    <script src="../scrips/registro.js"></script>
 </body>
 
 </html>

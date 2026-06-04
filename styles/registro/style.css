@@ -28,8 +28,8 @@ body {
 
 header {
     display: flex;
-    justify-content: flex-start;
-    align-items: flex-end;
+    justify-content: space-between;
+    align-items: center;
     height: auto;
     width: 90%;
     margin: 30px auto;
@@ -41,6 +41,16 @@ header {
     font-family: var(--texto-secundario);
 }
 
+header img{
+    height: 50px;
+    width: 50px;
+    border-radius:50px;
+}
+header h2{
+    text-align: center;
+    margin: 0 0 0 10px;
+    font-size: 3.3rem;
+}
 
 main {
     width: 100%;
@@ -104,20 +114,16 @@ main {
 }
 
 
-.container--register__button{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: auto;
-    margin: 20px 0;
-}
-
-.container--register__button button{
+#submitRegistro{
+    position: relative;
+    top: 100px;
+    margin: 0 auto;
     height: 50px;
     width: 200px;
     background-color: var(--color-secundario);
     color: var(--color-blanco-tema);
     border: none;
     border-radius: 10px;
+    margin-bottom: 15px;
 }
+

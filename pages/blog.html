@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Blog</title>
     <link rel="stylesheet" href="../styles/blog/style.css">
-    <link rel="stylesheet" href="../styles/inicio/tablet.css" media="(min-width:600px)">
-    <link rel="stylesheet" href="../styles/inicio/desktop.css" media="(min-width:900px)">
+    <link rel="stylesheet" href="../styles/blog/tablet.css" media="(min-width:600px)">
+    <link rel="stylesheet" href="../styles/blog/desktop.css" media="(min-width:900px)">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Fjalla+One&display=swap"
@@ -21,7 +21,7 @@
 
 <body>
     <header>
-        <img src="../assets/logosintexto.png" alt="imagen logo de una cabeza de gladiador romano">
+        <a href="../index.html"><img src="../assets/logosintexto.png" alt="imagen logo de una cabeza de gladiador romano"></a>
         <h1>Roman Colosseum</h1>
         <p>Blog</p>
         <img id="nav__menu" src="../assets/menu.png" alt="icono de menu">
@@ -59,7 +59,14 @@
                 </div>
             </div>
         </section>
+        <section class="main--modal__opciones main--modal__opcionesActivo">
+            <h2><a href="../pages/ingresar.html">Iniciar Sesion</a></h2>
+            <h2><a href="../pages/registro.html">Registrarse</a></h2>
+            <h2><a href="../pages/blog.html">Blog</a></h2>
+            <img class="modal--opciones__cerrar" src="../assets/cancel.png" alt="">
+        </section>
     </main>
+    <script src="../scrips/code.js"></script>
 </body>
 
 </html>
