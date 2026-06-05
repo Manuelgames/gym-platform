@@ -8,11 +8,13 @@
     --texto-principal: "Cossette Texte", sans-serif;
     --texto-secundario: "David Libre", serif;
 }
+
 * {
     box-sizing: 0;
     margin: 0;
     padding: 0;
 }
+
 html {
     font-size: 62.5%;
     font-family: var(--texto-principal);
@@ -40,13 +42,15 @@ header {
     font-family: var(--texto-secundario);
 }
 
-header img{
+header img {
     height: 50px;
     width: 50px;
-    border-radius:50px;
+    border-radius: 50px;
 }
-header h2{
-    margin: 0 100px;
+
+header h2 {
+    text-align: center;
+    margin: 0 0 0 10px;
     font-size: 3.3rem;
 }
 
@@ -92,30 +96,26 @@ header h2{
 }
 
 
-.seleccion__alterna{
+.seleccion__alterna {
     display: flex;
     flex-direction: column;
 
 }
-.seleccion__alterna label{
+
+.seleccion__alterna label {
     height: 30px;
 }
-.seleccion__alterna label a{
+
+.seleccion__alterna label a {
     text-decoration: none;
     font-family: var(--texto-secundario);
     color: var(--color-blanco-tema);
 }
-.container--ingreso__button{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: auto;
-    margin: 20px 0;
-}
 
-
-.container--ingreso__button button{
+#submitRegistro{
+    position: relative;
+    top: 100px;
+    margin: 0 auto;
     height: 50px;
     width: 200px;
     background-color: var(--color-secundario);

@@ -31,22 +31,21 @@
             <form action="" class="ingreso__formulario">
                 <label for="correoIngreso">
                     Correo
-                    <input type="text" name="correoIngreso" id="correoIngreso">
+                    <input type="text" name="correoIngreso" required id="correoIngreso" autocomplete="email">
                 </label>
                 <label for="claveIngreso">
                     Contraseña
-                    <input type="password" name="claveIngreso" id="claveIngreso">
+                    <input type="password" name="claveIngreso" id="claveIngreso" required autocomplete="current-password">
                 </label>
                 <div class="seleccion__alterna">
                     <label><a href="">Olvidaste tu Contraseña</a></label>
-                    <label><a href="">Crear una cuenta nueva</a></label>
+                    <label><a href="./registro.html">Crear una cuenta nueva</a></label>
                 </div>
+                <input id="submitRegistro" value="Registrarme" name="submitRegistro" type="submit">
             </form>
         </section>
-        <div class="container--ingreso__button">
-            <button>Iniciar</button>
-        </div>
     </main>
+    <script src="../scrips/ingreso.js"></script>
 </body>
 
 </html>
