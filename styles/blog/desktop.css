@@ -1,0 +1,66 @@
+:root {
+    --color-principal: #e7f018;
+    --color-secundario: #959366;
+    --color-blanco-tema: #fbfaee;
+    --color-negro-tema: #1d1c0d;
+    --color-negro: #000000;
+    --color-blanco: #ffffff;
+    --texto-principal: "Cossette Texte", sans-serif;
+    --texto-secundario: "David Libre", serif;
+}
+
+#nav__menu {
+    display: none;
+}
+.opciones__ingreso a{
+    text-decoration: none;
+    color: var(--color-blanco);
+}
+.opciones__ingreso {
+    display: flex;
+    width: 210px;
+    justify-content: space-around;
+    font-size: 2.3rem;
+    color: var(--color-blanco);
+    font-family: var(--texto-secundario);
+    font-weight: 700;
+    -webkit-text-stroke: 1px var(--color-secundario);
+}
+
+.opciones__ingreso p {
+    display: block;
+    font-size: 2.1rem;
+    transition: transform 0.3s;
+}
+.opciones__ingreso p:hover{
+    transform: scale(1.2);
+}
+
+
+
+.seccion--principal__textos h2 {
+    font-size: 3rem;
+}
+
+.seccion--principal__textos p {
+    font-size: 3rem;
+}
+
+.main--portada__blog {
+    display: flex;
+    position: relative;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    box-shadow: none;
+
+}
+
+.main--portada__blog img {
+    width: 85%;
+    box-shadow: 0px 0px 10px 1px var(--color-principal);
+}
+
+.main--seccion__destacado {
+    width: 85%;
+}

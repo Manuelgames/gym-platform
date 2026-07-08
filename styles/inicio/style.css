@@ -71,11 +71,13 @@ nav {
 nav img {
     height: 50px;
     width: 50px;
+    border-radius: 20px;
 }
 
 nav>img:last-child {
     height: 44px;
     width: 44px;
+    
 }
 
 nav p {

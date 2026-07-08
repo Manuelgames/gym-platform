@@ -1,0 +1,43 @@
+:root {
+    --color-principal: #e7f018;
+    --color-secundario: #959366;
+    --color-blanco-tema: #fbfaee;
+    --color-negro-tema: #1d1c0d;
+    --color-negro: #000000;
+    --color-blanco: #ffffff;
+    --texto-principal: "Cossette Texte", sans-serif;
+    --texto-secundario: "David Libre", serif;
+}
+
+body{
+    overflow: hidden;
+}
+header h2{
+    font-size: 6rem;
+}
+
+.main--ingreso{
+    width: 80%;
+    height: 60vh;
+    margin: 150px auto;
+}
+
+.main--ingreso h2{
+    font-size: 5rem;
+}
+.ingreso__formulario label{
+    font-size: 3rem;
+    margin: 15px 0;
+}
+.seleccion__alterna label a{
+    margin: 10px 0;
+    font-size: 3rem;
+}
+
+.ingreso__formulario input{
+    font-size: 3rem;
+}
+
+#submitRegistro{
+    margin: 0 auto;
+}

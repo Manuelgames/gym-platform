@@ -67,7 +67,7 @@ header h2 {
 .ingreso__titulo {
     font-weight: 100;
     font-family: var(--texto-secundario);
-    font-size: clamp(3rem, 4vw, 6rem);
+    font-size: 3.1rem;
     margin-bottom: 20px;
 }
 
@@ -85,7 +85,7 @@ header h2 {
     justify-content: center;
     width: 80%;
     height: 60px;
-    font-size: clamp(1.8rem, 1.9vw, 3rem);
+    font-size: 2rem;
     margin-bottom: 10px;
 }
 
@@ -104,10 +104,12 @@ header h2 {
 
 .seleccion__alterna label {
     height: 30px;
+    font-size: 2.1rem;
 }
 
 .seleccion__alterna label a {
     text-decoration: none;
+    font-size: 2.1rem;
     font-family: var(--texto-secundario);
     color: var(--color-blanco-tema);
 }
@@ -118,6 +120,7 @@ header h2 {
     margin: 0 auto;
     height: 50px;
     width: 200px;
+    font-size: 2rem;
     background-color: var(--color-secundario);
     color: var(--color-blanco-tema);
     border: none;

@@ -70,7 +70,7 @@ main {
 .registro__titulo {
     font-weight: 100;
     font-family: var(--texto-secundario);
-    font-size: clamp(3rem, 4vw, 6rem);
+    font-size: 3rem;
     margin-bottom: 20px;
 }
 

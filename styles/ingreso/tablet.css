@@ -1,0 +1,28 @@
+:root {
+    --color-principal: #e7f018;
+    --color-secundario: #959366;
+    --color-blanco-tema: #fbfaee;
+    --color-negro-tema: #1d1c0d;
+    --color-negro: #000000;
+    --color-blanco: #ffffff;
+    --texto-principal: "Cossette Texte", sans-serif;
+    --texto-secundario: "David Libre", serif;
+}
+
+header h2{
+    font-size: 5rem;
+}
+
+.main--ingreso{
+    width: 65%;
+}
+
+.main--ingreso h2{
+    font-size: 4.1rem;
+}
+.ingreso__formulario label{
+    font-size: 2.4rem;
+}
+.ingreso__formulario input{
+    font-size: 2.4rem;
+}

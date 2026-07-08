@@ -1,0 +1,32 @@
+h1{
+    font-size: 4rem;
+}
+
+
+
+.main--portada__blog h2{
+   font-size: 4rem; 
+}
+.main--portada__blog h3{
+   font-size: 3rem; 
+}
+.seccion--principal {
+    width: 90%;
+}
+.main--seccion__destacado {
+    border: 1px solid var(--color-principal);
+    border-radius: 10px;
+}
+.main--seccion__destacado h2{
+    font-size: 3rem;
+}
+.main--portada__blog h2{
+   font-size: 5rem;
+}
+
+.seccion--principal__textos h2{
+    font-size: 2rem;
+}
+.seccion--principal__textos p{
+    font-size: 1.8rem;
+}

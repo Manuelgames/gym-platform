@@ -1,0 +1,32 @@
+.main--registro {
+    width: 80%;
+}
+
+header h2 {
+    font-size: 5rem;
+}
+
+.registro__titulo {
+    font-size: 4.1rem;
+
+}
+
+.registro__formulario label{
+    font-size: 2.4rem;
+}
+.registro__formulario input{
+    font-size: 2.4rem;
+}
+
+#submitRegistro{
+    position: relative;
+    top: 100px;
+    margin: 0 auto;
+    height: 50px;
+    width: 200px;
+    background-color: var(--color-secundario);
+    color: var(--color-blanco-tema);
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
