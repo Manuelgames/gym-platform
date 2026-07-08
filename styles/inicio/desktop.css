@@ -1,0 +1,166 @@
+:root {
+    --color-principal: #e7f018;
+    --color-secundario: #959366;
+    --color-blanco-tema: #fbfaee;
+    --color-negro-tema: #1d1c0d;
+    --color-negro: #000000;
+    --color-blanco: #ffffff;
+    --texto-principal: "Cossette Texte", sans-serif;
+    --texto-secundario: "David Libre", serif;
+}
+
+nav {
+    justify-content: space-evenly;
+    text-align: center;
+}
+
+nav a {
+    margin-left: 10px;
+}
+
+nav div {
+    margin-right: 10px;
+}
+
+nav h1 {
+    font-size: 4rem;
+    padding-left: 165px;
+}
+
+body {
+    margin: 0 auto;
+}
+
+.nav--opciones {
+    display: flex;
+}
+
+.opciones__blog {
+    display: none;
+}
+
+.nav--opciones p {
+    margin: 0 7px;
+    transition: transform 0.3s;
+}
+.nav--opciones p:hover {
+    transform: scale(1.2);
+}
+
+.main--caracteristicas {
+    width: 85%;
+    height: 85vh;
+    margin: 0 auto;
+}
+
+.main--caracteristicas h2 {
+    top: 190px;
+    right: 20px;
+}
+
+.main--introduccionH2 {
+    width: 80%;
+    margin: 0 auto;
+}
+
+.main--introduccionH2__leyendas {
+    font-size: 2.8rem;
+
+    transition: transform 0.5s;
+}
+.main--introduccionH2__leyendas:hover{
+    transform: translateY(-8px);
+}
+
+
+/* -------------------------------------- */
+.main--portada__container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+
+.main--portada {
+    position: relative;
+    width: 85%;
+    overflow: hidden;
+    transition: transform 0.5s;
+}
+
+.main--portada img {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s;
+}
+
+
+.main--portada span {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.5s;
+}
+
+.main--portada:hover {
+    transform: translateY(-8px);
+}
+
+.main--portada:hover img {
+    transform: scale(1.09);
+
+}
+
+/* ------------------ */
+
+
+
+
+
+.main--blog {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.main--blog h2 {
+    margin: 15px 0;
+    padding: 0;
+}
+
+.main--blog__ingreso {
+    position: relative;
+    height: 100%;
+    width: 85%;
+    transition: transform 0.3s;
+}
+
+.blog--ingreso__imgfondo {
+    width: 100%;
+}
+
+.main--blog__ingreso button {
+    transition: transform 0.1s;
+}
+
+
+.main--blog__ingreso:hover {
+    transform: scale(1.02);
+}
+
+.main--blog__ingreso button:hover {
+    background-color: var(--color-principal);
+}
+
+
+.footer--ingresar {
+    display: none;
+}
+
+.footer--informacion {
+    font-size: 1.5rem;
+    height: 30px;
+    padding: 30px;
+}

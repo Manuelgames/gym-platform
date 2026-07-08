@@ -64,6 +64,7 @@ nav {
     background-color: var(--color-negro-tema);
     color: var(--color-blanco-tema);
     font-family: var(--texto-secundario);
+    -webkit-text-stroke: 1px var(--color-negro);
     font-size: 1.5rem;
 }
 
@@ -77,6 +78,12 @@ nav>img:last-child {
     width: 44px;
 }
 
+nav p {
+    display: none;
+}
+.nav--opciones{
+    display: none;
+}
 .main--caracteristicas {
     position: relative;
     width: 100%;
@@ -132,8 +139,8 @@ nav>img:last-child {
     width: 220px;
     z-index: 1;
     text-align: center;
-    border-left: 4px solid var(--color-blanco);
-    border-right: 4px solid var(--color-blanco);
+    border-left: 10px solid var(--color-blanco);
+    border-right: 10px solid var(--color-blanco);
     font-size: 4rem;
     color: var(--color-blanco);
 }
@@ -310,7 +317,7 @@ nav>img:last-child {
     box-shadow: 4px 4px 8px 0px var(--color-negro);
 }
 
-.main--blog__ingreso button a{
+.main--blog__ingreso button a {
     text-decoration: none;
     font-size: 3rem;
     font-weight: 600;
@@ -369,10 +376,12 @@ nav>img:last-child {
     background-color: var(--color-negro);
     overflow: hidden;
 }
-.main--modal__opciones a{
+
+.main--modal__opciones a {
     text-decoration: none;
     color: var(--color-blanco-tema);
 }
+
 .main--modal__opciones h2 {
     text-align: center;
     width: 100%;
