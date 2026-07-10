@@ -122,7 +122,7 @@ main {
 
 .campos--completados {
     display: none;
-    font-size: 1.8rem;
+    font-size: clamp(1.8rem, 2rem, 3rem);
     width: 80%;
     margin-bottom: 8px;
     color: var(--color-principal);
