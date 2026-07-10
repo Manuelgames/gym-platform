@@ -38,9 +38,10 @@
                     Correo
                     <input type="email" name="correoRegistro" id="correoRegistro" required>
                 </label>
+                <p class="correo--existente">Este correo ya fue registrado, coloca uno nuevo</p>
                 <label for="claveRegistro">
                     Contraseña
-                    <input type="password" name="claveRegistro" id="claveRegistro" required >
+                    <input type="password" name="claveRegistro" id="claveRegistro" required autocomplete="">
                 </label>
                 <label for="nacimientoRegistro">
                     Nacimiento
@@ -56,6 +57,7 @@
                         <input type="radio" name="sexoRegistro" id="sexoRegistro" value="hombre" required>
                     </div>
                 </label>
+                <p class="campos--completados">Favor de completar todos los campos</p>
                 <input id="submitRegistro" value="Registrarme" name="submitRegistro" type="submit">
             </form>
         </section>

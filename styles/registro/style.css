@@ -8,11 +8,13 @@
     --texto-principal: "Cossette Texte", sans-serif;
     --texto-secundario: "David Libre", serif;
 }
+
 * {
     box-sizing: 0;
     margin: 0;
     padding: 0;
 }
+
 html {
     font-size: 62.5%;
     font-family: var(--texto-principal);
@@ -41,12 +43,13 @@ header {
     font-family: var(--texto-secundario);
 }
 
-header img{
+header img {
     height: 50px;
     width: 50px;
-    border-radius:50px;
+    border-radius: 50px;
 }
-header h2{
+
+header h2 {
     text-align: center;
     margin: 0 0 0 10px;
     font-size: 3.3rem;
@@ -80,10 +83,18 @@ main {
     height: auto;
 }
 
+.correo--existente {
+    display: none;
+    font-size: 1.8rem;
+    width: 80%;
+    margin: 8px 0 15px 0;
+    color: var(--color-principal);
+}
+
 .registro__formulario label {
     display: flex;
     flex-direction: column;
-    width: 80%;
+    width: 70%;
     height: 60px;
     font-size: clamp(1.8rem, 1.9vw, 3rem);
     margin-bottom: 20px;
@@ -109,12 +120,20 @@ main {
     font-size: clamp(1.6rem, 1.8vw, 3rem);
 }
 
+.campos--completados {
+    display: none;
+    font-size: 1.8rem;
+    width: 80%;
+    margin-bottom: 8px;
+    color: var(--color-principal);
+}
+
 .sexo__seleccion input {
     height: 20px;
 }
 
 
-#submitRegistro{
+#submitRegistro {
     position: relative;
     top: 100px;
     margin: 0 auto;
@@ -126,4 +145,3 @@ main {
     border-radius: 10px;
     margin-bottom: 15px;
 }
-
