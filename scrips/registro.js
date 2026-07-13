@@ -21,7 +21,6 @@ function envioRegistro(eventoClick) {
         if (validaciones.existeCorreo == 0) {
             mensajeCorreoExistente.style.display = 'none';
             saveInLocalStorageForm(nombreRegistro.value, correoRegistro.value, claveRegistro.value, nacimientoRegistro.value, sexoRegistro.value)
-            console.log('correo registrado')
             nombreRegistro.value = '';
             correoRegistro.value = '';
             claveRegistro.value = '';

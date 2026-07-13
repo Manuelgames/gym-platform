@@ -38,11 +38,17 @@ header {
     background-color: var(--color-negro);
     font-family: var(--texto-secundario);
 }
-header h1{
+
+header h1 {
     font-size: 2.5rem;
     margin-left: 75px;
 }
-header p {
+
+.header--nombre {
+    display: none;
+}
+
+.opciones__ingreso {
     display: none;
 }
 
@@ -51,9 +57,15 @@ header img {
     width: 45px;
     border-radius: 20px;
 }
-header>img:last-child{
+
+header>img:last-child {
     border-radius: 0;
 }
+
+.nav--nombre {
+    display: block;
+}
+
 
 main {
     width: 100%;
@@ -143,7 +155,7 @@ main {
     transition: transform 0.3s;
 }
 
-.seccion--principal:hover{
+.seccion--principal:hover {
     background-color: var(--color-negro);
     border: 1px solid var(--color-principal);
     transform: translateY(-10px);
@@ -196,10 +208,12 @@ main {
     background-color: var(--color-negro);
     overflow: hidden;
 }
-.main--modal__opciones a{
+
+.main--modal__opciones a {
     text-decoration: none;
     color: var(--color-blanco-tema);
 }
+
 .main--modal__opciones h2 {
     text-align: center;
     width: 100%;
@@ -210,6 +224,20 @@ main {
     box-shadow: 0px 0px 10px var(--color-principal);
     text-shadow: var(--color-negro) 3px 1px 5px;
     background-color: var(--color-secundario);
+}
+
+.main--modal__opciones .modal__opciones--nombre,
+.modal__opciones--concluir {
+    display: none;
+    text-align: center;
+    width: 100%;
+    height: 50px;
+    font-size: 3rem;
+    margin: 80px 0;
+    padding: 5px 0;
+    box-shadow: 0px 0px 10px var(--color-principal);
+    text-shadow: var(--color-negro) 3px 1px 5px;
+    background-color: var(--color-negro);
 }
 
 .main--modal__opciones img {

@@ -10,7 +10,12 @@
 }
 
 #nav__menu {
-    display: none;
+    display: block;
+    width: 200px;
+    background-color: #e7f018;
+}
+.header--nombre{
+    display: block;
 }
 .opciones__ingreso a{
     text-decoration: none;
