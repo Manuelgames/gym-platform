@@ -6,6 +6,13 @@ const sexoRegistro = document.getElementById('sexoRegistro');
 const submitRegistro = document.getElementById('submitRegistro');
 const mensajeCorreoExistente = document.querySelector('.correo--existente');
 const mensajeCamposCompletados = document.querySelector('.campos--completados')
+const sesionIniciada = JSON.parse(localStorage.getItem('sesionIniciada') || '[]');
+const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo') || '[]');
+
+localStorage.setItem('sesionIniciada', '[]');
+localStorage.setItem('usuarioActivo', '[]');
+
+
 
 
 submitRegistro.addEventListener('click', envioRegistro);
@@ -26,6 +33,7 @@ function envioRegistro(eventoClick) {
             claveRegistro.value = '';
             nacimientoRegistro.value = '';
             sexoRegistro.value = '';
+            window.location.href = '/pages/ingresar.html';
         }
     }
     validaciones.camposCompletados = 0;
