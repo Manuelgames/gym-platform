@@ -31,7 +31,7 @@ function ingresoValidacion(eventoClick) {
                         localStorage.setItem('sesionIniciada', JSON.stringify(sesionIniciada));
                         localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
                         console.log('datos encontrados, correo y clave');
-                        window.location.href = '/pages/blog.html';
+                        window.location.href = 'blog.html';
                         break;
                     } else {
                         mensajeClaveIncorrecta.style.display = 'block'

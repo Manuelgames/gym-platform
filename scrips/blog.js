@@ -52,5 +52,5 @@ function validacionSesionIniciada(sesionIniciada) {
 
 
 function cerrarSesion() {
-    window.location.href = '/pages/ingresar.html';
+    window.location.href = 'ingresar.html';
 }
