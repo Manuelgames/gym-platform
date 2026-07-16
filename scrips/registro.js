@@ -33,7 +33,7 @@ function envioRegistro(eventoClick) {
             claveRegistro.value = '';
             nacimientoRegistro.value = '';
             sexoRegistro.value = '';
-            window.location.href = '/pages/ingresar.html';
+            window.location.href = './pages/ingresar.html';
         }
     }
     validaciones.camposCompletados = 0;
