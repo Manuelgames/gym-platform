@@ -49,11 +49,12 @@ function saveInLocalStorageForm(nombre, correo, clave, nacimiento, sexo) {
     const claveRegistro = JSON.parse(localStorage.getItem('claveRegistro') || '[]');
     const nacimientoRegistro = JSON.parse(localStorage.getItem('nacimientoRegistro') || '[]');
     const sexoRegistro = JSON.parse(localStorage.getItem('sexoRegistro') || '[]');
-    nombreRegistro.push(nombre)
-    correoRegistro.push(correo)
-    claveRegistro.push(clave)
-    nacimientoRegistro.push(nacimiento)
-    sexoRegistro.push(sexo)
+    nombreRegistro.push(nombre.toLowerCase());
+    correoRegistro.push(correo.toLowerCase());
+    claveRegistro.push(clave);
+    nacimientoRegistro.push(nacimiento.toLowerCase());
+    sexoRegistro.push(sexo.toLowerCase());
+    console.log('el nombre es', nombreRegistro);
     localStorage.setItem('nombreRegistro', JSON.stringify(nombreRegistro));
     localStorage.setItem('correoRegistro', JSON.stringify(correoRegistro));
     localStorage.setItem('claveRegistro', JSON.stringify(claveRegistro));

@@ -51,8 +51,16 @@ header h1 {
 .opciones__funcionales {
     display: none;
 }
-
-.header--nombre {
+.header__datos{
+    display: none;
+}
+.header--nombre{
+    display: none;
+}
+.header--flecha{
+    display: none;
+}
+.header--modal__opciones{
     display: none;
 }
 
@@ -66,9 +74,7 @@ header>img:last-child {
     border-radius: 0;
 }
 
-.nav--nombre {
-    display: block;
-}
+
 
 #nav__menu {
     display: block;
