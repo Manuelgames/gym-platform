@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rutina</title>
+    <link rel="stylesheet" href="../styles/rutina/style.css">
+    <link rel="stylesheet" href="../styles/rutina/tablet.css" media="(min-width:600px)">
+    <link rel="stylesheet" href="../styles/rutina/desktop.css" media="(min-width:900px)">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Fjalla+One&display=swap"
+        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=David+Libre:wght@400;500;700&family=Fjalla+One&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <a href="../index.html"><img src="../assets/logosintexto.png"
+                alt="imagen logo de una cabeza de gladiador romano"></a>
+        <h1>Roman Colosseum</h1>
+        <div class="opciones__funcionales">
+            <p class="header--dieta">Dieta</p>
+            <p class="header--rutina">Rutina</p>
+            <p class="header--mediciones">Mediciones</p>
+            <p class="header--calculadora">Calculadora</p>
+        </div>
+        <div class="header__datos">
+            <p class="header--nombre">aasdasdsa</p>
+            <img class="header--flecha" src="../assets/downarrow.png"
+                alt="icono de flecha que a punta hacia abajo, abre mas opciones del usuario">
+        </div>
+        <section class="header--modal__opciones">
+            <p class="opciones--cuenta__desktop">Mi cuenta</p>
+            <p class="opciones--concluir__desktop">Cerrar Sesion</p>
+        </section>
+
+        <img id="nav__menu" src="../assets/menu.png" alt="icono de menu">
+    </header>
+    <main>
+        <section class="main--opcion__titulo">
+            <h2>Rutina</h2>
+        </section>
+        <section class="main--rutina__container">
+
+            <h2>Crea tu rutunina</h2>
+
+            <table class="rutina__semana">
+                <tbody>
+                    <tr>
+                        <td class="lunes__rutina">L</td>
+                        <td class="martes__rutina">M</td>
+                        <td class="miercoles__rutina">M</td>
+                        <td class="jueves__rutina">J</td>
+                        <td class="viernes__rutina">V</td>
+                        <td class="sabado__rutina">S</td>
+                        <td class="domingo__rutina">D</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="main--modal__opciones main--modal__opcionesActivo">
+            <p class="modal__opciones--nombre"></p>
+            <p class="modal__opciones--dieta">Dieta</p>
+            <p class="modal__opciones--mediciones">Mediciones</p>
+            <p class="modal__opciones--calculadora">Calculadora</p>
+            <p class="modal__opciones--concluir">Cerrar Sesion</p>
+            <img class="modal--opciones__cerrar" src="../assets/cancel.png" alt="">
+        </section>
+    </main>
+    <script src="../scrips/rutina.js"></script>
+</body>
+
+</html>
