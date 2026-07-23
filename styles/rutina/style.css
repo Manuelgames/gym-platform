@@ -133,33 +133,120 @@ main {
     justify-content: center;
     overflow-x: hidden;
     overflow-y: hidden;
-    margin: 20px 0;
-    height: 55px;
+    padding: 20px 0;
+    height: 100px;
     width: 100%;
     background-color: var(--color-negro-tema);
 }
 
-.rutina__semana tr {
-    display: grid;
-    height: 55px;
-    grid-template-columns: repeat(7, 1fr);
-}
-
-.rutina__semana td {
+.rutina__semana tbody {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
-    transition: transform 0.3s;
-
+    height: inherit;
 }
 
-.rutina__semana td:hover {
+.semana__dias--seleccion {
+    display: grid;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    grid-template-columns: repeat(7, 1fr);
+}
+
+.semana__dias--seleccion td {
+    display: flex;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s;
+    font-family: var(--texto-secundario);
+}
+
+.semana__dias--seleccion td:hover {
     transform: scaleX(1.1);
     background-color: var(--color-secundario);
     border-radius: 7px;
     box-shadow: 0px 1px 4px 2px var(--color-principal);
 }
+
+.semana__dias--tabla {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: auto;
+    min-height: 40vh;
+    max-height: 50vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+
+.semana__dias {
+    display: grid;
+    justify-content: center;
+    align-items: flex-start;
+    width: 90%;
+    height: 100%;
+    grid-template-columns: repeat(1, 1fr);
+    background-color: var(--color-negro);
+}
+
+.validacion--rutina {
+    margin: 20px;
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+
+.container__rutina--sindia {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+    width: 100%;
+    height: 90%;
+    font-size: 2rem;
+    font-weight: 600;
+    font-family: var(--texto-principal);
+    box-shadow: 0px 1px 4px 2px var(--color-secundario);
+    border-radius: 10px;
+    color: var(--color-blanco-tema);
+}
+
+
+
+
+
+.main--container__generacion {
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 10vh;
+    z-index: 3;
+    bottom: 0px;
+
+}
+
+.main--container__generacion button {
+    width: 200px;
+    height: 50px;
+    color: var(--color-blanco);
+    background-color: var(--color-negro-tema);
+    font-size: 2rem;
+    border: 1px solid rgb(238, 232, 55);
+    border-radius: 10px;
+}
+.main--container__generacion button:hover {
+    background-color: var(--color-negro);
+}
+
 
 .main--modal__opcionesActivo {
     display: none;
