@@ -43,7 +43,6 @@ header h1 {
     font-size: 2.5rem;
 }
 
-
 .opciones__ingreso {
     display: none;
 }
@@ -217,10 +216,21 @@ main {
     border-radius: 10px;
     color: var(--color-blanco-tema);
 }
-
-
-
-
+.container__rutina--dia {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0;
+    width: 100%;
+    height: 90%;
+    font-size: 2rem;
+    font-weight: 600;
+    font-family: var(--texto-principal);
+    box-shadow: 0px 1px 4px 2px var(--color-secundario);
+    border-radius: 10px;
+    color: var(--color-blanco-tema);
+}
 
 .main--container__generacion {
     position: fixed;
@@ -234,6 +244,75 @@ main {
 
 }
 
+.main--modal__rutina {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    z-index: 5;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    bottom: 10px;
+    width: 85%;
+    height: 95vh;
+    background-color: var(--color-negro-tema);
+    border: 1px solid black;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px var(--color-principal);
+}
+.display-active{
+    display: flex;
+}
+.modal--rutina__creacion>* {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    margin: 18px 0;
+    font-size: 1.8rem;
+}
+
+.modal--rutina__creacion h2 {
+    font-size: 2.3rem;
+}
+
+.modal--rutina__creacion select {
+    width: 200px;
+    margin: 0 auto;
+}
+
+#numeroSeries {
+    margin: 5px 0;
+    width: 20%;
+}
+
+#numeroRepeticiones {
+    margin: 5px 0;
+    width: 20%;
+}
+#descripcionEjercicio{
+    width: 100%;
+    height: 80px;
+}
+.modal--rutina__creacion input {
+    width: 200px;
+}
+
+.modal--rutina__botones {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.modal--rutina__botones button {
+    height: 45px;
+    width: 150px;
+    font-size: 2rem;
+    border-radius: 10px;
+}
+
 .main--container__generacion button {
     width: 200px;
     height: 50px;
@@ -243,6 +322,7 @@ main {
     border: 1px solid rgb(238, 232, 55);
     border-radius: 10px;
 }
+
 .main--container__generacion button:hover {
     background-color: var(--color-negro);
 }

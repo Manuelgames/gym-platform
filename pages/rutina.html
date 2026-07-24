@@ -85,6 +85,56 @@
         <section class="main--container__generacion">
             <button class="generacion__rutina">Generar rutina</button>
         </section>
+        <section class="main--modal__rutina">
+            <form class="modal--rutina__creacion" action="">
+                <h2>Registra un ejercicio</h2>
+                <label for="grupoMuscular">Grupo Muscular</label>
+                <select id="grupoMuscular" name="grupoMuscular">
+                    <option value="pecho">Pecho</option>
+                    <option value="bicep">Bicep</option>
+                    <option value="tricep">Tricep</option>
+                    <option value="hombro">Hombro</option>
+                    <option value="espalda">Espalda</option>
+                    <option value="femoral">Femoral</option>
+                    <option value="cuadricep">Cuadricep</option>
+                    <option value="gluteo">Gluteo</option>
+                </select>
+                <label for="diaEjercicioSemana">Dia de la semana</label>
+                <select id="diaEjercicioSemana" name="diaEjercicioSemana">
+                    <option value="lunes">Lunes</option>
+                    <option value="bicep">Martes</option>
+                    <option value="miercoles">Miercoles</option>
+                    <option value="jueves">Jueves</option>
+                    <option value="viernes">Viernes</option>
+                    <option value="sabado">Sabado</option>
+                    <option value="domingo">Domingo</option>
+                </select>
+
+                <label for="nombreEjercicio">
+                    Nombre del ejercicio
+                    <input id="nombreEjercicio" type="text">
+                </label>
+
+                <label for="numeroSeries">
+                    Numero de series
+                    <input id="numeroSeries" type="number">
+                </label>
+
+                <label for="numeroRepeticiones">
+                    Numero de repeticiones
+                    <input id="numeroRepeticiones" type="number">
+                </label>
+                <label for="descripcionEjercicio">
+                    Descripcion del ejercicio
+                    <textarea name="descripcionEjercicio" id="descripcionEjercicio"></textarea>
+                </label>
+
+                <div class="modal--rutina__botones">
+                    <button class="rutina--botones__cancelar">Cancelar</button>
+                    <button class="rutina--botones__confirmar">Confirmar</button>
+                </div>
+            </form>
+        </section>
         <section class="main--modal__opciones main--modal__opcionesActivo">
             <p class="modal__opciones--nombre"></p>
             <p class="modal__opciones--dieta">Dieta</p>

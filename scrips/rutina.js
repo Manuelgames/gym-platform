@@ -11,6 +11,18 @@ const modalOpcionesMediciones = document.querySelector('.modal__opciones--medici
 const modalOpcionesCalculadora = document.querySelector('.modal__opciones--calculadora');
 const headerNombre = document.querySelector('.header--nombre');
 
+const generarRutina = document.querySelector('.generacion__rutina');
+const modalRutinaCreacion = document.querySelector('.main--modal__rutina');
+const rutinaCancelarCreacion = document.querySelector('.rutina--botones__cancelar');
+const rutinaConfirmarCreacion = document.querySelector('.rutina--botones__confirmar');
+const grupoMuscular = document.querySelector('#grupoMuscular')
+const diaEjercicioSemana = document.querySelector('#diaEjercicioSemana')
+const nombreEjercicio = document.querySelector('#nombreEjercicio')
+const numeroSeries = document.querySelector('#numeroSeries')
+const numeroRepeticiones = document.querySelector('#numeroRepeticiones')
+const descripcionEjercicio = document.querySelector('#descripcionEjercicio')
+
+
 const rutinaSemana = document.querySelector('.rutina__semana');
 const lunesRutina = document.querySelector('.lunes__rutina');
 const martesRutina = document.querySelector('.martes__rutina');
@@ -21,11 +33,13 @@ const sabadoRutina = document.querySelector('.sabado__rutina');
 const domingoRutina = document.querySelector('.domingo__rutina');
 
 const semanaDiaRutina = document.querySelector('.semana__dias');
-const containerSemanaDia = document.querySelector('.container__rutina--dia');
 const sesionIniciada = JSON.parse(localStorage.getItem("sesionIniciada"));
 //obtenemos los datos del usuario para activar las opciones particulares del usuario y sus funcionalidades
 const usuarioActivo = JSON.parse(localStorage.getItem("usuarioActivo"));
 const usuarioNombre = JSON.parse(localStorage.getItem("nombreRegistro"));
+
+const rutinaUsuarioStorage = JSON.parse(localStorage.getItem('rutinaUsuario') || '[]');
+
 
 //estructura de la rutina de la semana
 let rutinaUsuario = {
@@ -43,19 +57,14 @@ let rutinaUsuario = {
     ]
 }
 
-
-
-
-
-
 validacionSesionIniciada(sesionIniciada[0])
 const body = document.querySelector('body');
 
 headerDatos.addEventListener('click', opcionesAperturaUsuario);
 menuMobile.addEventListener('click', aperturaMenu);
-
-
-
+generarRutina.addEventListener('click', activacionRutinaMenu);
+rutinaCancelarCreacion.addEventListener('click', cancelarCreacionRutina);
+rutinaConfirmarCreacion.addEventListener('click', confirmacionCreacionRutina);
 
 function validacionSesionIniciada(sesionIniciada) {
     if (sesionIniciada === 1) {
@@ -107,21 +116,100 @@ rutinaSemana.addEventListener('click',
 
     });
 
-function creacionRutina(icono, className) {
-    // const btn = document.createElement('button');
-    // btn.textContent = icono;
-    // btn.className = className;
-    // return btn;
+
+function activacionRutinaMenu() {
+    modalRutinaCreacion.classList.toggle('display-active');
 }
 
+function confirmacionCreacionRutina(evento) {
+    evento.preventDefault();
+    //creacion de variables de local storage para guardar en los datos del usuario 
+    if (diaEjercicioSemana.value === 'lunes') {
+        rutinaUsuario.semana[0].push({
+            grupoMuscular: grupoMuscular.value,
+            diaSemana: diaEjercicioSemana.value,
+            nombreEjercicio: nombreEjercicio.value,
+            numeroSeries: numeroSeries.value,
+            numeroRepeticiones: numeroRepeticiones.value
+        });
+    }
+    if (diaEjercicioSemana.value === 'martes') {
+        rutinaUsuario.semana[1].push({
+            grupoMuscular: grupoMuscular.value,
+            diaSemana: diaEjercicioSemana.value,
+            nombreEjercicio: nombreEjercicio.value,
+            numeroSeries: numeroSeries.value,
+            numeroRepeticiones: numeroRepeticiones.value
+        });
+    }
+    if (diaEjercicioSemana.value === 'miercoles') {
+        rutinaUsuario.semana[2].push({
+            grupoMuscular: grupoMuscular.value,
+            diaSemana: diaEjercicioSemana.value,
+            nombreEjercicio: nombreEjercicio.value,
+            numeroSeries: numeroSeries.value,
+            numeroRepeticiones: numeroRepeticiones.value
+        });
+    }
+    if (diaEjercicioSemana.value === 'jueves') {
+        rutinaUsuario.semana[3].push({
+            grupoMuscular: grupoMuscular.value,
+            diaSemana: diaEjercicioSemana.value,
+            nombreEjercicio: nombreEjercicio.value,
+            numeroSeries: numeroSeries.value,
+            numeroRepeticiones: numeroRepeticiones.value
+        });
+    }
+    if (diaEjercicioSemana.value === 'viernes') {
+        rutinaUsuario.semana[4].push({
+            grupoMuscular: grupoMuscular.value,
+            diaSemana: diaEjercicioSemana.value,
+            nombreEjercicio: nombreEjercicio.value,
+            numeroSeries: numeroSeries.value,
+            numeroRepeticiones: numeroRepeticiones.value
+        });
+    }
+    if (diaEjercicioSemana.value === 'sabado') {
+        rutinaUsuario.semana[5].push({
+            grupoMuscular: grupoMuscular.value,
+            diaSemana: diaEjercicioSemana.value,
+            nombreEjercicio: nombreEjercicio.value,
+            numeroSeries: numeroSeries.value,
+            numeroRepeticiones: numeroRepeticiones.value
+        });
+    }
+    if (diaEjercicioSemana.value === 'domingo') {
+        rutinaUsuario.semana[6].push({
+            grupoMuscular: grupoMuscular.value,
+            diaSemana: diaEjercicioSemana.value,
+            nombreEjercicio: nombreEjercicio.value,
+            numeroSeries: numeroSeries.value,
+            numeroRepeticiones: numeroRepeticiones.value
+        });
+    }
+    localStorage.setItem('rutinaUsuarioStorage', JSON.stringify(rutinaUsuario));
+
+    modalRutinaCreacion.classList.toggle('display-active');
+    grupoMuscular.value = '';
+    diaEjercicioSemana.value = '';
+    nombreEjercicio.value = '';
+    numeroSeries.value = '';
+    numeroRepeticiones.value = '';
+    descripcionEjercicio.value = '';
+}
+function cancelarCreacionRutina(evento) {
+    evento.preventDefault();
+    modalRutinaCreacion.classList.toggle('display-active');
+}
 
 function busquedaRutina(diaSemana) {
     if (rutinaUsuario.usuarioIdentificador !== null && rutinaUsuario.usuarioIdentificador !== undefined && rutinaUsuario.usuarioIdentificador >= 0) {
+        const datos = localStorage.getItem('rutinaUsuarioStorage');
         // no hay rutinas encontradas
-        let sinRutinaMarcada = 0;
-        if (rutinaUsuario.semana[diaSemana].length === 0) {
+        const rutinaUsuarioStorage =    JSON.parse(datos);
+        if (!rutinaUsuarioStorage?.semana?.[diaSemana]?.length) {
             if (!semanaDiaRutina.querySelector('.container__rutina--sindia')) {
-                const containerRutinaSinDia = document.createElement('div');
+                const con1tainerRutinaSinDia = document.createElement('div');
                 containerRutinaSinDia.className = 'container__rutina--sindia';
                 const diaSinRutina = document.createElement('p');
                 diaSinRutina.textContent = 'Este dia no tiene rutinas'
@@ -130,8 +218,33 @@ function busquedaRutina(diaSemana) {
             }
         }
         //si hay rutinas encontradas
-        else if(rutinaUsuario.semana[diaSemana].length > 0){
-            
+        if (rutinaUsuarioStorage.semana[diaSemana].length > 0) {
+
+            rutinaUsuarioStorage.semana.forEach((dia, indiceDia) => {
+                if (dia.length > 0) {
+                    dia.forEach((ejercicio) => {
+                        console.log(`Grupo Muscular: ${ejercicio.grupoMuscular}`);
+                        console.log(`Día de la semana: ${ejercicio.diaSemana}`);
+                        console.log(`Ejercicio: ${ejercicio.nombreEjercicio}`);
+                        console.log(`Series: ${ejercicio.numeroSeries}`);
+                        console.log(`Repeticiones: ${ejercicio.numeroRepeticiones}`);
+                    });
+                }
+            });
+
+            // for (let dia = 0; dia < rutinaUsuarioStorage.semana[diaSemana].length; dia++) {
+            //     const containerSemanaDia = document.createElement('div');
+            //     containerSemanaDia.className = 'container__rutina--dia';
+            //     const pGrupoMuscular = document.createElement('p');
+            //     const pDiaSemana = document.createElement('p');
+            //     const pNombreEjercicio = document.createElement('p');
+            //     const pNumeroSeries = document.createElement('p');
+            //     const pNumeroRepeticiones = document.createElement('p');
+            //     const pDescripcionEjercicio = document.createElement('p');
+            //     pGrupoMuscular.textContent = rutinaUsuarioStorage.semana[diaSemana, dia]
+
+            // }
+
         }
     }
 }

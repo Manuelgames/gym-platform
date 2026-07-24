@@ -47,7 +47,6 @@ function ingresoValidacion(eventoClick) {
             }
             posicion = posicion + 1;
         }
-        console.log(correoEncontrado);
         if (correoEncontrado === 0) {
             mensajeCorreoIncorrecto.style.display = 'block'
         }
