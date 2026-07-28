@@ -36,7 +36,6 @@ function ingresoValidacion(eventoClick) {
                         usuarioActivo.push(posicion)
                         localStorage.setItem('sesionIniciada', JSON.stringify(sesionIniciada));
                         localStorage.setItem('usuarioActivo', JSON.stringify(usuarioActivo));
-                        console.log('datos encontrados, correo y clave');
                         window.location.href = 'blog.html';
                         break;
                     } else {

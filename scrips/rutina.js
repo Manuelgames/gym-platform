@@ -40,7 +40,8 @@ const usuarioNombre = JSON.parse(localStorage.getItem("nombreRegistro"));
 
 const rutinaUsuarioStorage = JSON.parse(localStorage.getItem('rutinaUsuario') || '[]');
 
-
+//ACTUALIZAR LA INFORMACION DE RUTINA PARA QUE NO SE PIERDA
+// let rutinaUsuario = JSON.parse(localStorage.getItem('rutinaUsuarioStorage')) || {usuarioIdentificador: usuarioActivo[0], semana: [[], [], [], [], [], [], []] };
 //estructura de la rutina de la semana
 let rutinaUsuario = {
     //siempre seleccionara el usuario que haya iniciado sesion
@@ -123,6 +124,7 @@ function activacionRutinaMenu() {
 
 function confirmacionCreacionRutina(evento) {
     evento.preventDefault();
+
     //creacion de variables de local storage para guardar en los datos del usuario 
     if (diaEjercicioSemana.value === 'lunes') {
         rutinaUsuario.semana[0].push({
@@ -130,7 +132,8 @@ function confirmacionCreacionRutina(evento) {
             diaSemana: diaEjercicioSemana.value,
             nombreEjercicio: nombreEjercicio.value,
             numeroSeries: numeroSeries.value,
-            numeroRepeticiones: numeroRepeticiones.value
+            numeroRepeticiones: numeroRepeticiones.value,
+            descripcionEjercicio: descripcionEjercicio.value
         });
     }
     if (diaEjercicioSemana.value === 'martes') {
@@ -139,7 +142,8 @@ function confirmacionCreacionRutina(evento) {
             diaSemana: diaEjercicioSemana.value,
             nombreEjercicio: nombreEjercicio.value,
             numeroSeries: numeroSeries.value,
-            numeroRepeticiones: numeroRepeticiones.value
+            numeroRepeticiones: numeroRepeticiones.value,
+            descripcionEjercicio: descripcionEjercicio.value
         });
     }
     if (diaEjercicioSemana.value === 'miercoles') {
@@ -148,7 +152,8 @@ function confirmacionCreacionRutina(evento) {
             diaSemana: diaEjercicioSemana.value,
             nombreEjercicio: nombreEjercicio.value,
             numeroSeries: numeroSeries.value,
-            numeroRepeticiones: numeroRepeticiones.value
+            numeroRepeticiones: numeroRepeticiones.value,
+            descripcionEjercicio: descripcionEjercicio.value
         });
     }
     if (diaEjercicioSemana.value === 'jueves') {
@@ -157,7 +162,8 @@ function confirmacionCreacionRutina(evento) {
             diaSemana: diaEjercicioSemana.value,
             nombreEjercicio: nombreEjercicio.value,
             numeroSeries: numeroSeries.value,
-            numeroRepeticiones: numeroRepeticiones.value
+            numeroRepeticiones: numeroRepeticiones.value,
+            descripcionEjercicio: descripcionEjercicio.value
         });
     }
     if (diaEjercicioSemana.value === 'viernes') {
@@ -166,7 +172,8 @@ function confirmacionCreacionRutina(evento) {
             diaSemana: diaEjercicioSemana.value,
             nombreEjercicio: nombreEjercicio.value,
             numeroSeries: numeroSeries.value,
-            numeroRepeticiones: numeroRepeticiones.value
+            numeroRepeticiones: numeroRepeticiones.value,
+            descripcionEjercicio: descripcionEjercicio.value
         });
     }
     if (diaEjercicioSemana.value === 'sabado') {
@@ -175,7 +182,8 @@ function confirmacionCreacionRutina(evento) {
             diaSemana: diaEjercicioSemana.value,
             nombreEjercicio: nombreEjercicio.value,
             numeroSeries: numeroSeries.value,
-            numeroRepeticiones: numeroRepeticiones.value
+            numeroRepeticiones: numeroRepeticiones.value,
+            descripcionEjercicio: descripcionEjercicio.value
         });
     }
     if (diaEjercicioSemana.value === 'domingo') {
@@ -184,9 +192,11 @@ function confirmacionCreacionRutina(evento) {
             diaSemana: diaEjercicioSemana.value,
             nombreEjercicio: nombreEjercicio.value,
             numeroSeries: numeroSeries.value,
-            numeroRepeticiones: numeroRepeticiones.value
+            numeroRepeticiones: numeroRepeticiones.value,
+            descripcionEjercicio: descripcionEjercicio.value
         });
     }
+    console.log('los datos de rutinason',rutinaUsuario);
     localStorage.setItem('rutinaUsuarioStorage', JSON.stringify(rutinaUsuario));
 
     modalRutinaCreacion.classList.toggle('display-active');
@@ -203,15 +213,37 @@ function cancelarCreacionRutina(evento) {
 }
 
 function busquedaRutina(diaSemana) {
+    //eliminacion de contenedores con informacion
+    if (!semanaDiaRutina.querySelector('.container__rutina--sindia')) {
+        //eliminacion del contenedor con informacion de ejercicios en caso de que anteriormente se hayan reflejado
+        const condias = semanaDiaRutina.querySelector('.container__rutina--dia');
+        condias?.remove();
+    } else {
+        const sindias = semanaDiaRutina.querySelector('.container__rutina--sindia');
+        sindias?.remove();
+    }
+    //variables en caso de que no haya ejercicios
+    const containerRutinaSinDia = document.createElement('div');
+    containerRutinaSinDia.className = 'container__rutina--sindia';
+    const diaSinRutina = document.createElement('p');
+    //variables en caso de que haya ejercicios
+    const containerSemanaDia = document.createElement('div');
+    containerSemanaDia.className = 'container__rutina--dia';
+
+    //revisa que el usuario haya iniciado sesion con una cuenta
     if (rutinaUsuario.usuarioIdentificador !== null && rutinaUsuario.usuarioIdentificador !== undefined && rutinaUsuario.usuarioIdentificador >= 0) {
+        //se asignan a una const los datos del localstorage para convertir posteriormente a objeto rutinaUsuarioStoragerutinaUsuarioStorage
         const datos = localStorage.getItem('rutinaUsuarioStorage');
+        console.log(datos);
         // no hay rutinas encontradas
-        const rutinaUsuarioStorage =    JSON.parse(datos);
+        const rutinaUsuarioStorage = JSON.parse(datos);
+        console.log(rutinaUsuarioStorage);
         if (!rutinaUsuarioStorage?.semana?.[diaSemana]?.length) {
             if (!semanaDiaRutina.querySelector('.container__rutina--sindia')) {
-                const con1tainerRutinaSinDia = document.createElement('div');
-                containerRutinaSinDia.className = 'container__rutina--sindia';
-                const diaSinRutina = document.createElement('p');
+                //eliminacion del contenedor con informacion de ejercicios en caso de que anteriormente se hayan reflejado
+                const condias = semanaDiaRutina.querySelector('.container__rutina--dia');
+                condias?.remove();
+
                 diaSinRutina.textContent = 'Este dia no tiene rutinas'
                 containerRutinaSinDia.append(diaSinRutina);
                 semanaDiaRutina.append(containerRutinaSinDia);
@@ -219,31 +251,46 @@ function busquedaRutina(diaSemana) {
         }
         //si hay rutinas encontradas
         if (rutinaUsuarioStorage.semana[diaSemana].length > 0) {
+            //eliminacion del contenedor que menciona que no hay ejercicios, en caso de que ahora si haya ejercicios
+            const sindias = semanaDiaRutina.querySelector('.container__rutina--sindia');
+            sindias?.remove();
 
-            rutinaUsuarioStorage.semana.forEach((dia, indiceDia) => {
+
+            rutinaUsuarioStorage.semana.forEach((dia) => {
                 if (dia.length > 0) {
                     dia.forEach((ejercicio) => {
-                        console.log(`Grupo Muscular: ${ejercicio.grupoMuscular}`);
-                        console.log(`Día de la semana: ${ejercicio.diaSemana}`);
-                        console.log(`Ejercicio: ${ejercicio.nombreEjercicio}`);
-                        console.log(`Series: ${ejercicio.numeroSeries}`);
-                        console.log(`Repeticiones: ${ejercicio.numeroRepeticiones}`);
-                    });
+                        console.log('el valor de ejercicio es', ejercicio);
+                        const containerSemanaDiaElemento = document.createElement('div');
+                        containerSemanaDiaElemento.className = 'container__SemanaDia--Elemento';
+                        //identificacion del dia de la semana para imprimir los valores
+                        // console.log('el valor tendria que ser L de', rutinaUsuarioStorage.semana[0][0].diaSemana);
+                        // impresion de ejercicios en lunes
+                        const pGrupoMuscular = document.createElement('p');
+                        const pDiaSemana = document.createElement('p');
+                        const pNombreEjercicio = document.createElement('p');
+                        const pNumeroSeries = document.createElement('p');
+                        const pNumeroRepeticiones = document.createElement('p');
+                        const pDescripcionEjercicio = document.createElement('p');
+                        pGrupoMuscular.textContent = ejercicio.grupoMuscular;
+                        pDiaSemana.textContent = ejercicio.diaSemana;
+                        pNombreEjercicio.textContent = ejercicio.nombreEjercicio;
+                        pNumeroSeries.textContent = ejercicio.numeroSeries;
+                        pNumeroRepeticiones.textContent = ejercicio.numeroRepeticiones;
+                        pDescripcionEjercicio.textContent = ejercicio.descripcionEjercicio;
+                        semanaDiaRutina.append(containerSemanaDia);
+                        containerSemanaDiaElemento.append('Grupo Muscular: ', pGrupoMuscular);
+                        containerSemanaDiaElemento.append('Dia: ', pDiaSemana);
+                        containerSemanaDiaElemento.append('Nombre ejercicio: ', pNombreEjercicio);
+                        containerSemanaDiaElemento.append('Numero de series: ', pNumeroSeries);
+                        containerSemanaDiaElemento.append('Numero de repeticiones: ', pNumeroRepeticiones);
+                        containerSemanaDiaElemento.append('Descripcion del ejercicio: ', pDescripcionEjercicio);
+                        containerSemanaDia.append(containerSemanaDiaElemento);
+                    })
                 }
             });
 
-            // for (let dia = 0; dia < rutinaUsuarioStorage.semana[diaSemana].length; dia++) {
-            //     const containerSemanaDia = document.createElement('div');
-            //     containerSemanaDia.className = 'container__rutina--dia';
-            //     const pGrupoMuscular = document.createElement('p');
-            //     const pDiaSemana = document.createElement('p');
-            //     const pNombreEjercicio = document.createElement('p');
-            //     const pNumeroSeries = document.createElement('p');
-            //     const pNumeroRepeticiones = document.createElement('p');
-            //     const pDescripcionEjercicio = document.createElement('p');
-            //     pGrupoMuscular.textContent = rutinaUsuarioStorage.semana[diaSemana, dia]
 
-            // }
+
 
         }
     }
