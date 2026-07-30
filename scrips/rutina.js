@@ -1,3 +1,4 @@
+const headerLogoHome = document.querySelector('.header__logo--home');
 const headerDatos = document.querySelector('.header__datos');
 const menuMobile = document.querySelector('#nav__menu');
 const modalOpcionesNombre = document.querySelector('.modal__opciones--nombre');
@@ -38,6 +39,7 @@ const sesionIniciada = JSON.parse(localStorage.getItem("sesionIniciada"));
 //obtenemos los datos del usuario para activar las opciones particulares del usuario y sus funcionalidades
 const usuarioActivo = JSON.parse(localStorage.getItem("usuarioActivo"));
 const usuarioNombre = JSON.parse(localStorage.getItem("nombreRegistro"));
+console.log(usuarioActivo[0]);
 
 //se genera un identificador por usuario para que los registros sean idenpendientes y no se junten
 // const storageKey = `rutinaUsuarioStorage_${usuarioActivo[0]}`;
@@ -61,6 +63,13 @@ rutinaCancelarCreacion.addEventListener('click', cancelarCreacionRutina);
 rutinaConfirmarCreacion.addEventListener('click', confirmacionCreacionRutina);
 modalOpcionesConcluir.addEventListener('click', cerrarSesion);
 cerrarSesionDesktop.addEventListener('click', cerrarSesion);
+headerLogoHome.addEventListener('click', () => {
+    if (usuarioActivo[0] !== undefined && usuarioActivo[0] !== null && usuarioActivo[0] >= 0) {
+        window.location.href = 'blog.html';
+    }
+}
+);
+
 
 function validacionSesionIniciada(sesionIniciada) {
     if (sesionIniciada === 1) {
@@ -76,6 +85,8 @@ function validacionSesionIniciada(sesionIniciada) {
         headerDatos.classList.add('is-active');
     }
 }
+
+
 
 rutinaSemana.addEventListener('click',
     (event) => {
@@ -214,8 +225,7 @@ function busquedaRutina(diaSemana) {
     //pregunta si el contedor sin dias existe, si existe lo elimina
     sindias?.remove();
 
-    console.log('en condias', condias);
-    console.log('eb sindias', sindias);
+
 
     //variables en caso de que no haya ejercicios
     const containerRutinaSinDia = document.createElement('div');
@@ -232,7 +242,6 @@ function busquedaRutina(diaSemana) {
         const datos = localStorage.getItem('rutinaUsuarioStorage');
         // no hay rutinas encontradas
         const rutinaUsuarioStorage = JSON.parse(datos);
-        console.log(`cantidad de caracteres${rutinaUsuarioStorage?.semana?.[diaSemana]?.length}`);
         if (!rutinaUsuarioStorage?.semana?.[diaSemana]?.length) {
             if (!semanaDiaRutina.querySelector('.container__rutina--sindia')) {
                 //eliminacion del contenedor con informacion de ejercicios en caso de que anteriormente se hayan reflejado
@@ -259,7 +268,6 @@ function busquedaRutina(diaSemana) {
                 if (dia.length > 0) {
                     dia.forEach((ejercicio) => {
                         if (ejercicio.diaSemana === 'lunes' && diaSemana === 0) {
-                            console.log()
                             listadoEjerciciosDia(ejercicio.grupoMuscular, ejercicio.diaSemana, ejercicio.nombreEjercicio, ejercicio.numeroSeries, ejercicio.numeroRepeticiones, ejercicio.descripcionEjercicio);
                         }
                         if (ejercicio.diaSemana === 'martes' && diaSemana === 1) {
