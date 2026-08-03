@@ -1,68 +1,22 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
-    <link rel="stylesheet" href="../styles/registro/style.css">
-    <link rel="stylesheet" href="../styles/registro/tablet.css" media="(min-width:600px)">
-    <link rel="stylesheet" href="../styles/registro/desktop.css" media="(min-width:900px)">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Fjalla+One&display=swap"
-        rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=David+Libre:wght@400;500;700&family=Fjalla+One&display=swap"
-        rel="stylesheet">
-</head>
-
+<!doctype html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crear cuenta | Roman Colosseum</title><link rel="stylesheet" href="../styles/app.css"></head>
 <body>
-    <header>
-        <a href="../index.html"><img src="../assets/back.png" alt="imagen logo de una cabeza de gladiador romano"></a>
-        <h2>Roman Colosseum</h2>
-        <span></span>
-    </header>
-    <main>
-        <section class="main--registro">
-            <h2 class="registro__titulo">Registro</h2>
-            <form action="" class="registro__formulario">
-                <label for="nombreRegistro">
-                    Nombre
-                    <input type="text" name="nombreRegistro" required id="nombreRegistro">
-                </label>
-
-                <label for="correoRegistro">
-                    Correo
-                    <input type="email" name="correoRegistro" id="correoRegistro" required>
-                </label>
-                <p class="correo--existente">Este correo ya fue registrado, coloca uno nuevo</p>
-                <label for="claveRegistro">
-                    Contraseña
-                    <input type="password" name="claveRegistro" id="claveRegistro" required autocomplete="">
-                </label>
-                <label for="nacimientoRegistro">
-                    Nacimiento
-                    <input type="date" name="nacimientoRegistro" id="nacimientoRegistro" required>
-                </label>
-
-                <label class="formulario--sexo" for="sexoRegistro">
-                    <p>Sexo</p>
-                    <div class="sexo__seleccion">
-                        Mujer
-                        <input type="radio" name="sexoRegistro" id="sexoRegistro" value="mujer" required>
-                        Hombre
-                        <input type="radio" name="sexoRegistro" id="sexoRegistro" value="hombre" required>
-                    </div>
-                </label>
-                <p class="campos--completados">Favor de completar todos los campos</p>
-                <input id="submitRegistro" value="Registrarme" name="submitRegistro" type="submit">
-            </form>
-        </section>
-    </main>
-    <script src="../scrips/registro.js"></script>
-</body>
-
-</html>
+  <main class="auth-shell">
+    <section class="auth-card" aria-labelledby="register-title">
+      <a class="auth-brand" href="../index.html"><img src="../assets/logosintexto.png" alt=""><span>Roman Colosseum</span></a>
+      <h1 id="register-title">Forja tu leyenda</h1>
+      <p>Crea un espacio privado para construir hábitos dignos de un héroe.</p>
+      <form class="form" data-mode="register">
+        <label class="field">Nombre<input name="name" type="text" autocomplete="name" required minlength="2" placeholder="Nombre con el que entrenas"></label>
+        <label class="field">Correo electrónico<input name="email" type="email" autocomplete="email" required placeholder="tu@correo.com"></label>
+        <label class="field">Contraseña<input name="password" type="password" autocomplete="new-password" required minlength="4" placeholder="Mínimo 4 caracteres"></label>
+        <div class="field-row"><label class="field">Nacimiento<input name="birthDate" type="date" required></label><label class="field">Identidad<select name="sex" required><option value="" selected disabled>Selecciona</option><option value="mujer">Mujer</option><option value="hombre">Hombre</option><option value="prefiero no decirlo">Prefiero no decirlo</option></select></label></div>
+        <p class="form-message" data-form-message hidden aria-live="polite"></p>
+        <button class="button" type="submit">Crear mi perfil</button>
+      </form>
+      <p class="form-note">¿Ya eres parte del imperio? <a href="ingresar.html">Inicia sesión</a>.</p>
+    </section>
+  </main>
+  <script src="../scrips/data.js"></script><script src="../scrips/auth.js"></script>
+</body></html>

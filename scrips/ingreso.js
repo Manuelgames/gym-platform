@@ -10,6 +10,25 @@ const usuarioActivo = JSON.parse(localStorage.getItem('usuarioActivo') || '[]');
 localStorage.setItem('sesionIniciada', '[]');
 localStorage.setItem('usuarioActivo', '[]');
 
+
+const rutinaUsuarioStorage = JSON.parse(
+    localStorage.getItem('rutinaUsuarioStorage') || JSON.stringify({
+        //nos permita identificar que el usuario haya iniciado sesion
+        usuarioIdentificador: usuarioActivo,
+        //semana donde se estaran registrando cada ejercicio para cada dia (lunes, martes, miercoles, jueves, viernes, sabado, domingo);
+        semana: [[], [], [], [], [], [], []]
+    })
+);
+
+rutinaUsuarioStorage.semana = [[], [], [], [], [], [], []];
+
+localStorage.setItem('rutinaUsuariosStorage', JSON.stringify(rutinaUsuarioStorage))
+
+
+
+
+
+
 submitRegistro.addEventListener('click', ingresoValidacion);
 localStorage.removeItem('sesisionIniciada');
 

@@ -1,54 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar sesion</title>
-    <link rel="stylesheet" href="../styles/ingreso/style.css">
-    <link rel="stylesheet" href="../styles/ingreso/tablet.css" media="(min-width:600px)">
-    <link rel="stylesheet" href="../styles/ingreso/desktop.css" media="(min-width:900px)">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=Fjalla+One&display=swap"
-        rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Cossette+Texte:wght@400;700&family=David+Libre:wght@400;500;700&family=Fjalla+One&display=swap"
-        rel="stylesheet">
-</head>
-
+<!doctype html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Iniciar sesión | Roman Colosseum</title><link rel="stylesheet" href="../styles/app.css"></head>
 <body>
-    <header>
-        <a href="../index.html"><img src="../assets/back.png" alt="imagen logo de una cabeza de gladiador romano"></a>
-        <h2>Roman Colosseum</h2>
-        <span></span>
-    </header>
-    <main>
-        <section class="main--ingreso">
-            <h2 class="ingreso__titulo">Inicia tu aventura</h2>
-            <form action="" class="ingreso__formulario">
-                <label for="correoIngreso">
-                    Correo
-                    <input type="text" name="correoIngreso" required id="correoIngreso" autocomplete="email">
-                </label>
-                <label for="claveIngreso">
-                    Contraseña
-                    <input type="password" name="claveIngreso" id="claveIngreso" required autocomplete="current-password">
-                </label>
-                <div class="seleccion__alterna">
-                    <label><a href="">Olvidaste tu Contraseña</a></label>
-                    <label><a href="./registro.html">Crear una cuenta nueva</a></label>
-                </div>
-                <p class="campos--completados">Favor de completar todos los campos</p>
-                <p class="correo--incorrecto">Correo incorrecto</p>
-                <p class="clave--incorrecta">Contraseña incorrecta</p>
-                <input id="submitRegistro" value="Iniciar Sesion" name="submitRegistro" type="submit">
-            </form>
-        </section>
-    </main>
-    <script src="../scrips/ingreso.js"></script>
-</body>
-
-</html>
+  <main class="auth-shell">
+    <section class="auth-card" aria-labelledby="login-title">
+      <a class="auth-brand" href="../index.html"><img src="../assets/logosintexto.png" alt=""><span>Roman Colosseum</span></a>
+      <h1 id="login-title">Regresa a la arena</h1>
+      <p>Tu rutina, dieta y progreso te esperan donde los dejaste.</p>
+      <form class="form" data-mode="login">
+        <label class="field">Correo electrónico<input name="email" type="email" autocomplete="email" required placeholder="tu@correo.com"></label>
+        <label class="field">Contraseña<input name="password" type="password" autocomplete="current-password" required placeholder="••••••••"></label>
+        <p class="form-message" data-form-message hidden aria-live="polite"></p>
+        <button class="button" type="submit">Entrar al imperio</button>
+      </form>
+      <p class="form-note">¿Aún no tienes cuenta? <a href="registro.html">Crea tu perfil de guerrero</a>.</p>
+    </section>
+  </main>
+  <script src="../scrips/data.js"></script><script src="../scrips/auth.js"></script>
+</body></html>
