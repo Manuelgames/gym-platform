@@ -1,0 +1,63 @@
+---
+import FormMessage from '../../components/forms/FormMessage.astro';
+import WorkRoleBoard from '../../components/specialists/WorkRoleBoard.astro';
+import PageIntro from '../../components/ui/PageIntro.astro';
+import Panel from '../../components/ui/Panel.astro';
+import { getApplication } from '../../infrastructure/composition/container';
+import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
+import { readErrorMessage } from '../../presentation/feedback';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/iniciar-sesion');
+const work = await getApplication().getMyWork(user.id);
+if (!work) return Astro.redirect('/app/especialistas');
+const errorMessage = readErrorMessage(Astro.url);
+const registered = Astro.url.searchParams.has('registered');
+const updated = Astro.url.searchParams.get('updated');
+const successMessage = registered
+  ? 'Tu perfil profesional quedó registrado y ya aparece en los directorios elegidos.'
+  : updated === 'accept'
+    ? 'La solicitud fue aceptada y ahora aparece en Asesorados.'
+    : updated === 'reject'
+      ? 'La solicitud fue rechazada y el usuario recuperó su cupo.'
+      : updated === 'close'
+        ? 'La asesoría se cerró correctamente.'
+        : undefined;
+const roleNames = work.profile.roles.map((role) => (
+  role === 'trainer' ? 'Entrenador personal' : 'Nutricionista'
+));
+---
+
+<ProtectedLayout
+  title="Mi trabajo"
+  description="Gestiona solicitudes y personas asesoradas por especialidad."
+  {user}
+  currentPath={Astro.url.pathname}
+  footerText="Roman Colosseum · Cada solicitud conserva su especialidad, propietario y estado."
+>
+  <PageIntro
+    eyebrow="Tu actividad profesional"
+    title="Mi trabajo"
+    lead="Las solicitudes pendientes aparecen en Solicitantes. Al aceptarlas pasan a Asesorados dentro de la misma rama."
+    compact
+  />
+
+  <FormMessage message={successMessage} tone="success" />
+  <FormMessage message={errorMessage} tone="error" />
+
+  <Panel labelledby="professional-summary">
+    <h2 id="professional-summary">Perfil profesional</h2>
+    <p><strong>Identificador:</strong> <code>{work.profile.id}</code></p>
+    <p><strong>Roles activos:</strong> {roleNames.join(' y ')}.</p>
+    <p>El identificador no cambia si posteriormente se modifica el estado de uno de tus roles.</p>
+  </Panel>
+
+  <div class="work-boards section-flow">
+    {work.roles.map((board) => <WorkRoleBoard {board} />)}
+  </div>
+</ProtectedLayout>
+
+<style>
+  code { color: var(--color-gold-light); overflow-wrap: anywhere; }
+  .work-boards { display: grid; gap: 2rem; }
+</style>

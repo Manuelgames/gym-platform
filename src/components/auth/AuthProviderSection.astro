@@ -1,0 +1,41 @@
+---
+export interface Props {
+  label?: string;
+}
+
+const { label = "O continúa con" } = Astro.props;
+---
+
+<section class="provider-section" aria-label="Opciones de autenticación externa">
+  <div class="provider-section__divider"><span>{label}</span></div>
+  <slot />
+</section>
+
+<style>
+  .provider-section {
+    margin-top: 2.4rem;
+  }
+
+  .provider-section__divider {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 1.2rem;
+    align-items: center;
+    color: var(--color-muted);
+    font-size: 1.2rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .provider-section__divider::before,
+  .provider-section__divider::after {
+    height: 1px;
+    background: var(--color-line);
+    content: "";
+  }
+
+  .provider-section > :global(*) {
+    width: 100%;
+    margin-top: 1.6rem;
+  }
+</style>

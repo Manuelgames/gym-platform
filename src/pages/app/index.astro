@@ -1,0 +1,47 @@
+---
+import DashboardHero from '../../components/dashboard/DashboardHero.astro';
+import ModuleCard from '../../components/dashboard/ModuleCard.astro';
+import Button from '../../components/ui/Button.astro';
+import QuoteBlock from '../../components/ui/QuoteBlock.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import { getApplication } from '../../infrastructure/composition/container';
+import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/iniciar-sesion');
+const dashboard = await getApplication().getDashboard(user.id);
+---
+
+<ProtectedLayout title="Mi imperio" {user} currentPath={Astro.url.pathname}>
+  <DashboardHero
+    name={user.name}
+    lead="Aquí tu progreso es solo tuyo. Planifica tu semana, alimenta tu fuerza y encuentra el rumbo de vuelta a tu mejor versión."
+    stats={[
+      { value: dashboard.exerciseCount, label: 'ejercicios' },
+      { value: dashboard.hasDiet ? 1 : '—', label: 'plan de dieta' },
+      { value: dashboard.calorieCalculationCount, label: 'cálculos' },
+    ]}
+  >
+    <Fragment slot="actions">
+      <Button href="/app/rutina">Abrir mi rutina</Button>
+      <Button href="/app/dieta" variant="ghost">Crear dieta</Button>
+    </Fragment>
+  </DashboardHero>
+
+  <section class="section-flow" aria-labelledby="tools-title">
+    <SectionHeading eyebrow="Tus herramientas" title="Un santuario para cada hábito" id="tools-title" />
+    <div class="content-grid content-grid--three" data-tablet-columns="two">
+      <ModuleCard numeral="I" title="La rutina" description="Diseña ejercicios para cada día de la semana dentro de tu cuenta." href="/app/rutina" actionLabel="Entrenar" />
+      <ModuleCard numeral="II" title="La dieta" description="Genera una guía de comidas según tu objetivo y preferencia." href="/app/dieta" actionLabel="Planificar" />
+      <ModuleCard numeral="III" title="El cálculo" description="Estima tus calorías diarias y consulta tu bitácora personal." href="/app/calculadora" actionLabel="Calcular" />
+      <ModuleCard numeral="IV" title="Especialistas" description="Elige hasta un entrenador y un nutricionista, o presenta tu propio perfil profesional." href="/app/especialistas" actionLabel="Explorar" />
+      {Astro.locals.specialistRoles.length > 0 && (
+        <ModuleCard numeral="V" title="Mi trabajo" description="Gestiona solicitantes y personas asesoradas en cada uno de tus roles activos." href="/app/mi-trabajo" actionLabel="Gestionar" />
+      )}
+    </div>
+  </section>
+
+  <section class="section-flow" aria-label="Cita inspiradora">
+    <QuoteBlock quote="No es la fuerza del cuerpo lo que cuenta, sino la fuerza del espíritu." cite="Inspirado en La Odisea" />
+  </section>
+</ProtectedLayout>

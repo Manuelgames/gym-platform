@@ -1,0 +1,50 @@
+---
+export interface Props {
+  title?: string;
+  message: string;
+  compact?: boolean;
+}
+
+const { title, message, compact = false } = Astro.props;
+---
+
+<div class:list={["empty-state", { "empty-state--compact": compact }]} role="status">
+  <div>
+    {title && <h3>{title}</h3>}
+    <p>{message}</p>
+    {Astro.slots.has("actions") && <div class="empty-state__actions"><slot name="actions" /></div>}
+  </div>
+</div>
+
+<style>
+  .empty-state {
+    display: grid;
+    min-height: 20rem;
+    padding: 2rem;
+    place-items: center;
+    border: 1px dashed var(--color-line);
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  .empty-state--compact {
+    min-height: 12rem;
+  }
+
+  h3 {
+    margin: 0 0 0.6rem;
+    color: var(--color-paper);
+    font: 700 2rem var(--font-display);
+  }
+
+  p {
+    max-width: 48rem;
+    margin: 0;
+  }
+
+  .empty-state__actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 1.6rem;
+  }
+</style>

@@ -1,0 +1,44 @@
+---
+export interface Props {
+  as?: "article" | "section" | "div";
+  interactive?: boolean;
+  padded?: boolean;
+  class?: string;
+}
+
+const { as = "article", interactive = false, padded = true, class: className = "" } = Astro.props;
+const Tag = as;
+---
+
+<Tag class:list={["card", { "card--interactive": interactive, "card--padded": padded }, className]}>
+  <slot />
+</Tag>
+
+<style>
+  .card {
+    min-width: 0;
+    border: 1px solid var(--color-line);
+    background: linear-gradient(145deg, rgb(38 49 43 / 96%), rgb(19 27 23 / 98%));
+  }
+
+  .card--padded {
+    padding: 2.4rem;
+  }
+
+  .card--interactive {
+    transition: border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+  }
+
+  .card--interactive:hover,
+  .card--interactive:focus-within {
+    border-color: var(--color-gold);
+    transform: translateY(-0.4rem);
+    box-shadow: 0 1.5rem 3rem rgb(0 0 0 / 28%);
+  }
+
+  @media (max-width: 450px) {
+    .card--padded {
+      padding: 2rem;
+    }
+  }
+</style>

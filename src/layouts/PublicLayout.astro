@@ -1,0 +1,44 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import SiteFooter from "../components/navigation/SiteFooter.astro";
+import SiteHeader from "../components/navigation/SiteHeader.astro";
+
+export interface PublicUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string | URL;
+  image?: string;
+  noindex?: boolean;
+  user?: PublicUser | null;
+  currentPath: string;
+  footerText?: string;
+  mainClass?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  image,
+  noindex = false,
+  user = null,
+  currentPath,
+  footerText,
+  mainClass = "",
+} = Astro.props;
+---
+
+<BaseLayout {title} {description} {canonical} {image} {noindex}>
+  <Fragment slot="head"><slot name="head" /></Fragment>
+  <SiteHeader {user} {currentPath} variant="public" accessMode={Astro.locals.accessMode} showWork={Astro.locals.specialistRoles.length > 0} />
+  <main id="contenido-principal" class={mainClass} tabindex="-1">
+    <slot />
+  </main>
+  <SiteFooter text={footerText} />
+</BaseLayout>

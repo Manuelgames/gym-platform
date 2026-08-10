@@ -1,0 +1,133 @@
+---
+export interface Props {
+  id: string;
+  title: string;
+  description?: string;
+  /** Etiqueta del botón iconográfico; permite contextualizar diálogos especializados. */
+  closeLabel?: string;
+  class?: string;
+}
+
+const {
+  id,
+  title,
+  description,
+  closeLabel = "Cerrar diálogo",
+  class: className = "",
+} = Astro.props;
+const titleId = `${id}-title`;
+const descriptionId = description ? `${id}-description` : undefined;
+---
+
+<dialog
+  id={id}
+  class:list={["dialog", className]}
+  aria-labelledby={titleId}
+  aria-describedby={descriptionId}
+  data-app-dialog
+>
+  <div class="dialog__surface">
+    <header class="dialog__header">
+      <div>
+        <h2 id={titleId}>{title}</h2>
+        {description && <p id={descriptionId}>{description}</p>}
+      </div>
+      <button class="dialog__close" type="button" aria-label={closeLabel} data-dialog-close>
+        <span aria-hidden="true">×</span>
+      </button>
+    </header>
+    <div class="dialog__body">
+      <slot />
+    </div>
+    {Astro.slots.has("actions") && <footer class="dialog__actions"><slot name="actions" /></footer>}
+  </div>
+</dialog>
+
+<script>
+  import "../../scripts/dialog-controller";
+</script>
+
+<style>
+  .dialog {
+    width: min(calc(100% - 3rem), 58rem);
+    max-height: min(90dvh, 78rem);
+    padding: 0;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    background: #1a241f;
+    color: var(--color-paper);
+    box-shadow: 0 2rem 6rem rgb(0 0 0 / 60%);
+  }
+
+  .dialog::backdrop {
+    background: rgb(2 5 3 / 76%);
+    backdrop-filter: blur(0.4rem);
+  }
+
+  .dialog__surface {
+    max-height: min(90dvh, 78rem);
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+
+  .dialog__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1.6rem;
+    padding: 2.6rem 2.6rem 0;
+  }
+
+  h2 {
+    margin: 0;
+    font: 700 3rem/1.05 var(--font-display);
+  }
+
+  .dialog__header p {
+    margin: 1rem 0 0;
+    color: var(--color-muted);
+  }
+
+  .dialog__close {
+    display: grid;
+    width: 4.4rem;
+    min-width: 4.4rem;
+    height: 4.4rem;
+    place-items: center;
+    border: 1px solid var(--color-line);
+    background: transparent;
+    color: var(--color-paper);
+    font-size: 2.4rem;
+  }
+
+  .dialog__body {
+    padding: 2.6rem;
+  }
+
+  .dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: end;
+    gap: 1rem;
+    padding: 0 2.6rem 2.6rem;
+  }
+
+  @media (max-width: 450px) {
+    .dialog__header {
+      padding: 2rem 2rem 0;
+    }
+
+    .dialog__body {
+      padding: 2rem;
+    }
+
+    .dialog__actions {
+      display: grid;
+      padding: 0 2rem 2rem;
+    }
+
+    .dialog__actions :global(*) {
+      width: 100%;
+    }
+  }
+</style>

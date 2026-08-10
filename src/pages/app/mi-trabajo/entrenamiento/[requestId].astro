@@ -1,0 +1,67 @@
+---
+import FormMessage from '../../../../components/forms/FormMessage.astro';
+import RoutineDocument from '../../../../components/routine/RoutineDocument.astro';
+import RoutinePlanEditor from '../../../../components/routine/RoutinePlanEditor.astro';
+import Button from '../../../../components/ui/Button.astro';
+import Panel from '../../../../components/ui/Panel.astro';
+import PageIntro from '../../../../components/ui/PageIntro.astro';
+import { getApplication } from '../../../../infrastructure/composition/container';
+import ProtectedLayout from '../../../../layouts/ProtectedLayout.astro';
+import { readErrorMessage } from '../../../../presentation/feedback';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/iniciar-sesion');
+const requestId = Astro.params.requestId ?? '';
+let context;
+try {
+  context = await getApplication().getTrainingClientRoutine(user.id, requestId);
+} catch {
+  return Astro.redirect('/app/mi-trabajo?error=training-relation-required');
+}
+const errorMessage = readErrorMessage(Astro.url);
+const successMessage = Astro.url.searchParams.get('saved') === 'specialist'
+  ? `La rutina de ${context.client.name} quedó actualizada y ya puede verla en su cuenta.`
+  : undefined;
+---
+
+<ProtectedLayout
+  title={`Rutina de ${context.client.name}`}
+  description="Editor profesional de entrenamiento para una asesoría activa."
+  {user}
+  currentPath="/app/mi-trabajo"
+  footerText="Los documentos profesionales conservan relación, autoría y fecha de actualización."
+>
+  <PageIntro eyebrow="Asesoría de entrenamiento activa" title={`Plan de ${context.client.name}`} lead="Programa de lunes a domingo con el mismo formato que recibe el usuario." compact />
+  <div class="page-actions"><Button href="/app/mi-trabajo" variant="subtle" size="small">← Volver a asesorados</Button></div>
+  <FormMessage message={successMessage} tone="success" />
+  <FormMessage message={errorMessage} tone="error" />
+
+  <section class="client-context" aria-label="Datos del asesorado">
+    <Panel labelledby="training-client-title"><p class="eyebrow">Asesorado</p><h2 id="training-client-title">{context.client.name}</h2><p>{context.client.email}</p><small>Solicitud vinculada: <code>{context.requestId}</code></small></Panel>
+    <Panel labelledby="training-format-title"><p class="eyebrow">Formato compatible</p><h2 id="training-format-title">Lunes a domingo</h2><p>Objetivo, nivel, descansos, ejercicios, series, repeticiones, pausas y tempo.</p></Panel>
+  </section>
+
+  {context.plan && (
+    <section class="section-flow" aria-labelledby="current-specialist-routine">
+      <p class="eyebrow">Documento vigente</p><h2 class="section-heading" id="current-specialist-routine">Vista que recibe el usuario</h2>
+      <RoutineDocument plan={context.plan} clientName={context.client.name} authorName={user.name} />
+    </section>
+  )}
+
+  <section class="section-flow" aria-labelledby="specialist-routine-editor-title">
+    <header class="editor-heading"><p class="eyebrow">{context.plan ? 'Actualizar documento' : 'Nuevo documento'}</p><h2 id="specialist-routine-editor-title">{context.plan ? 'Editar rutina asignada' : 'Crear rutina de especialista'}</h2><p>Al guardar se reflejará inmediatamente en la subsección Rutina de especialista de {context.client.name}.</p></header>
+    <RoutinePlanEditor id="specialist-routine-editor" action="/api/routine/specialist/save" requestId={context.requestId} plan={context.plan} submitLabel="Asignar rutina al usuario" />
+  </section>
+</ProtectedLayout>
+
+<style>
+  .page-actions { display: flex; margin: 1.5rem 0; }
+  .client-context { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0 2.5rem; }
+  .client-context h2 { margin: .4rem 0; font: 700 2.5rem var(--font-display); }
+  .client-context p { color: var(--color-muted); }
+  code { color: var(--color-gold-light); overflow-wrap: anywhere; }
+  .section-heading, .editor-heading h2 { margin: .4rem 0 1.2rem; font: 700 clamp(2.6rem, 5vw, 4rem) var(--font-display); }
+  .editor-heading { max-width: 80rem; }
+  .editor-heading p:last-child { color: var(--color-muted); }
+  @media (max-width: 700px) { .client-context { grid-template-columns: 1fr; } }
+</style>

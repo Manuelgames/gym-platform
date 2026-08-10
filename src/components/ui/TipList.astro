@@ -1,0 +1,27 @@
+---
+export interface Props {
+  items: string[];
+  labelledby?: string;
+}
+
+const { items, labelledby } = Astro.props;
+---
+
+<ul class="tip-list" aria-labelledby={labelledby}>
+  {items.map((item) => <li>{item}</li>)}
+</ul>
+
+<style>
+  .tip-list {
+    padding-left: 2rem;
+    color: var(--color-muted);
+  }
+
+  .tip-list li {
+    padding-block: 0.55rem;
+  }
+
+  .tip-list li::marker {
+    color: var(--color-gold);
+  }
+</style>

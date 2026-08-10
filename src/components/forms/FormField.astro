@@ -1,0 +1,99 @@
+---
+export interface Props {
+  label: string;
+  /** Debe coincidir con el `id` del control incluido en el slot. */
+  for: string;
+  hint?: string;
+  error?: string;
+  required?: boolean;
+  class?: string;
+}
+
+const {
+  label,
+  for: htmlFor,
+  hint,
+  error,
+  required = false,
+  class: className = "",
+} = Astro.props;
+const hintId = hint ? `${htmlFor}-hint` : undefined;
+const errorId = error ? `${htmlFor}-error` : undefined;
+---
+
+<div class:list={["field", { "field--error": Boolean(error) }, className]}>
+  <label for={htmlFor}>
+    {label}
+    {required && <span aria-hidden="true"> *</span>}
+    {required && <span class="sr-only"> (obligatorio)</span>}
+  </label>
+  <slot />
+  {hint && <small class="field__hint" id={hintId}>{hint}</small>}
+  {error && <small class="field__error" id={errorId} role="alert">{error}</small>}
+</div>
+
+<style>
+  .field {
+    display: grid;
+    gap: 0.7rem;
+    min-width: 0;
+  }
+
+  label {
+    color: var(--color-muted);
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  label span[aria-hidden="true"] {
+    color: var(--color-gold-light);
+  }
+
+  .field :global(input),
+  .field :global(select),
+  .field :global(textarea) {
+    width: 100%;
+    min-height: 4.8rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid #586057;
+    border-radius: 0;
+    background: #111914;
+    color: var(--color-paper);
+    outline: 0;
+  }
+
+  .field :global(textarea) {
+    min-height: 10rem;
+    resize: vertical;
+  }
+
+  .field :global(input:focus),
+  .field :global(select:focus),
+  .field :global(textarea:focus) {
+    border-color: var(--color-gold);
+    box-shadow: var(--shadow-focus);
+  }
+
+  .field--error :global(input),
+  .field--error :global(select),
+  .field--error :global(textarea) {
+    border-color: var(--color-danger);
+  }
+
+  .field__hint,
+  .field__error {
+    font-size: 1.25rem;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  .field__hint {
+    color: var(--color-muted);
+  }
+
+  .field__error {
+    color: var(--color-danger);
+  }
+</style>

@@ -1,0 +1,13 @@
+---
+import Button from '../components/ui/Button.astro';
+import EmptyState from '../components/ui/EmptyState.astro';
+import PublicLayout from '../layouts/PublicLayout.astro';
+---
+
+<PublicLayout title="Página no encontrada" noindex user={Astro.locals.user} currentPath={Astro.url.pathname}>
+  <div class="page-shell">
+    <EmptyState title="Este camino no conduce a Ítaca" message="La página que buscas no existe o cambió de ruta.">
+      <Fragment slot="actions"><Button href={Astro.locals.user ? '/app' : '/'}>Volver a salvo</Button></Fragment>
+    </EmptyState>
+  </div>
+</PublicLayout>

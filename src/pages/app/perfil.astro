@@ -1,0 +1,144 @@
+---
+import FormField from '../../components/forms/FormField.astro';
+import FormMessage from '../../components/forms/FormMessage.astro';
+import FormStack from '../../components/forms/FormStack.astro';
+import Button from '../../components/ui/Button.astro';
+import PageIntro from '../../components/ui/PageIntro.astro';
+import Panel from '../../components/ui/Panel.astro';
+import { getApplication } from '../../infrastructure/composition/container';
+import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
+import { readErrorMessage, readInvalidField } from '../../presentation/feedback';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/iniciar-sesion');
+const profile = await getApplication().getProfile(user.id);
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+const updated = Astro.url.searchParams.get('updated');
+const successMessage = updated === 'photo'
+  ? 'Tu fotografía de perfil fue actualizada.'
+  : updated === 'name'
+    ? 'Tu nombre fue actualizado.'
+    : updated === 'password'
+      ? 'Tu contraseña fue actualizada y la sesión se renovó.'
+      : undefined;
+const initials = profile.name
+  .split(/\s+/)
+  .slice(0, 2)
+  .map((part) => part[0]?.toUpperCase())
+  .join('');
+const demoMode = Astro.locals.accessMode === 'demo';
+---
+
+<ProtectedLayout
+  title="Mi perfil"
+  description="Administra tu identidad visible y la seguridad de tu cuenta."
+  {user}
+  currentPath={Astro.url.pathname}
+  footerText="Roman Colosseum · Tu identidad y tus credenciales se administran por separado."
+>
+  <PageIntro
+    eyebrow="Tu cuenta"
+    title="Mi perfil"
+    lead="Actualiza cada sección de forma independiente. Más adelante podremos añadir nuevos datos sin modificar las demás funciones."
+    compact
+  />
+
+  <FormMessage message={successMessage} tone="success" />
+  <FormMessage message={invalidField ? undefined : errorMessage} tone="error" />
+
+  <section class="profile-layout" aria-label="Configuración del perfil">
+    <Panel class="profile-summary" labelledby="profile-summary-title">
+      <h2 id="profile-summary-title">Identidad visible</h2>
+      {profile.profilePhotoId ? (
+        <img
+          class="profile-photo"
+          src={`/api/profile/photo/${profile.id}`}
+          alt={`Fotografía de perfil de ${profile.name}`}
+          width="240"
+          height="240"
+        />
+      ) : (
+        <div class="profile-photo profile-photo--placeholder" aria-label="Sin fotografía de perfil">
+          <span aria-hidden="true">{initials}</span>
+        </div>
+      )}
+      <div class="profile-summary__details">
+        <strong>{profile.name}</strong>
+        <span>{profile.email}</span>
+        <small>ID de cuenta: <code>{profile.id}</code></small>
+      </div>
+    </Panel>
+
+    <div class="profile-sections">
+      <Panel labelledby="photo-title">
+        <h2 id="photo-title">Fotografía de perfil</h2>
+        <p>Será visible para otras cuentas dentro de los espacios donde interactúen contigo.</p>
+        <FormStack action="/api/profile/photo" enctype="multipart/form-data">
+          <FormField
+            label={profile.profilePhotoId ? 'Reemplazar fotografía' : 'Agregar fotografía'}
+            for="profile-photo"
+            hint="JPEG, PNG o WebP; máximo 4 MB."
+            required
+            error={invalidField === 'photo' ? errorMessage : undefined}
+          >
+            <input id="profile-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
+          </FormField>
+          <Button type="submit">Guardar fotografía</Button>
+        </FormStack>
+      </Panel>
+
+      <Panel labelledby="name-title">
+        <h2 id="name-title">Nombre visible</h2>
+        <p>Este nombre aparecerá en tu cuenta y ante los usuarios con quienes interactúes.</p>
+        <FormStack action="/api/profile/name" autocomplete="on">
+          <FormField label="Nombre" for="profile-name" required error={invalidField === 'name' ? errorMessage : undefined}>
+            <input id="profile-name" name="name" type="text" value={profile.name} autocomplete="name" minlength="2" maxlength="80" required />
+          </FormField>
+          <Button type="submit">Actualizar nombre</Button>
+        </FormStack>
+      </Panel>
+
+      <Panel labelledby="password-title">
+        <h2 id="password-title">Contraseña</h2>
+        {demoMode ? (
+          <p>La contraseña no puede cambiarse en la vista demo compartida.</p>
+        ) : (
+          <Fragment>
+            <p>Confirma tu contraseña actual antes de establecer una nueva.</p>
+            <FormStack action="/api/profile/password" autocomplete="on">
+              <FormField label="Contraseña actual" for="current-password" required error={invalidField === 'currentPassword' ? errorMessage : undefined}>
+                <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" required />
+              </FormField>
+              <FormField label="Nueva contraseña" for="new-password" hint="Debe tener entre 8 y 128 caracteres." required error={invalidField === 'newPassword' ? errorMessage : undefined}>
+                <input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required />
+              </FormField>
+              <FormField label="Confirmar nueva contraseña" for="password-confirmation" required error={invalidField === 'passwordConfirmation' ? errorMessage : undefined}>
+                <input id="password-confirmation" name="passwordConfirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" required />
+              </FormField>
+              <Button type="submit">Cambiar contraseña</Button>
+            </FormStack>
+          </Fragment>
+        )}
+      </Panel>
+    </div>
+  </section>
+</ProtectedLayout>
+
+<style>
+  .profile-layout { display: grid; grid-template-columns: minmax(24rem, 0.65fr) minmax(0, 1.35fr); gap: 2rem; margin-top: 4rem; align-items: start; }
+  .profile-summary { position: sticky; top: 9rem; display: grid; gap: 1.8rem; }
+  .profile-summary h2, .profile-sections h2 { margin-top: 0; }
+  .profile-photo { width: min(100%, 24rem); aspect-ratio: 1; margin-inline: auto; border: 1px solid var(--color-line); border-radius: 2.4rem; object-fit: cover; background: #111914; }
+  .profile-photo--placeholder { display: grid; place-items: center; color: var(--color-gold-light); font: 700 5rem var(--font-display); }
+  .profile-summary__details { display: grid; gap: 0.45rem; min-width: 0; text-align: center; }
+  .profile-summary__details strong { color: var(--color-paper); font: 700 2.4rem var(--font-display); }
+  .profile-summary__details span, .profile-summary__details small { color: var(--color-muted); overflow-wrap: anywhere; }
+  code { color: var(--color-gold-light); }
+  .profile-sections { display: grid; gap: 2rem; }
+  .profile-sections p { color: var(--color-muted); }
+  @media (max-width: 800px) {
+    .profile-layout { grid-template-columns: 1fr; }
+    .profile-summary { position: static; }
+  }
+</style>

@@ -1,0 +1,60 @@
+---
+import ArticleCard from '../components/blog/ArticleCard.astro';
+import HeroMedia from '../components/ui/HeroMedia.astro';
+import QuoteBlock from '../components/ui/QuoteBlock.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import PublicLayout from '../layouts/PublicLayout.astro';
+
+const articles = [
+  {
+    image: '/assets/guerreoBlog.png', width: 617, height: 563,
+    alt: 'Guerrero con físico musculoso', category: 'Entrenamiento',
+    title: 'Hipertrofia: esculpir con paciencia',
+    excerpt: 'El músculo responde a tensión progresiva, buena técnica, volumen sostenible y recuperación. No hay un atajo más épico que repetir bien lo esencial.',
+  },
+  {
+    image: '/assets/alimenacionblog.png', width: 1166, height: 745,
+    alt: 'Frutas y alimentos nutritivos', category: 'Nutrición',
+    title: 'Alimenta el templo que habitas',
+    excerpt: 'Prioriza proteína suficiente, vegetales, carbohidratos que disfrutes y grasas de calidad. La mejor dieta es la que puedes sostener con calma.',
+  },
+  {
+    image: '/assets/descansoblog.png', width: 791, height: 881,
+    alt: 'Personas descansando', category: 'Recuperación',
+    title: 'El descanso también entrena',
+    excerpt: 'El entrenamiento da la señal; el sueño, la comida y los días suaves hacen posible la adaptación. Tu próxima sesión comienza cuando termina la actual.',
+  },
+];
+---
+
+<PublicLayout
+  title="Blog"
+  description="Fundamentos de entrenamiento, alimentación y descanso para avanzar con criterio."
+  image="/assets/blogportada.png"
+  user={Astro.locals.user}
+  currentPath={Astro.url.pathname}
+  footerText="Roman Colosseum · Aprende, practica, vuelve a intentarlo."
+>
+  <HeroMedia
+    image="/assets/blogportada.png"
+    alt="Biblioteca inspirada en la antigüedad"
+    eyebrow="El círculo de la sabiduría"
+    title="El blog del coliseo"
+    lead="Ideas sencillas, respaldadas por los fundamentos que convierten esfuerzo en progreso."
+    variant="compact"
+    width={1340}
+    height={670}
+    priority
+  />
+  <div class="page-shell">
+    <section class="section-flow" aria-labelledby="articles-title">
+      <SectionHeading eyebrow="Lecturas para tu travesía" title="Los pilares de una gran historia" id="articles-title" />
+      <div class="content-grid content-grid--three" data-tablet-columns="two">
+        {articles.map((article) => <ArticleCard {...article} />)}
+      </div>
+    </section>
+    <section class="section-flow" aria-label="Cita inspiradora">
+      <QuoteBlock quote="Nadie llega a Ítaca sin haber aprendido algo en el viaje." cite="Inspirado en Cavafis y La Odisea" />
+    </section>
+  </div>
+</PublicLayout>

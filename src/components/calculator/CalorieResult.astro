@@ -1,0 +1,43 @@
+---
+export interface Props {
+  calories?: number | null;
+  bmr?: number | null;
+  emptyMessage?: string;
+}
+
+const {
+  calories = null,
+  bmr = null,
+  emptyMessage = "Completa tus datos para ver una estimación.",
+} = Astro.props;
+const formatter = new Intl.NumberFormat("es-MX");
+---
+
+<output class="calorie-result" aria-live="polite">
+  <strong>{calories === null ? "—" : `${formatter.format(calories)} kcal`}</strong>
+  <span>
+    {calories === null
+      ? emptyMessage
+      : `Estimación de mantenimiento diario${bmr === null ? "." : ` · metabolismo basal: ${formatter.format(bmr)} kcal.`}`}
+  </span>
+</output>
+
+<style>
+  .calorie-result {
+    display: block;
+    margin-top: 2rem;
+    padding: 2.3rem;
+    border: 1px solid var(--color-line);
+    background: rgb(214 166 66 / 9%);
+  }
+
+  strong {
+    display: block;
+    color: var(--color-gold-light);
+    font: 700 clamp(4rem, 7vw, 6.6rem)/1 var(--font-display);
+  }
+
+  span {
+    color: var(--color-muted);
+  }
+</style>

@@ -1,0 +1,66 @@
+---
+export interface Props {
+  dayLabel: string;
+  title: string;
+  labelledby?: string;
+}
+
+const { dayLabel, title, labelledby = "routine-panel-title" } = Astro.props;
+---
+
+<section class="routine-panel" aria-labelledby={labelledby}>
+  <header class="routine-panel__header">
+    <div>
+      <p class="eyebrow">{dayLabel}</p>
+      <h2 id={labelledby}>{title}</h2>
+    </div>
+    {Astro.slots.has("actions") && <div class="routine-panel__actions"><slot name="actions" /></div>}
+  </header>
+  <div class="routine-panel__content"><slot /></div>
+</section>
+
+<style>
+  .routine-panel {
+    min-width: 0;
+    min-height: 47rem;
+    padding: 2.6rem;
+    border: 1px solid var(--color-line);
+    background: linear-gradient(145deg, rgb(35 45 39 / 94%), rgb(18 25 21 / 98%));
+  }
+
+  .routine-panel__header {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1.6rem;
+  }
+
+  h2 {
+    margin: 0;
+    font: 700 3.2rem/1.08 var(--font-display);
+  }
+
+  .routine-panel__actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 1rem;
+  }
+
+  .routine-panel__content {
+    display: grid;
+    gap: 1rem;
+    margin: 2.4rem 0;
+  }
+
+  @media (max-width: 560px) {
+    .routine-panel__header {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 450px) {
+    .routine-panel {
+      padding: 2rem;
+    }
+  }
+</style>

@@ -1,0 +1,341 @@
+---
+import FormField from '../../components/forms/FormField.astro';
+import FormMessage from '../../components/forms/FormMessage.astro';
+import FormStack from '../../components/forms/FormStack.astro';
+import DietDocument from '../../components/nutrition/DietDocument.astro';
+import DietPlanEditor from '../../components/nutrition/DietPlanEditor.astro';
+import Button from '../../components/ui/Button.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import PageIntro from '../../components/ui/PageIntro.astro';
+import Panel from '../../components/ui/Panel.astro';
+import { getApplication } from '../../infrastructure/composition/container';
+import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
+import { readErrorMessage, readInvalidField } from '../../presentation/feedback';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/iniciar-sesion');
+const application = getApplication();
+const [automaticDiet, manualDiet, specialistDiet, calorieHistory, specialists] = await Promise.all([
+  application.getDiet(user.id, 'ai'),
+  application.getDiet(user.id, 'manual'),
+  application.getDiet(user.id, 'specialist'),
+  application.getCalories(user.id),
+  application.getSpecialistsPage(user.id),
+]);
+const latestCalories = calorieHistory[0] ?? null;
+const dietProfile = {
+  name: user.name,
+  age: latestCalories?.age ?? null,
+  weightKg: latestCalories?.weightKg ?? null,
+  heightCm: latestCalories?.heightCm ?? null,
+};
+const automaticCalories = calorieHistory.find((item) => item.id === automaticDiet?.plan.calorieCalculationId)
+  ?? latestCalories;
+const automaticDietProfile = {
+  name: user.name,
+  age: automaticCalories?.age ?? null,
+  weightKg: automaticCalories?.weightKg ?? null,
+  heightCm: automaticCalories?.heightCm ?? null,
+};
+const nutritionRequest = specialists.activeRequests.nutritionist;
+const validTabs = ['ai', 'manual', 'specialist'];
+const requestedTab = Astro.url.searchParams.get('tab') ?? 'ai';
+const activeTab = validTabs.includes(requestedTab) ? requestedTab : 'ai';
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+const saved = Astro.url.searchParams.get('saved');
+const successMessage = saved === 'ai'
+  ? 'Tu dieta automática se generó con porciones detalladas.'
+  : saved === 'manual'
+    ? 'Tu dieta personalizada quedó guardada.'
+    : undefined;
+const goal = automaticDiet?.plan.goal ?? 'mantener';
+const preference = automaticDiet?.plan.preference ?? 'general';
+const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
+---
+
+<ProtectedLayout
+  title="Mi dieta"
+  description="Genera, crea o consulta planes de alimentación con porciones detalladas."
+  {user}
+  currentPath={Astro.url.pathname}
+  footerText="Las porciones son orientativas. Para necesidades clínicas, consulta a un profesional de la salud."
+>
+  <PageIntro
+    eyebrow="Nutrición personalizada"
+    title="Tu alimentación, en detalle"
+    lead="Elige cómo construir tu plan. Todas las modalidades usan comidas, ingredientes y porciones compatibles, y pueden descargarse en PDF."
+    compact
+  />
+
+  <FormMessage message={successMessage} tone="success" />
+  <FormMessage message={errorMessage} tone="error" />
+
+  <nav class="diet-tabs" aria-label="Modalidades de dieta" role="tablist" data-diet-tabs>
+    <a
+      id="diet-tab-ai"
+      href="?tab=ai"
+      role="tab"
+      aria-controls="diet-panel-ai"
+      aria-selected={activeTab === 'ai' ? 'true' : 'false'}
+      tabindex={activeTab === 'ai' ? 0 : -1}
+      class:list={{ 'is-active': activeTab === 'ai' }}
+      data-diet-tab="ai"
+    >
+      <span>01</span>
+      <strong>Dieta con IA</strong>
+      <small>Basada en tu calculadora</small>
+    </a>
+    <a
+      id="diet-tab-manual"
+      href="?tab=manual"
+      role="tab"
+      aria-controls="diet-panel-manual"
+      aria-selected={activeTab === 'manual' ? 'true' : 'false'}
+      tabindex={activeTab === 'manual' ? 0 : -1}
+      class:list={{ 'is-active': activeTab === 'manual' }}
+      data-diet-tab="manual"
+    >
+      <span>02</span>
+      <strong>Crear mi dieta</strong>
+      <small>Control completamente manual</small>
+    </a>
+    <a
+      id="diet-tab-specialist"
+      href="?tab=specialist"
+      role="tab"
+      aria-controls="diet-panel-specialist"
+      aria-selected={activeTab === 'specialist' ? 'true' : 'false'}
+      tabindex={activeTab === 'specialist' ? 0 : -1}
+      class:list={{ 'is-active': activeTab === 'specialist' }}
+      data-diet-tab="specialist"
+    >
+      <span>03</span>
+      <strong>Dieta de especialista</strong>
+      <small>Asignada por tu nutricionista</small>
+    </a>
+  </nav>
+
+  <section
+    id="diet-panel-ai"
+    class="diet-panel"
+    role="tabpanel"
+    aria-labelledby="diet-tab-ai"
+    hidden={activeTab !== 'ai'}
+    data-diet-panel="ai"
+  >
+    <div class:list={['calculator-status', { 'calculator-status--ready': Boolean(latestCalories) }]}>
+      <span class="calculator-status__icon" aria-hidden="true">{latestCalories ? '✓' : '!'}</span>
+      <div>
+        <strong>{latestCalories ? 'Perfil energético listo' : 'Falta completar la Calculadora de calorías'}</strong>
+        {latestCalories ? (
+          <p>Usaremos exclusivamente tu último registro: {latestCalories.weightKg} kg, {latestCalories.heightCm} cm y {latestCalories.age} años.</p>
+        ) : (
+          <p>Peso, altura y edad son obligatorios antes de generar una dieta automática.</p>
+        )}
+      </div>
+      <Button href="/app/calculadora" variant="subtle" size="small">
+        {latestCalories ? 'Actualizar datos' : 'Completar calculadora'}
+      </Button>
+    </div>
+
+    <div class="ai-planner">
+      <Panel labelledby="ai-diet-form-title">
+        <p class="eyebrow">Configuración</p>
+        <h2 id="ai-diet-form-title">Generar dieta personalizada</h2>
+        <p>El motor utiliza tu gasto energético guardado y devuelve ingredientes con cantidades en gramos, mililitros o unidades claras.</p>
+        <FormStack action="/api/diet/save" data-ai-diet-form>
+          <FormField label="Objetivo" for="diet-goal" required error={invalidField === 'goal' ? errorMessage : undefined}>
+            <select id="diet-goal" name="goal" required>
+              <option value="ganar" selected={goal === 'ganar'}>Ganar fuerza y masa</option>
+              <option value="mantener" selected={goal === 'mantener'}>Mantener energía</option>
+              <option value="perder" selected={goal === 'perder'}>Reducir grasa gradualmente</option>
+            </select>
+          </FormField>
+          <FormField label="Preferencia" for="diet-preference" required error={invalidField === 'preference' ? errorMessage : undefined}>
+            <select id="diet-preference" name="preference" required>
+              <option value="general" selected={preference === 'general'}>Alimentación general</option>
+              <option value="vegetariana" selected={preference === 'vegetariana'}>Vegetariana</option>
+              <option value="vegana" selected={preference === 'vegana'}>Vegana</option>
+              <option value="pescetariana" selected={preference === 'pescetariana'}>Pescetariana</option>
+              <option value="sin_lactosa" selected={preference === 'sin_lactosa'}>Sin lactosa</option>
+              <option value="rapida" selected={preference === 'rapida'}>Rápida de preparar</option>
+            </select>
+          </FormField>
+          <FormField label="Comidas al día" for="diet-meals" hint="Puedes elegir más de cinco comidas." required error={invalidField === 'meals' ? errorMessage : undefined}>
+            <input id="diet-meals" name="meals" type="number" min="1" max="24" step="1" required value={mealCount} />
+          </FormField>
+          <Button type="submit" disabled={!latestCalories} data-ai-submit>Generar mi dieta</Button>
+          <p class="generation-note" data-ai-status role="status">La generación puede tardar algunos segundos.</p>
+        </FormStack>
+      </Panel>
+
+      <aside class="calorie-snapshot" aria-label="Datos usados por la generación">
+        <p class="eyebrow">Fuente de personalización</p>
+        <h2>Último cálculo</h2>
+        {latestCalories ? (
+          <dl>
+            <div><dt>Mantenimiento</dt><dd>{latestCalories.maintenanceCalories.toLocaleString('es-MX')} <span>kcal</span></dd></div>
+            <div><dt>Peso</dt><dd>{latestCalories.weightKg} <span>kg</span></dd></div>
+            <div><dt>Altura</dt><dd>{latestCalories.heightCm} <span>cm</span></dd></div>
+            <div><dt>Edad</dt><dd>{latestCalories.age} <span>años</span></dd></div>
+          </dl>
+        ) : (
+          <EmptyState compact message="Todavía no hay un cálculo energético asociado a tu cuenta.">
+            <Button slot="actions" href="/app/calculadora" size="small">Abrir calculadora</Button>
+          </EmptyState>
+        )}
+        <p class="calorie-snapshot__note">La dieta automática siempre toma estos datos del servidor; no pueden reemplazarse desde este formulario.</p>
+      </aside>
+    </div>
+
+    <div class="diet-result">
+      {automaticDiet ? (
+        <DietDocument plan={automaticDiet.plan} pdfHref="/api/diet/pdf/ai" profile={automaticDietProfile} />
+      ) : (
+        <EmptyState
+          title="Tu primera dieta automática aparecerá aquí"
+          message={latestCalories
+            ? 'Selecciona objetivo, preferencia y número de comidas para generar un plan con porciones detalladas.'
+            : 'Completa primero la Calculadora de calorías para habilitar la generación.'}
+        />
+      )}
+    </div>
+  </section>
+
+  <section
+    id="diet-panel-manual"
+    class="diet-panel"
+    role="tabpanel"
+    aria-labelledby="diet-tab-manual"
+    hidden={activeTab !== 'manual'}
+    data-diet-panel="manual"
+  >
+    <header class="panel-intro">
+      <p class="eyebrow">Tu estructura, tus elecciones</p>
+      <h2>Crear mi dieta</h2>
+      <p>No existe un límite de cinco comidas en la interfaz. Define tantos momentos del día como necesites y detalla cada porción.</p>
+    </header>
+    {manualDiet && (
+      <div class="diet-result diet-result--existing">
+        <DietDocument plan={manualDiet.plan} pdfHref="/api/diet/pdf/manual" profile={dietProfile} />
+      </div>
+    )}
+    <details class="editor-disclosure" open={!manualDiet}>
+      <summary>{manualDiet ? 'Editar mi dieta' : 'Comenzar mi dieta'}</summary>
+      <div class="editor-disclosure__content">
+        <DietPlanEditor
+          id="manual-diet-editor"
+          action="/api/diet/manual/save"
+          plan={manualDiet?.plan}
+          submitLabel={manualDiet ? 'Guardar cambios' : 'Crear mi dieta'}
+        />
+      </div>
+    </details>
+  </section>
+
+  <section
+    id="diet-panel-specialist"
+    class="diet-panel"
+    role="tabpanel"
+    aria-labelledby="diet-tab-specialist"
+    hidden={activeTab !== 'specialist'}
+    data-diet-panel="specialist"
+  >
+    <header class="panel-intro">
+      <p class="eyebrow">Seguimiento profesional</p>
+      <h2>Dieta de especialista</h2>
+      <p>Este documento solo puede ser creado o actualizado por el nutricionista cuya asesoría hayas solicitado y aceptado.</p>
+    </header>
+    {specialistDiet ? (
+      <DietDocument
+        plan={specialistDiet.plan}
+        pdfHref="/api/diet/pdf/specialist"
+        authorName={nutritionRequest?.specialistName}
+        profile={dietProfile}
+      />
+    ) : nutritionRequest?.status === 'accepted' ? (
+      <EmptyState
+        title={`Asesoría activa con ${nutritionRequest.specialistName}`}
+        message="Tu nutricionista todavía no ha asignado una dieta. Cuando la guarde desde su lista de asesorados, aparecerá aquí automáticamente."
+      />
+    ) : nutritionRequest?.status === 'pending' ? (
+      <EmptyState
+        title="Solicitud nutricional pendiente"
+        message={`Estamos esperando que ${nutritionRequest.specialistName} acepte tu solicitud. Después podrá preparar tu dieta.`}
+      />
+    ) : (
+      <EmptyState
+        title="Aún no tienes nutricionista asignado"
+        message="Solicita orientación a un nutricionista para recibir en esta sección un plan profesional con el mismo formato de comidas y porciones."
+      >
+        <Button slot="actions" href="/app/especialistas" size="small">Buscar nutricionista</Button>
+      </EmptyState>
+    )}
+  </section>
+</ProtectedLayout>
+
+<script>
+  import '../../scripts/diet-tabs';
+
+  const form = document.querySelector<HTMLFormElement>('[data-ai-diet-form]');
+  form?.addEventListener('submit', () => {
+    const button = form.querySelector<HTMLButtonElement>('[data-ai-submit]');
+    const status = form.querySelector<HTMLElement>('[data-ai-status]');
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Generando plan...';
+    }
+    if (status) status.textContent = 'Estamos calculando porciones y organizando tus comidas.';
+  });
+</script>
+
+<style>
+  :global(.form-message) { margin-top: 1.4rem; }
+  .diet-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 3rem; border: 1px solid var(--color-line); background: rgb(9 15 11 / 62%); }
+  .diet-tabs a { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; padding: 1.6rem; border-right: 1px solid var(--color-line); color: var(--color-muted); transition: background var(--transition-fast), color var(--transition-fast); }
+  .diet-tabs a:last-child { border-right: 0; }
+  .diet-tabs a > span { grid-row: 1 / 3; color: var(--color-gold); font: 700 1.8rem var(--font-display); }
+  .diet-tabs strong { color: var(--color-paper); font-size: 1.3rem; letter-spacing: .07em; text-transform: uppercase; }
+  .diet-tabs small { font-size: 1.15rem; }
+  .diet-tabs a:hover, .diet-tabs a.is-active { background: rgb(214 166 66 / 9%); }
+  .diet-tabs a.is-active { box-shadow: inset 0 -.3rem var(--color-gold); }
+  .diet-tabs a.is-active strong, .diet-tabs a.is-active small { color: var(--color-gold-light); }
+  .diet-panel { margin-top: 2rem; }
+  .calculator-status { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 1.3rem; padding: 1.4rem 1.6rem; border: 1px solid rgb(242 139 121 / 35%); background: rgb(242 139 121 / 6%); }
+  .calculator-status--ready { border-color: rgb(152 207 154 / 34%); background: rgb(152 207 154 / 6%); }
+  .calculator-status__icon { display: grid; width: 3.4rem; height: 3.4rem; place-items: center; border: 1px solid currentColor; border-radius: 50%; color: var(--color-danger); font-weight: 900; }
+  .calculator-status--ready .calculator-status__icon { color: var(--color-success); }
+  .calculator-status strong { color: var(--color-paper); }
+  .calculator-status p { margin: .2rem 0 0; color: var(--color-muted); font-size: 1.3rem; }
+  .ai-planner { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(28rem, .75fr); gap: 1.6rem; margin-top: 1.6rem; }
+  .calorie-snapshot { padding: 2.6rem; border: 1px solid var(--color-line); background: linear-gradient(155deg, rgb(23 33 27 / 98%), rgb(10 16 12 / 98%)); }
+  .calorie-snapshot h2 { margin: 0; font: 700 3rem var(--font-display); }
+  .calorie-snapshot dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; margin: 2rem 0; background: var(--color-line-soft); }
+  .calorie-snapshot dl > div { padding: 1.4rem; background: #111914; }
+  .calorie-snapshot dt { color: var(--color-muted); font-size: 1rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  .calorie-snapshot dd { margin: .35rem 0 0; color: var(--color-paper); font: 700 2.2rem var(--font-display); }
+  .calorie-snapshot dd span { color: var(--color-muted); font: 500 1.1rem var(--font-body); }
+  .calorie-snapshot__note { color: var(--color-muted); font-size: 1.2rem; }
+  .generation-note { margin: -.6rem 0 0; color: var(--color-muted); font-size: 1.2rem; }
+  .diet-result { margin-top: 2rem; }
+  .diet-result--existing { margin: 0 0 2rem; }
+  .panel-intro { max-width: 78rem; padding: 1.2rem 0 2rem; }
+  .panel-intro h2 { margin: 0; font: 700 clamp(3rem, 5vw, 4.5rem) var(--font-display); }
+  .panel-intro > p:last-child { color: var(--color-muted); }
+  .editor-disclosure { border: 1px solid var(--color-line); }
+  .editor-disclosure > summary { padding: 1.5rem 1.8rem; background: rgb(214 166 66 / 7%); color: var(--color-gold-light); cursor: pointer; font-size: 1.2rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+  .editor-disclosure__content { padding: 1.6rem; border-top: 1px solid var(--color-line); }
+  @media (max-width: 800px) {
+    .diet-tabs { grid-template-columns: 1fr; }
+    .diet-tabs a { border-right: 0; border-bottom: 1px solid var(--color-line); }
+    .diet-tabs a:last-child { border-bottom: 0; }
+    .diet-tabs a.is-active { box-shadow: inset .3rem 0 var(--color-gold); }
+    .ai-planner { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .calculator-status { grid-template-columns: auto 1fr; }
+    .calculator-status :global(.button) { grid-column: 1 / -1; }
+    .editor-disclosure__content { padding: .8rem; }
+  }
+</style>

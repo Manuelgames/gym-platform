@@ -1,0 +1,34 @@
+---
+export interface Props {
+  columns?: 2 | 3;
+  class?: string;
+}
+
+const { columns = 2, class: className = "" } = Astro.props;
+---
+
+<div class:list={["field-row", `field-row--${columns}`, className]}>
+  <slot />
+</div>
+
+<style>
+  .field-row {
+    display: grid;
+    gap: 1.4rem;
+  }
+
+  .field-row--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-row--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (max-width: 800px) {
+    .field-row--2,
+    .field-row--3 {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

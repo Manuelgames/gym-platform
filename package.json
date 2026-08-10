@@ -1,0 +1,31 @@
+{
+  "name": "roman-colosseum",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "start": "node ./dist/server/entry.mjs",
+    "check": "astro check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:smoke": "node ./scripts/smoke.mjs"
+  },
+  "dependencies": {
+    "@astrojs/node": "11.0.3",
+    "astro": "7.1.6",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@types/node": "^24.10.0",
+    "typescript": "6.0.3",
+    "vite": "8.2.0",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}

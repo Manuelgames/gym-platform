@@ -1,0 +1,143 @@
+---
+import type {
+  ActiveSpecialistRequestView,
+  SpecialistProfileView,
+} from '../../application/facade';
+import type { SpecialistRole } from '../../domain/specialists/specialist';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  profile: SpecialistProfileView;
+  role: SpecialistRole;
+  currentUserId: string;
+  activeRequest?: ActiveSpecialistRequestView;
+}
+
+const { profile, role, currentUserId, activeRequest } = Astro.props;
+const isSelf = profile.userId === currentUserId;
+const isSelected = activeRequest?.specialistProfileId === profile.id;
+const roleOccupied = Boolean(activeRequest);
+const statusLabel = activeRequest?.status === 'accepted' ? 'Asesoría activa' : 'Solicitud pendiente';
+const roleLabel = role === 'trainer' ? 'Entrenador personal' : 'Nutricionista';
+---
+
+<article class:list={["specialist-card", { "specialist-card--selected": isSelected }]}>
+  <img
+    class="specialist-card__photo"
+    src={profile.profilePhotoId
+      ? `/api/profile/photo/${profile.userId}`
+      : `/api/specialists/media/${profile.photo.id}`}
+    alt={`Fotografía de ${profile.name}`}
+    width="480"
+    height="360"
+    loading="lazy"
+  />
+  <div class="specialist-card__body">
+    <div class="specialist-card__heading">
+      <div>
+        <p class="eyebrow">{roleLabel}</p>
+        <h3>{profile.name}</h3>
+      </div>
+      {isSelf && <span class="status-chip">Tu perfil</span>}
+      {isSelected && <span class="status-chip status-chip--active">{statusLabel}</span>}
+    </div>
+
+    <p class="specialist-card__identifier">
+      <span>Identificador</span>
+      <code>{profile.id}</code>
+    </p>
+    <p>{profile.presentation}</p>
+    <details>
+      <summary>Experiencia y certificados</summary>
+      <p class="specialist-card__experience">{profile.experience}</p>
+      {profile.certificates.length > 0 ? (
+        <ul class="certificate-list">
+          {profile.certificates.map((certificate) => (
+            <li><a href={`/api/specialists/media/${certificate.id}`} target="_blank" rel="noreferrer">{certificate.originalName}</a></li>
+          ))}
+        </ul>
+      ) : <p class="specialist-card__muted">No adjuntó certificados.</p>}
+    </details>
+
+    <div class="specialist-card__action">
+      {isSelf ? (
+        <p>No puedes solicitar orientación a tu propio perfil.</p>
+      ) : isSelected ? (
+        <p>Este especialista ocupa actualmente tu cupo de {roleLabel.toLowerCase()}.</p>
+      ) : roleOccupied ? (
+        <Button disabled size="small">Ya elegiste otro perfil</Button>
+      ) : (
+        <form method="POST" action="/api/specialists/request/create">
+          <input type="hidden" name="specialistProfileId" value={profile.id} />
+          <input type="hidden" name="role" value={role} />
+          <Button type="submit" size="small">Solicitar orientación</Button>
+        </form>
+      )}
+    </div>
+  </div>
+</article>
+
+<style>
+  .specialist-card {
+    display: grid;
+    grid-template-rows: 22rem 1fr;
+    min-width: 0;
+    border: 1px solid var(--color-line);
+    background: linear-gradient(145deg, rgb(38 49 43 / 96%), rgb(19 27 23 / 98%));
+  }
+
+  .specialist-card--selected { border-color: var(--color-gold); }
+
+  .specialist-card__photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: var(--color-surface);
+  }
+
+  .specialist-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    padding: 2.2rem;
+  }
+
+  .specialist-card__heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: start;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  h3 { margin: 0.4rem 0 0; font: 700 2.4rem var(--font-display); }
+  p { margin: 0; color: var(--color-muted); }
+  .specialist-card__identifier { display: grid; gap: 0.4rem; }
+  .specialist-card__identifier span {
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .specialist-card__identifier code { color: var(--color-gold-light); overflow-wrap: anywhere; }
+  summary { cursor: pointer; color: var(--color-gold-light); font-weight: 700; }
+  details[open] summary { margin-bottom: 1rem; }
+  .specialist-card__experience { white-space: pre-line; }
+  .specialist-card__muted { font-size: 1.25rem; }
+  .certificate-list { margin: 1rem 0 0; padding-left: 1.8rem; }
+  .certificate-list a { color: var(--color-gold-light); }
+
+  .status-chip {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--color-line);
+    color: var(--color-muted);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .status-chip--active { border-color: var(--color-gold); color: var(--color-gold-light); }
+  .specialist-card__action { margin-top: auto; padding-top: 0.6rem; }
+  .specialist-card__action form { margin: 0; }
+</style>

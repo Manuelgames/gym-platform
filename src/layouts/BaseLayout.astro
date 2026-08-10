@@ -1,0 +1,70 @@
+---
+import "../styles/global.css";
+
+export interface Props {
+  /** Título específico de la vista; el layout añade la marca si aún no está presente. */
+  title: string;
+  description?: string;
+  canonical?: string | URL;
+  image?: string;
+  noindex?: boolean;
+  bodyClass?: string;
+  lang?: string;
+}
+
+const {
+  title,
+  description = "Rutinas, alimentación y herramientas para entrenar con propósito en Roman Colosseum.",
+  canonical,
+  image = "/assets/fondotitulo.jpg",
+  noindex = false,
+  bodyClass = "",
+  lang = "es",
+} = Astro.props;
+
+const brand = "Roman Colosseum";
+const documentTitle = title.includes(brand) ? title : `${title} | ${brand}`;
+const origin = Astro.site ?? Astro.url.origin;
+const canonicalUrl = new URL(canonical?.toString() ?? Astro.url.pathname, origin);
+const socialImageUrl = new URL(image, origin);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0c100f" />
+    <meta name="generator" content={Astro.generator} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <link rel="canonical" href={canonicalUrl.toString()} />
+    <link rel="icon" href="/assets/logosintexto.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap"
+    />
+
+    <meta property="og:site_name" content={brand} />
+    <meta property="og:locale" content="es_MX" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={documentTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl.toString()} />
+    <meta property="og:image" content={socialImageUrl.toString()} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={documentTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={socialImageUrl.toString()} />
+
+    <title>{documentTitle}</title>
+    <slot name="head" />
+  </head>
+  <body class={bodyClass}>
+    <a class="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
+    <slot />
+  </body>
+</html>

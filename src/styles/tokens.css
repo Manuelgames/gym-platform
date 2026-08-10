@@ -1,0 +1,46 @@
+:root {
+  color-scheme: dark;
+
+  /* Paleta de la identidad Roman Colosseum. */
+  --color-ink: #0c100f;
+  --color-stone: #18201d;
+  --color-surface: #202a25;
+  --color-surface-raised: #29352e;
+  --color-paper: #f5eedc;
+  --color-muted: #b9b8a9;
+  --color-gold: #d6a642;
+  --color-gold-light: #f2d78a;
+  --color-danger: #f28b79;
+  --color-success: #98cf9a;
+  --color-line: rgb(231 194 104 / 26%);
+  --color-line-soft: rgb(231 194 104 / 16%);
+
+  --font-display: "Cinzel", Georgia, serif;
+  --font-body: "DM Sans", Arial, sans-serif;
+
+  --page-max: 118rem;
+  --page-gutter: max(2rem, calc((100vw - var(--page-max)) / 2));
+  --header-height: 7.2rem;
+
+  --space-1: 0.4rem;
+  --space-2: 0.8rem;
+  --space-3: 1.2rem;
+  --space-4: 1.6rem;
+  --space-5: 2rem;
+  --space-6: 2.4rem;
+  --space-8: 3.2rem;
+  --space-10: 4rem;
+  --space-12: 4.8rem;
+  --space-16: 6.4rem;
+  --space-20: 8rem;
+
+  --shadow-raised: 0 2.5rem 7rem rgb(0 0 0 / 40%);
+  --shadow-focus: 0 0 0 0.3rem rgb(214 166 66 / 18%);
+  --transition-fast: 180ms ease;
+}
+
+@media (max-width: 800px) {
+  :root {
+    --page-gutter: 1.5rem;
+  }
+}

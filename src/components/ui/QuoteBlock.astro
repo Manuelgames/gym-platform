@@ -1,0 +1,42 @@
+---
+export interface Props {
+  quote: string;
+  cite?: string;
+}
+
+const { quote, cite } = Astro.props;
+---
+
+<figure class="quote-block">
+  <blockquote>“{quote}”</blockquote>
+  {cite && <figcaption>— {cite}</figcaption>}
+</figure>
+
+<style>
+  .quote-block {
+    margin-inline: 0;
+    padding: 4rem;
+    border-left: 3px solid var(--color-gold);
+    background: rgb(214 166 66 / 8%);
+  }
+
+  blockquote {
+    margin: 0;
+    color: var(--color-paper);
+    font: 600 clamp(2rem, 3vw, 3.2rem) / 1.25 var(--font-display);
+  }
+
+  figcaption {
+    margin-top: 1.4rem;
+    color: var(--color-gold-light);
+    font: 600 1.1rem var(--font-body);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 450px) {
+    .quote-block {
+      padding: 2.6rem;
+    }
+  }
+</style>

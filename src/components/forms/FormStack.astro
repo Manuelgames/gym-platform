@@ -1,0 +1,41 @@
+---
+export interface Props {
+  action?: string;
+  method?: "get" | "post";
+  id?: string;
+  class?: string;
+  autocomplete?: "on" | "off";
+  novalidate?: boolean;
+  [attribute: string]: unknown;
+}
+
+const {
+  action,
+  method = "post",
+  id,
+  class: className = "",
+  autocomplete,
+  novalidate = false,
+  ...attributes
+} = Astro.props;
+---
+
+<form
+  {...attributes}
+  class:list={["form-stack", className]}
+  {action}
+  {method}
+  {id}
+  {autocomplete}
+  {novalidate}
+>
+  <slot />
+</form>
+
+<style>
+  .form-stack {
+    display: grid;
+    gap: 1.6rem;
+    margin-top: 2.7rem;
+  }
+</style>

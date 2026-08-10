@@ -1,0 +1,31 @@
+---
+export interface Props {
+  title: string;
+  description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<article class="meal-card">
+  <h3>{title}</h3>
+  <p>{description}</p>
+</article>
+
+<style>
+  .meal-card {
+    padding: 1.5rem;
+    border-left: 3px solid var(--color-gold);
+    background: rgb(7 12 9 / 40%);
+  }
+
+  h3 {
+    margin: 0 0 0.4rem;
+    font: 700 1.8rem var(--font-display);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-muted);
+  }
+</style>

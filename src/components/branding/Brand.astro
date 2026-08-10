@@ -1,0 +1,60 @@
+---
+export interface Props {
+  /** Destino del logotipo; cambia entre portada y área privada según el layout. */
+  href?: string;
+  /** Reduce el texto para contextos estrechos sin perder el nombre accesible. */
+  compact?: boolean;
+  class?: string;
+}
+
+const { href = "/", compact = false, class: className = "" } = Astro.props;
+---
+
+<a class:list={["brand", { "brand--compact": compact }, className]} href={href} aria-label="Roman Colosseum">
+  <img src="/assets/logosintexto.png" alt="" width="504" height="522" decoding="async" />
+  <span>Roman Colosseum</span>
+</a>
+
+<style>
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    color: var(--color-gold-light);
+    font: 700 1.85rem/1 var(--font-display);
+    letter-spacing: 0.05em;
+  }
+
+  .brand img {
+    width: 3.8rem;
+    height: 3.8rem;
+    flex: 0 0 auto;
+    object-fit: contain;
+  }
+
+  .brand span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand--compact span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  @media (max-width: 450px) {
+    .brand {
+      font-size: 1.45rem;
+    }
+
+    .brand img {
+      width: 3.3rem;
+      height: 3.3rem;
+    }
+  }
+</style>

@@ -1,0 +1,38 @@
+---
+export interface Props {
+  numeral: string;
+  title: string;
+  description: string;
+}
+
+const { numeral, title, description } = Astro.props;
+---
+
+<article class="feature-card">
+  <span class="feature-card__number" aria-hidden="true">{numeral}</span>
+  <h3>{title}</h3>
+  <p>{description}</p>
+</article>
+
+<style>
+  .feature-card {
+    padding: 2.4rem;
+    border: 1px solid var(--color-line);
+    background: linear-gradient(145deg, rgb(38 49 43 / 96%), rgb(19 27 23 / 98%));
+  }
+
+  .feature-card__number {
+    color: var(--color-gold);
+    font: 700 3rem/1 var(--font-display);
+  }
+
+  h3 {
+    margin: 1.7rem 0 0.8rem;
+    font: 700 2rem var(--font-display);
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-muted);
+  }
+</style>

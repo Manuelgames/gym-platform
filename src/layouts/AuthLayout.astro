@@ -1,0 +1,35 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import SiteHeader from "../components/navigation/SiteHeader.astro";
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string | URL;
+}
+
+const { title, description, canonical } = Astro.props;
+---
+
+<BaseLayout {title} {description} {canonical} noindex bodyClass="auth-page">
+  <Fragment slot="head"><slot name="head" /></Fragment>
+  <SiteHeader
+    user={Astro.locals.user}
+    currentPath={Astro.url.pathname}
+    variant="public"
+    accessMode={Astro.locals.accessMode}
+    showWork={Astro.locals.specialistRoles.length > 0}
+  />
+  <main id="contenido-principal" class="auth-shell" tabindex="-1">
+    <slot />
+  </main>
+</BaseLayout>
+
+<style is:global>
+  .auth-page .auth-shell {
+    display: grid;
+    min-height: calc(100vh - 8rem);
+    place-items: center;
+    padding: 2.4rem;
+  }
+</style>

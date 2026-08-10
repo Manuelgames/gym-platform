@@ -1,0 +1,38 @@
+---
+export interface Props {
+  as?: "section" | "aside" | "div";
+  labelledby?: string;
+  class?: string;
+}
+
+const { as = "section", labelledby, class: className = "" } = Astro.props;
+const Tag = as;
+---
+
+<Tag class:list={["panel", className]} aria-labelledby={labelledby}>
+  <slot />
+</Tag>
+
+<style>
+  .panel {
+    min-width: 0;
+    padding: 2.6rem;
+    border: 1px solid var(--color-line);
+    background: linear-gradient(145deg, rgb(37 48 42 / 93%), rgb(17 25 20 / 98%));
+  }
+
+  .panel :global(h2) {
+    margin: 0 0 0.8rem;
+    font: 700 3rem/1.05 var(--font-display);
+  }
+
+  .panel :global(p) {
+    color: var(--color-muted);
+  }
+
+  @media (max-width: 450px) {
+    .panel {
+      padding: 2rem;
+    }
+  }
+</style>

@@ -1,0 +1,252 @@
+---
+import FormField from '../../components/forms/FormField.astro';
+import FormMessage from '../../components/forms/FormMessage.astro';
+import FormStack from '../../components/forms/FormStack.astro';
+import SpecialistCard from '../../components/specialists/SpecialistCard.astro';
+import Button from '../../components/ui/Button.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import PageIntro from '../../components/ui/PageIntro.astro';
+import Panel from '../../components/ui/Panel.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import { getApplication } from '../../infrastructure/composition/container';
+import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
+import { readErrorMessage, readInvalidField } from '../../presentation/feedback';
+import { filterSpecialistsById } from '../../presentation/specialist-search';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/iniciar-sesion');
+const view = await getApplication().getSpecialistsPage(user.id);
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+const requestedRole = Astro.url.searchParams.get('requested');
+const updatedAction = Astro.url.searchParams.get('updated');
+const successMessage = requestedRole === 'trainer'
+  ? 'Tu solicitud de entrenador personal fue enviada.'
+  : requestedRole === 'nutritionist'
+    ? 'Tu solicitud de nutricionista fue enviada.'
+    : updatedAction === 'cancel'
+      ? 'La solicitud o asesoría fue cancelada; el cupo vuelve a estar disponible.'
+      : undefined;
+const trainerRequest = view.activeRequests.trainer;
+const nutritionRequest = view.activeRequests.nutritionist;
+const specialistId = Astro.url.searchParams.get('specialistId')?.trim() ?? '';
+const isSearching = specialistId.length > 0;
+const visibleTrainers = filterSpecialistsById(view.trainers, specialistId);
+const visibleNutritionists = filterSpecialistsById(view.nutritionists, specialistId);
+const hasSearchResults = visibleTrainers.length > 0 || visibleNutritionists.length > 0;
+const statusText = (status: 'pending' | 'accepted') => (
+  status === 'pending' ? 'Esperando respuesta' : 'Asesoría aceptada'
+);
+const activeRoleLabels = view.myProfile?.roles.map((role) => (
+  role === 'trainer' ? 'Entrenador personal' : 'Nutricionista'
+)) ?? [];
+---
+
+<ProtectedLayout
+  title="Especialistas"
+  description="Elige orientación de entrenamiento y nutrición o registra tu perfil profesional."
+  {user}
+  currentPath={Astro.url.pathname}
+  footerText="Roman Colosseum · La orientación complementa tu criterio; no sustituye atención médica."
+>
+  <PageIntro
+    eyebrow="Orientación personalizada"
+    title="Especialistas"
+    lead="Puedes mantener una solicitud o asesoría de entrenamiento y otra de nutrición al mismo tiempo. Cada rama se administra de forma independiente."
+    compact
+  />
+
+  <FormMessage message={successMessage} tone="success" />
+  <FormMessage message={errorMessage} tone="error" />
+
+  <section class="section-flow" aria-labelledby="selections-title">
+    <SectionHeading eyebrow="Tus elecciones" title="Un especialista por cada rama" id="selections-title" />
+    <div class="content-grid specialist-selections">
+      <Panel labelledby="trainer-selection">
+        <h2 id="trainer-selection">Entrenador personal</h2>
+        {trainerRequest ? (
+          <div class="selection-detail">
+            <strong>{trainerRequest.specialistName}</strong>
+            <span>{statusText(trainerRequest.status)}</span>
+            <form method="POST" action="/api/specialists/request/action">
+              <input type="hidden" name="requestId" value={trainerRequest.id} />
+              <input type="hidden" name="action" value="cancel" />
+              <Button type="submit" size="small" variant="danger">{trainerRequest.status === 'pending' ? 'Cancelar solicitud' : 'Finalizar orientación'}</Button>
+            </form>
+          </div>
+        ) : <p>Tienes libre el cupo de entrenamiento.</p>}
+      </Panel>
+      <Panel labelledby="nutrition-selection">
+        <h2 id="nutrition-selection">Nutricionista</h2>
+        {nutritionRequest ? (
+          <div class="selection-detail">
+            <strong>{nutritionRequest.specialistName}</strong>
+            <span>{statusText(nutritionRequest.status)}</span>
+            <form method="POST" action="/api/specialists/request/action">
+              <input type="hidden" name="requestId" value={nutritionRequest.id} />
+              <input type="hidden" name="action" value="cancel" />
+              <Button type="submit" size="small" variant="danger">{nutritionRequest.status === 'pending' ? 'Cancelar solicitud' : 'Finalizar orientación'}</Button>
+            </form>
+          </div>
+        ) : <p>Tienes libre el cupo de nutrición.</p>}
+      </Panel>
+    </div>
+  </section>
+
+  <section class="section-flow" aria-labelledby="specialist-search-title">
+    <SectionHeading eyebrow="Búsqueda directa" title="Encuentra por identificador" id="specialist-search-title" />
+    <Panel labelledby="specialist-search-title">
+      <form class="specialist-search" method="GET" action="/app/especialistas" role="search">
+        <FormField
+          label="Identificador del especialista"
+          for="specialist-search-id"
+          hint="Escribe o pega el identificador completo. La búsqueda revisa entrenadores personales y nutricionistas."
+        >
+          <input
+            id="specialist-search-id"
+            name="specialistId"
+            type="search"
+            value={specialistId}
+            maxlength="80"
+            placeholder="Ej. 550e8400-e29b-41d4-a716-446655440000"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </FormField>
+        <div class="specialist-search__actions">
+          <Button type="submit">Buscar especialista</Button>
+          {isSearching && <Button href="/app/especialistas" variant="subtle">Mostrar todos</Button>}
+        </div>
+      </form>
+      {isSearching && hasSearchResults && (
+        <p class="specialist-search__status" role="status">
+          Especialista encontrado. Se muestra en cada especialidad que tiene activa.
+        </p>
+      )}
+    </Panel>
+  </section>
+
+  {isSearching && !hasSearchResults && (
+    <section class="section-flow" aria-label="Resultado de la búsqueda">
+      <EmptyState
+        title="No encontramos ese especialista"
+        message="Revisa que hayas copiado el identificador completo y vuelve a intentarlo."
+        compact
+      />
+    </section>
+  )}
+
+  {(!isSearching || visibleTrainers.length > 0) && (
+    <section class="section-flow" aria-labelledby="trainers-title">
+      <SectionHeading eyebrow="División I" title="Entrenadores personales" id="trainers-title" />
+      {visibleTrainers.length > 0 ? (
+        <div class="specialist-directory">
+          {visibleTrainers.map((profile) => (
+            <SpecialistCard
+              {profile}
+              role="trainer"
+              currentUserId={user.id}
+              activeRequest={trainerRequest}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="Aún no hay entrenadores" message="El primer perfil con este rol aparecerá aquí automáticamente." compact />
+      )}
+    </section>
+  )}
+
+  {(!isSearching || visibleNutritionists.length > 0) && (
+    <section class="section-flow" aria-labelledby="nutritionists-title">
+      <SectionHeading eyebrow="División II" title="Nutricionistas" id="nutritionists-title" />
+      {visibleNutritionists.length > 0 ? (
+        <div class="specialist-directory">
+          {visibleNutritionists.map((profile) => (
+            <SpecialistCard
+              {profile}
+              role="nutritionist"
+              currentUserId={user.id}
+              activeRequest={nutritionRequest}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState title="Aún no hay nutricionistas" message="El primer perfil con este rol aparecerá aquí automáticamente." compact />
+      )}
+    </section>
+  )}
+
+  <section class="section-flow" aria-labelledby="join-title">
+    <SectionHeading eyebrow="Comparte tu experiencia" title="Forma parte de los especialistas" id="join-title" />
+    {view.myProfile ? (
+      <Panel labelledby="existing-profile-title">
+        <h2 id="existing-profile-title">Tu perfil ya está activo</h2>
+        <p><strong>Identificador:</strong> <code>{view.myProfile.id}</code></p>
+        <p><strong>Roles:</strong> {activeRoleLabels.join(' y ')}.</p>
+        <Button href="/app/mi-trabajo">Abrir Mi trabajo</Button>
+      </Panel>
+    ) : (
+      <Panel labelledby="application-title">
+        <h2 id="application-title">Presenta tu perfil profesional</h2>
+        <p>Al completar el registro se generará un identificador único. Los roles quedan separados para poder cambiar su estado en una evolución posterior.</p>
+        <FormStack
+          action="/api/specialists/profile/create"
+          enctype="multipart/form-data"
+          autocomplete="off"
+        >
+          <FormField label="Presentación" for="specialist-presentation" hint="Entre 40 y 800 caracteres: explica cómo acompañas a las personas." required error={invalidField === 'presentation' ? errorMessage : undefined}>
+            <textarea id="specialist-presentation" name="presentation" required minlength="40" maxlength="800" rows="5"></textarea>
+          </FormField>
+
+          <FormField label="Experiencia" for="specialist-experience" hint="Entre 20 y 2000 caracteres: formación, trayectoria y enfoque de trabajo." required error={invalidField === 'experience' ? errorMessage : undefined}>
+            <textarea id="specialist-experience" name="experience" required minlength="20" maxlength="2000" rows="7"></textarea>
+          </FormField>
+
+          <fieldset class:list={{ "role-fieldset": true, "role-fieldset--error": invalidField === 'roles' }}>
+            <legend>Roles a postular <span aria-hidden="true">*</span></legend>
+            <p>Puedes seleccionar uno o ambos.</p>
+            <label><input type="checkbox" name="roles" value="trainer" /> Entrenador personal</label>
+            <label><input type="checkbox" name="roles" value="nutritionist" /> Nutricionista</label>
+            {invalidField === 'roles' && <small role="alert">{errorMessage}</small>}
+          </fieldset>
+
+          <FormField label="Fotografía" for="specialist-photo" hint="JPEG, PNG o WebP; máximo 4 MB." required error={invalidField === 'photo' ? errorMessage : undefined}>
+            <input id="specialist-photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" required />
+          </FormField>
+
+          <FormField label="Certificados opcionales" for="specialist-certificates" hint="Hasta tres archivos PDF de 4 MB cada uno." error={invalidField === 'certificates' ? errorMessage : undefined}>
+            <input id="specialist-certificates" name="certificates" type="file" accept="application/pdf,.pdf" multiple />
+          </FormField>
+
+          <Button type="submit">Registrar perfil y abrir Mi trabajo</Button>
+        </FormStack>
+      </Panel>
+    )}
+  </section>
+</ProtectedLayout>
+
+<style>
+  .specialist-selections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .selection-detail { display: grid; gap: 0.8rem; }
+  .selection-detail strong { color: var(--color-paper); font-size: 1.8rem; }
+  .selection-detail span { color: var(--color-gold-light); }
+  .selection-detail form { margin-top: 0.8rem; }
+  .specialist-search { display: grid; gap: 1.6rem; }
+  .specialist-search__actions { display: flex; flex-wrap: wrap; gap: 1rem; }
+  .specialist-search__status { margin: 1.6rem 0 0; color: var(--color-gold-light); }
+  .specialist-directory { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.6rem; }
+  code { color: var(--color-gold-light); overflow-wrap: anywhere; }
+  .role-fieldset { display: grid; gap: 1rem; padding: 1.5rem; border: 1px solid #586057; }
+  .role-fieldset--error { border-color: var(--color-danger); }
+  .role-fieldset legend { color: var(--color-muted); font-size: 1.2rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
+  .role-fieldset legend span { color: var(--color-gold-light); }
+  .role-fieldset p { margin: 0; font-size: 1.25rem; }
+  .role-fieldset label { display: flex; align-items: center; gap: 0.8rem; color: var(--color-paper); }
+  .role-fieldset input { width: 1.8rem; height: 1.8rem; accent-color: var(--color-gold); }
+  .role-fieldset small { color: var(--color-danger); }
+  @media (max-width: 1000px) { .specialist-directory { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 700px) {
+    .specialist-selections, .specialist-directory { grid-template-columns: 1fr; }
+    .specialist-search__actions { display: grid; }
+  }
+</style>

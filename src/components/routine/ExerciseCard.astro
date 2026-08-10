@@ -1,0 +1,84 @@
+---
+export interface Props {
+  muscle: string;
+  name: string;
+  sets: string | number;
+  reps: string | number;
+  notes?: string;
+}
+
+const { muscle, name, sets, reps, notes } = Astro.props;
+const initial = Array.from(muscle.trim())[0]?.toLocaleUpperCase("es-MX") || "·";
+---
+
+<article class="exercise-card">
+  <span class="exercise-card__muscle" aria-hidden="true">{initial}</span>
+  <div class="exercise-card__content">
+    <h3>{name}</h3>
+    <p>
+      {muscle} · {sets} series × {reps} reps{notes ? ` · ${notes}` : ""}
+    </p>
+  </div>
+  {Astro.slots.has("actions") && <div class="exercise-card__actions"><slot name="actions" /></div>}
+</article>
+
+<style>
+  .exercise-card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 1.4rem;
+    align-items: center;
+    padding: 1.4rem;
+    border: 1px solid var(--color-line-soft);
+    background: rgb(9 14 11 / 36%);
+  }
+
+  .exercise-card__muscle {
+    display: grid;
+    width: 4.4rem;
+    height: 4.4rem;
+    place-items: center;
+    border: 1px solid var(--color-gold);
+    color: var(--color-gold-light);
+    font: 700 1.7rem var(--font-display);
+  }
+
+  .exercise-card__content {
+    min-width: 0;
+  }
+
+  h3 {
+    margin: 0 0 0.2rem;
+    font-size: 1.7rem;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 1.35rem;
+  }
+
+  .exercise-card__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .exercise-card__actions :global(button),
+  .exercise-card__actions :global(a) {
+    display: grid;
+    min-width: 4.4rem;
+    min-height: 4.4rem;
+    place-items: center;
+  }
+
+  @media (max-width: 450px) {
+    .exercise-card {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .exercise-card__actions {
+      grid-column: 2;
+      justify-self: end;
+    }
+  }
+</style>

@@ -1,0 +1,39 @@
+---
+import AuthCard from '../components/auth/AuthCard.astro';
+import AuthProviderSection from '../components/auth/AuthProviderSection.astro';
+import FormField from '../components/forms/FormField.astro';
+import FormMessage from '../components/forms/FormMessage.astro';
+import FormStack from '../components/forms/FormStack.astro';
+import Button from '../components/ui/Button.astro';
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { readErrorMessage, readInvalidField } from '../presentation/feedback';
+
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+---
+
+<AuthLayout title="Iniciar sesión" description="Accede a tu rutina, dieta e historial personal.">
+  <AuthCard title="Regresa a la arena" description="Tu rutina, dieta y progreso te esperan en tu cuenta.">
+    <FormStack action="/api/auth/login" autocomplete="on">
+      <FormField label="Correo electrónico" for="login-email" required error={invalidField === 'email' ? errorMessage : undefined}>
+        <input id="login-email" name="email" type="email" autocomplete="email" required maxlength="254" aria-invalid={invalidField === 'email' ? 'true' : undefined} />
+      </FormField>
+      <FormField label="Contraseña" for="login-password" required error={invalidField === 'password' ? errorMessage : undefined}>
+        <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" aria-invalid={invalidField === 'password' ? 'true' : undefined} />
+      </FormField>
+      <FormMessage message={invalidField ? undefined : errorMessage} tone="error" />
+      <Button type="submit">Entrar al imperio</Button>
+    </FormStack>
+
+    <AuthProviderSection>
+      <Button type="button" variant="subtle" disabled aria-describedby="google-status">Continuar con Google</Button>
+      <p id="google-status" class="provider-note">Disponible cuando se elija Google Identity Services o Firebase Authentication.</p>
+    </AuthProviderSection>
+
+    <Fragment slot="footer">¿Aún no tienes cuenta? <a href="/registro">Crea tu perfil de guerrero</a>.</Fragment>
+  </AuthCard>
+</AuthLayout>
+
+<style>
+  .provider-note { margin: 1rem 0 0; color: var(--color-muted); font-size: 1.25rem; text-align: center; }
+</style>

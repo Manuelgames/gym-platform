@@ -1,0 +1,106 @@
+---
+import FormMessage from '../../../../components/forms/FormMessage.astro';
+import DietDocument from '../../../../components/nutrition/DietDocument.astro';
+import DietPlanEditor from '../../../../components/nutrition/DietPlanEditor.astro';
+import Button from '../../../../components/ui/Button.astro';
+import Panel from '../../../../components/ui/Panel.astro';
+import PageIntro from '../../../../components/ui/PageIntro.astro';
+import { getApplication } from '../../../../infrastructure/composition/container';
+import ProtectedLayout from '../../../../layouts/ProtectedLayout.astro';
+import { readErrorMessage } from '../../../../presentation/feedback';
+
+const user = Astro.locals.user;
+if (!user) return Astro.redirect('/iniciar-sesion');
+const requestId = Astro.params.requestId ?? '';
+let context;
+try {
+  context = await getApplication().getNutritionClientDiet(user.id, requestId);
+} catch {
+  return Astro.redirect('/app/mi-trabajo?error=nutrition-relation-required');
+}
+const errorMessage = readErrorMessage(Astro.url);
+const successMessage = Astro.url.searchParams.get('saved') === 'specialist'
+  ? `La dieta de ${context.client.name} quedó actualizada y ya puede verla en su cuenta.`
+  : undefined;
+const calories = context.latestCalories;
+const clientProfile = {
+  name: context.client.name,
+  age: calories?.age ?? null,
+  weightKg: calories?.weightKg ?? null,
+  heightCm: calories?.heightCm ?? null,
+};
+---
+
+<ProtectedLayout
+  title={`Dieta de ${context.client.name}`}
+  description="Editor profesional de dieta para una asesoría nutricional activa."
+  {user}
+  currentPath="/app/mi-trabajo"
+  footerText="Los documentos profesionales conservan la relación, autoría y fecha de actualización."
+>
+  <PageIntro
+    eyebrow="Asesoría nutricional activa"
+    title={`Plan de ${context.client.name}`}
+    lead="Crea la dieta con el mismo formato que utiliza el usuario: comidas, ingredientes, cantidades y unidades compatibles."
+    compact
+  />
+
+  <div class="page-actions">
+    <Button href="/app/mi-trabajo" variant="subtle" size="small">Volver a Mi trabajo</Button>
+  </div>
+  <FormMessage message={successMessage} tone="success" />
+  <FormMessage message={errorMessage} tone="error" />
+
+  <section class="client-context" aria-label="Datos del asesorado">
+    <Panel labelledby="client-profile-title">
+      <p class="eyebrow">Asesorado</p>
+      <h2 id="client-profile-title">{context.client.name}</h2>
+      <p>{context.client.email}</p>
+      <small>Solicitud vinculada: <code>{context.requestId}</code></small>
+    </Panel>
+    <Panel labelledby="client-calories-title">
+      <p class="eyebrow">Calculadora de calorías</p>
+      <h2 id="client-calories-title">{calories ? `${calories.maintenanceCalories.toLocaleString('es-MX')} kcal` : 'Sin cálculo'}</h2>
+      {calories ? (
+        <p>{calories.weightKg} kg · {calories.heightCm} cm · {calories.age} años · mantenimiento diario estimado</p>
+      ) : (
+        <p>El usuario todavía no ha registrado peso y altura. Puedes crear la dieta manualmente y dejar los objetivos nutricionales vacíos.</p>
+      )}
+    </Panel>
+  </section>
+
+  {context.plan && (
+    <section class="section-flow" aria-labelledby="current-specialist-diet">
+      <p class="eyebrow">Documento vigente</p>
+      <h2 class="section-heading" id="current-specialist-diet">Vista que recibe el usuario</h2>
+      <DietDocument plan={context.plan} authorName={user.name} profile={clientProfile} />
+    </section>
+  )}
+
+  <section class="section-flow" aria-labelledby="specialist-editor-title">
+    <header class="editor-heading">
+      <p class="eyebrow">{context.plan ? 'Actualizar documento' : 'Nuevo documento'}</p>
+      <h2 id="specialist-editor-title">{context.plan ? 'Editar dieta asignada' : 'Crear dieta de especialista'}</h2>
+      <p>Al guardar, el documento se reflejará inmediatamente en la subsección Dieta de especialista de {context.client.name}.</p>
+    </header>
+    <DietPlanEditor
+      id="specialist-diet-editor"
+      action="/api/diet/specialist/save"
+      requestId={context.requestId}
+      plan={context.plan}
+      submitLabel={context.plan ? 'Actualizar dieta del usuario' : 'Asignar dieta al usuario'}
+    />
+  </section>
+</ProtectedLayout>
+
+<style>
+  .page-actions { display: flex; margin: 1.5rem 0; }
+  :global(.form-message) { margin-top: 1rem; }
+  .client-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; margin-top: 2rem; }
+  .client-context small { color: var(--color-muted); }
+  code { color: var(--color-gold-light); overflow-wrap: anywhere; }
+  .section-heading, .editor-heading h2 { margin: 0 0 1.5rem; font: 700 clamp(2.8rem, 5vw, 4.2rem) var(--font-display); }
+  .editor-heading { max-width: 78rem; margin-bottom: 2rem; }
+  .editor-heading p:last-child { color: var(--color-muted); }
+  @media (max-width: 750px) { .client-context { grid-template-columns: 1fr; } }
+</style>

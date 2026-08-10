@@ -1,0 +1,200 @@
+---
+import {
+  MUSCLE_GROUPS,
+  ROUTINE_PLAN_DAYS,
+  type RoutinePlan,
+  type RoutinePlanDay,
+  type RoutinePlanDayName,
+} from '../../domain/routine/routine';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  id: string;
+  action: string;
+  plan?: RoutinePlan | null;
+  requestId?: string;
+  submitLabel?: string;
+}
+
+const { id, action, plan = null, requestId, submitLabel = 'Guardar mi rutina' } = Astro.props;
+const dayLabels: Record<RoutinePlanDayName, string> = {
+  lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo',
+};
+const defaultDays: RoutinePlanDay[] = ROUTINE_PLAN_DAYS.map((day, index) => ({
+  day,
+  title: index === 0 ? 'Entrenamiento de cuerpo completo' : 'Descanso y recuperación',
+  focus: '',
+  isRestDay: index !== 0,
+  exercises: index === 0 ? [{
+    name: '', muscle: 'Pecho', sets: 3, reps: '8-12', restSeconds: 90, tempo: '', notes: '',
+  }] : [],
+}));
+const days = plan?.days.length ? plan.days : defaultDays;
+---
+
+<form id={id} class="routine-editor" action={action} method="post" data-routine-editor>
+  {requestId && <input type="hidden" name="requestId" value={requestId} />}
+  <input type="hidden" name="days" value={JSON.stringify(days)} data-routine-days />
+
+  <section class="routine-editor__section" aria-labelledby={`${id}-general`}>
+    <header class="routine-editor__heading">
+      <span>01</span>
+      <div><h3 id={`${id}-general`}>Parámetros generales</h3><p>Estos datos se muestran igual en la vista visual y en el PDF.</p></div>
+    </header>
+    <div class="routine-editor__grid routine-editor__grid--two">
+      <label><span>Título de la rutina *</span><input name="title" required minlength="2" maxlength="120" value={plan?.title ?? 'Mi rutina semanal'} /></label>
+      <label>
+        <span>Objetivo *</span>
+        <select name="goal" required>
+          <option value="fuerza" selected={plan?.goal === 'fuerza'}>Ganar fuerza</option>
+          <option value="hipertrofia" selected={plan?.goal === 'hipertrofia'}>Hipertrofia / masa muscular</option>
+          <option value="perdida_grasa" selected={plan?.goal === 'perdida_grasa'}>Pérdida de grasa</option>
+          <option value="resistencia" selected={plan?.goal === 'resistencia'}>Resistencia</option>
+          <option value="movilidad" selected={plan?.goal === 'movilidad'}>Movilidad</option>
+          <option value="general" selected={!plan || plan.goal === 'general'}>Condición física general</option>
+        </select>
+      </label>
+      <label>
+        <span>Nivel *</span>
+        <select name="level" required>
+          <option value="principiante" selected={!plan || plan.level === 'principiante'}>Principiante</option>
+          <option value="intermedio" selected={plan?.level === 'intermedio'}>Intermedio</option>
+          <option value="avanzado" selected={plan?.level === 'avanzado'}>Avanzado</option>
+        </select>
+      </label>
+      <label>
+        <span>Lugar *</span>
+        <select name="location" required>
+          <option value="gimnasio" selected={!plan || plan.location === 'gimnasio'}>Gimnasio</option>
+          <option value="casa" selected={plan?.location === 'casa'}>Casa</option>
+          <option value="mixto" selected={plan?.location === 'mixto'}>Mixto</option>
+        </select>
+      </label>
+      <label><span>Duración por sesión *</span><input name="sessionDurationMinutes" type="number" min="15" max="240" step="5" required value={plan?.sessionDurationMinutes ?? 60} /></label>
+      <label><span>Equipo disponible</span><input name="availableEquipment" maxlength="300" value={plan?.availableEquipment ?? ''} placeholder="Ej. Mancuernas, barra, banco y poleas" /></label>
+      <label class="routine-editor__wide"><span>Descripción general</span><textarea name="summary" maxlength="900" rows="3" placeholder="Propósito, progresión o indicaciones de la semana.">{plan?.summary ?? ''}</textarea></label>
+      <label class="routine-editor__wide"><span>Limitaciones o consideraciones</span><textarea name="limitations" maxlength="500" rows="3" placeholder="Ej. Evitar impacto; no sustituye una valoración profesional.">{plan?.limitations ?? ''}</textarea></label>
+    </div>
+  </section>
+
+  <section class="routine-editor__section" aria-labelledby={`${id}-week`}>
+    <header class="routine-editor__heading">
+      <span>02</span>
+      <div><h3 id={`${id}-week`}>Semana de lunes a domingo</h3><p>Marca descansos y agrega los ejercicios necesarios en cada sesión.</p></div>
+    </header>
+    <div class="routine-editor__days">
+      {days.map((day, dayIndex) => (
+        <article class:list={['routine-day-editor', { 'is-rest-day': day.isRestDay }]} data-routine-day data-day={day.day}>
+          <header class="routine-day-editor__header">
+            <div><span>Día {String(dayIndex + 1).padStart(2, '0')}</span><h4>{dayLabels[day.day]}</h4></div>
+            <strong data-day-status>{day.isRestDay ? 'Descanso' : 'Entrenamiento'}</strong>
+          </header>
+          <div class="routine-day-editor__settings">
+            <label class="rest-toggle"><input type="checkbox" checked={day.isRestDay} data-day-rest /><span>Día de descanso</span></label>
+            <label><span>Título del día *</span><input required maxlength="100" value={day.title} data-day-title /></label>
+            <label><span>Enfoque o indicaciones</span><textarea maxlength="160" rows="2" data-day-focus>{day.focus}</textarea></label>
+          </div>
+          <div class="routine-day-editor__exercises" data-day-exercises hidden={day.isRestDay}>
+            <div class="routine-day-editor__toolbar"><h5>Ejercicios</h5><button type="button" class="routine-action" data-add-routine-exercise>+ Agregar ejercicio</button></div>
+            <div class="routine-exercise-list" data-exercise-rows>
+              {day.exercises.map((exercise) => (
+                <article class="routine-exercise-editor" data-routine-exercise>
+                  <div class="routine-exercise-editor__main">
+                    <label class="routine-exercise-editor__name"><span>Ejercicio *</span><input required maxlength="100" value={exercise.name} data-exercise-field="name" placeholder="Ej. Press con barra" /></label>
+                    <label><span>Grupo *</span><select required data-exercise-field="muscle">{MUSCLE_GROUPS.map((muscle) => <option value={muscle} selected={exercise.muscle === muscle}>{muscle}</option>)}</select></label>
+                    <label><span>Series *</span><input required type="number" min="1" max="30" value={exercise.sets} data-exercise-field="sets" /></label>
+                    <label><span>Repeticiones *</span><input required maxlength="30" value={exercise.reps} data-exercise-field="reps" placeholder="8-12" /></label>
+                    <label><span>Descanso (s) *</span><input required type="number" min="0" max="900" step="5" value={exercise.restSeconds} data-exercise-field="restSeconds" /></label>
+                    <label><span>Tempo</span><input maxlength="30" value={exercise.tempo} data-exercise-field="tempo" placeholder="3-1-1" /></label>
+                    <button type="button" class="routine-action routine-action--danger" data-remove-routine-exercise aria-label={`Eliminar ${exercise.name || 'ejercicio'}`}>Eliminar</button>
+                  </div>
+                  <label><span>Notas técnicas</span><textarea maxlength="300" rows="2" data-exercise-field="notes" placeholder="Técnica, intensidad o alternativa.">{exercise.notes}</textarea></label>
+                </article>
+              ))}
+            </div>
+          </div>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <div class="routine-editor__submit">
+    <p>Revisa descansos, series, repeticiones y tiempos antes de guardar.</p>
+    <Button type="submit">{submitLabel}</Button>
+  </div>
+
+  <template data-routine-exercise-template>
+    <article class="routine-exercise-editor" data-routine-exercise>
+      <div class="routine-exercise-editor__main">
+        <label class="routine-exercise-editor__name"><span>Ejercicio *</span><input required maxlength="100" data-exercise-field="name" placeholder="Ej. Sentadilla" /></label>
+        <label><span>Grupo *</span><select required data-exercise-field="muscle">{MUSCLE_GROUPS.map((muscle) => <option value={muscle}>{muscle}</option>)}</select></label>
+        <label><span>Series *</span><input required type="number" min="1" max="30" value="3" data-exercise-field="sets" /></label>
+        <label><span>Repeticiones *</span><input required maxlength="30" value="8-12" data-exercise-field="reps" /></label>
+        <label><span>Descanso (s) *</span><input required type="number" min="0" max="900" step="5" value="90" data-exercise-field="restSeconds" /></label>
+        <label><span>Tempo</span><input maxlength="30" data-exercise-field="tempo" placeholder="Controlado" /></label>
+        <button type="button" class="routine-action routine-action--danger" data-remove-routine-exercise>Eliminar</button>
+      </div>
+      <label><span>Notas técnicas</span><textarea maxlength="300" rows="2" data-exercise-field="notes"></textarea></label>
+    </article>
+  </template>
+</form>
+
+<script>
+  import '../../scripts/routine-editor';
+</script>
+
+<style>
+  .routine-editor { display: grid; gap: 1.6rem; }
+  .routine-editor__section { padding: clamp(1.6rem, 4vw, 2.8rem); border: 1px solid var(--color-line); background: linear-gradient(145deg, rgb(34 45 39 / 94%), rgb(15 23 18 / 98%)); }
+  .routine-editor__heading { display: flex; align-items: start; gap: 1.4rem; margin-bottom: 2rem; }
+  .routine-editor__heading > span { display: grid; width: 3.8rem; height: 3.8rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-line); color: var(--color-gold); font: 700 1.4rem var(--font-display); }
+  .routine-editor__heading h3 { margin: 0; font: 700 2.3rem var(--font-display); }
+  .routine-editor__heading p { margin: .4rem 0 0; color: var(--color-muted); font-size: 1.3rem; }
+  .routine-editor__grid { display: grid; gap: 1.3rem; }
+  .routine-editor__grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .routine-editor__wide { grid-column: 1 / -1; }
+  label { display: grid; align-content: start; gap: .6rem; min-width: 0; }
+  label > span { color: var(--color-muted); font-size: 1.02rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+  input, select, textarea { width: 100%; min-height: 4.5rem; padding: .9rem 1rem; border: 1px solid #586057; border-radius: 0; background: #0f1712; color: var(--color-paper); outline: 0; }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus { border-color: var(--color-gold); box-shadow: var(--shadow-focus); }
+  .routine-editor__days { display: grid; gap: 1.3rem; }
+  .routine-day-editor { border: 1px solid var(--color-line); background: rgb(8 14 10 / 58%); }
+  .routine-day-editor.is-rest-day { border-color: rgb(152 207 154 / 32%); }
+  .routine-day-editor__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--color-line-soft); background: rgb(255 255 255 / 2%); }
+  .routine-day-editor__header span { color: var(--color-gold-light); font-size: 1rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  .routine-day-editor__header h4 { margin: .2rem 0 0; font: 700 2rem var(--font-display); }
+  .routine-day-editor__header > strong { padding: .45rem .8rem; border: 1px solid currentColor; color: var(--color-gold-light); font-size: 1rem; letter-spacing: .08em; text-transform: uppercase; }
+  .is-rest-day .routine-day-editor__header > strong { color: var(--color-success); }
+  .routine-day-editor__settings { display: grid; grid-template-columns: minmax(16rem, .55fr) 1fr 1.4fr; align-items: end; gap: 1.2rem; padding: 1.4rem; }
+  .rest-toggle { align-content: center; min-height: 4.5rem; grid-template-columns: auto 1fr; align-items: center; padding: .8rem 1rem; border: 1px solid var(--color-line-soft); }
+  .rest-toggle input { width: 1.8rem; min-height: 1.8rem; accent-color: var(--color-gold); }
+  .rest-toggle span { color: var(--color-paper); }
+  .routine-day-editor__exercises { padding: 0 1.4rem 1.4rem; }
+  .routine-day-editor__exercises[hidden] { display: none; }
+  .routine-day-editor__toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-top: 1px solid var(--color-line-soft); }
+  .routine-day-editor__toolbar h5 { margin: 0; font: 700 1.5rem var(--font-display); }
+  .routine-exercise-list { display: grid; gap: .9rem; }
+  .routine-exercise-editor { display: grid; gap: .9rem; padding: 1.2rem; border: 1px solid var(--color-line-soft); background: rgb(255 255 255 / 2%); }
+  .routine-exercise-editor__main { display: grid; grid-template-columns: minmax(16rem, 1.5fr) minmax(11rem, .8fr) repeat(4, minmax(8rem, .5fr)) auto; align-items: end; gap: .7rem; }
+  .routine-exercise-editor input, .routine-exercise-editor select { min-height: 4rem; padding: .7rem .8rem; }
+  .routine-action { min-height: 3.8rem; padding: .5rem .9rem; border: 1px solid var(--color-line); background: transparent; color: var(--color-gold-light); font-size: 1rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .routine-action--danger { border-color: rgb(242 139 121 / 38%); color: var(--color-danger); }
+  .routine-editor__submit { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 1.6rem; border: 1px solid var(--color-line); background: rgb(214 166 66 / 6%); }
+  .routine-editor__submit p { margin: 0; color: var(--color-muted); }
+  @media (max-width: 1050px) {
+    .routine-exercise-editor__main { grid-template-columns: 1.5fr 1fr repeat(3, .65fr); }
+    .routine-exercise-editor__main .routine-action { grid-column: -2 / -1; }
+  }
+  @media (max-width: 760px) {
+    .routine-editor__grid--two, .routine-day-editor__settings { grid-template-columns: 1fr; }
+    .routine-editor__wide { grid-column: auto; }
+    .routine-exercise-editor__main { grid-template-columns: 1fr 1fr; }
+    .routine-exercise-editor__name { grid-column: 1 / -1; }
+    .routine-editor__submit { display: grid; }
+  }
+  @media (max-width: 480px) {
+    .routine-exercise-editor__main { grid-template-columns: 1fr; }
+    .routine-exercise-editor__name { grid-column: auto; }
+  }
+</style>

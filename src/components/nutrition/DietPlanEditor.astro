@@ -1,0 +1,311 @@
+---
+import type { DietMeal, DietPlan } from '../../domain/diet/diet';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  id: string;
+  action: string;
+  plan?: DietPlan | null;
+  requestId?: string;
+  submitLabel?: string;
+}
+
+const {
+  id,
+  action,
+  plan = null,
+  requestId,
+  submitLabel = 'Guardar mi dieta',
+} = Astro.props;
+const defaultEntries: DietMeal[] = [{
+  type: 'Desayuno',
+  title: '',
+  time: '',
+  ingredients: [{ name: '', amount: 100, unit: 'g', note: '' }],
+  preparation: '',
+  notes: '',
+  estimatedCaloriesKcal: null,
+}];
+const entries = plan?.entries.length ? plan.entries : defaultEntries;
+const portionUnits = [
+  ['g', 'Gramos (g)'],
+  ['ml', 'Mililitros (ml)'],
+  ['pieza', 'Pieza'],
+  ['rebanada', 'Rebanada'],
+  ['taza', 'Taza'],
+  ['cucharada', 'Cucharada'],
+  ['cucharadita', 'Cucharadita'],
+  ['porcion', 'Porción'],
+] as const;
+---
+
+<form id={id} class="diet-editor" action={action} method="post" data-diet-editor>
+  {requestId && <input type="hidden" name="requestId" value={requestId} />}
+  <input type="hidden" name="entries" value={JSON.stringify(entries)} data-diet-entries />
+
+  <section class="diet-editor__section" aria-labelledby={`${id}-general`}>
+    <header class="diet-editor__section-heading">
+      <span>01</span>
+      <div>
+        <h3 id={`${id}-general`}>Datos generales</h3>
+        <p>Define el propósito del documento. Podrás modificarlo cuando lo necesites.</p>
+      </div>
+    </header>
+    <div class="diet-editor__grid diet-editor__grid--two">
+      <label>
+        <span>Título de la dieta *</span>
+        <input name="title" type="text" minlength="2" maxlength="120" required value={plan?.title ?? 'Mi plan de alimentación'} />
+      </label>
+      <label>
+        <span>Objetivo *</span>
+        <select name="goal" required>
+          <option value="ganar" selected={plan?.goal === 'ganar'}>Ganar fuerza y masa</option>
+          <option value="mantener" selected={!plan || plan.goal === 'mantener'}>Mantener energía</option>
+          <option value="perder" selected={plan?.goal === 'perder'}>Reducir grasa</option>
+        </select>
+      </label>
+      <label>
+        <span>Preferencia *</span>
+        <select name="preference" required>
+          <option value="general" selected={!plan || plan.preference === 'general'}>Alimentación general</option>
+          <option value="vegetariana" selected={plan?.preference === 'vegetariana'}>Vegetariana</option>
+          <option value="vegana" selected={plan?.preference === 'vegana'}>Vegana</option>
+          <option value="pescetariana" selected={plan?.preference === 'pescetariana'}>Pescetariana</option>
+          <option value="sin_lactosa" selected={plan?.preference === 'sin_lactosa'}>Sin lactosa</option>
+          <option value="rapida" selected={plan?.preference === 'rapida'}>Preparación rápida</option>
+        </select>
+      </label>
+      <label class="diet-editor__summary-field">
+        <span>Descripción o indicaciones</span>
+        <textarea name="summary" maxlength="800" rows="3" placeholder="Ej. Priorizar alimentos fáciles de preparar entre semana.">{plan?.summary ?? ''}</textarea>
+      </label>
+    </div>
+  </section>
+
+  <section class="diet-editor__section" aria-labelledby={`${id}-targets`}>
+    <header class="diet-editor__section-heading">
+      <span>02</span>
+      <div>
+        <h3 id={`${id}-targets`}>Objetivos diarios opcionales</h3>
+        <p>Si defines macronutrientes, indica también las calorías. Son valores aproximados.</p>
+      </div>
+    </header>
+    <div class="diet-editor__grid diet-editor__grid--four">
+      <label>
+        <span>Calorías (kcal)</span>
+        <input name="caloriesKcal" type="number" min="500" max="10000" step="1" value={plan?.nutrition?.caloriesKcal} placeholder="2200" />
+      </label>
+      <label>
+        <span>Proteína (g)</span>
+        <input name="proteinG" type="number" min="0" max="1000" step="1" value={plan?.nutrition?.proteinG} placeholder="150" />
+      </label>
+      <label>
+        <span>Carbohidratos (g)</span>
+        <input name="carbsG" type="number" min="0" max="2000" step="1" value={plan?.nutrition?.carbsG} placeholder="250" />
+      </label>
+      <label>
+        <span>Grasas (g)</span>
+        <input name="fatG" type="number" min="0" max="1000" step="1" value={plan?.nutrition?.fatG} placeholder="70" />
+      </label>
+    </div>
+  </section>
+
+  <section class="diet-editor__section" aria-labelledby={`${id}-meals`}>
+    <header class="diet-editor__section-heading">
+      <span>03</span>
+      <div>
+        <h3 id={`${id}-meals`}>Comidas e ingredientes</h3>
+        <p>Agrega todas las comidas que necesites. Cada ingrediente conserva su cantidad y unidad por separado.</p>
+      </div>
+    </header>
+
+    <datalist id={`${id}-meal-types`}>
+      <option value="Desayuno"></option>
+      <option value="Colación matutina"></option>
+      <option value="Comida"></option>
+      <option value="Colación vespertina"></option>
+      <option value="Cena"></option>
+      <option value="Antes de entrenar"></option>
+      <option value="Después de entrenar"></option>
+      <option value="Antes de dormir"></option>
+    </datalist>
+
+    <div class="diet-editor__meals" data-diet-meals>
+      {entries.map((meal, mealIndex) => (
+        <article class="meal-editor" data-diet-meal>
+          <header class="meal-editor__header">
+            <div>
+              <span data-meal-number>Comida {String(mealIndex + 1).padStart(2, '0')}</span>
+              <strong>{meal.title || 'Nueva comida'}</strong>
+            </div>
+            <button type="button" class="editor-action editor-action--danger" data-remove-meal aria-label={`Eliminar comida ${mealIndex + 1}`}>Eliminar comida</button>
+          </header>
+
+          <div class="diet-editor__grid diet-editor__grid--three meal-editor__fields">
+            <label>
+              <span>Tipo de comida *</span>
+              <input data-meal-field="type" type="text" list={`${id}-meal-types`} maxlength="60" required value={meal.type} placeholder="Ej. Desayuno" />
+            </label>
+            <label>
+              <span>Título *</span>
+              <input data-meal-field="title" type="text" maxlength="120" required value={meal.title} placeholder="Ej. Avena con frutos rojos" />
+            </label>
+            <label>
+              <span>Hora opcional</span>
+              <input data-meal-field="time" type="time" value={meal.time} />
+            </label>
+          </div>
+
+          <div class="ingredient-editor">
+            <div class="ingredient-editor__heading">
+              <h4>Ingredientes y porciones</h4>
+              <button type="button" class="editor-action" data-add-ingredient>+ Agregar ingrediente</button>
+            </div>
+            <div class="ingredient-editor__rows" data-ingredient-rows>
+              {meal.ingredients.map((ingredient) => (
+                <div class="ingredient-row" data-ingredient-row>
+                  <label class="ingredient-row__name">
+                    <span>Ingrediente *</span>
+                    <input data-ingredient-field="name" type="text" maxlength="100" required value={ingredient.name} placeholder="Ej. Pechuga de pollo" />
+                  </label>
+                  <label>
+                    <span>Cantidad *</span>
+                    <input data-ingredient-field="amount" type="number" min="0.1" max="10000" step="0.1" required value={ingredient.amount} />
+                  </label>
+                  <label>
+                    <span>Unidad *</span>
+                    <select data-ingredient-field="unit" required>
+                      {portionUnits.map(([value, label]) => <option value={value} selected={ingredient.unit === value}>{label}</option>)}
+                    </select>
+                  </label>
+                  <label class="ingredient-row__note">
+                    <span>Detalle</span>
+                    <input data-ingredient-field="note" type="text" maxlength="160" value={ingredient.note} placeholder="Ej. Peso cocido" />
+                  </label>
+                  <button type="button" class="editor-action editor-action--icon editor-action--danger" data-remove-ingredient aria-label="Eliminar ingrediente">×</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div class="diet-editor__grid diet-editor__grid--two meal-editor__details">
+            <label>
+              <span>Preparación</span>
+              <textarea data-meal-field="preparation" maxlength="1000" rows="3" placeholder="Describe brevemente cómo preparar la comida.">{meal.preparation}</textarea>
+            </label>
+            <label>
+              <span>Notas</span>
+              <textarea data-meal-field="notes" maxlength="500" rows="3" placeholder="Cambios, equivalencias o recomendaciones.">{meal.notes}</textarea>
+            </label>
+            <label>
+              <span>Calorías aproximadas</span>
+              <input data-meal-field="estimatedCaloriesKcal" type="number" min="1" max="10000" step="1" value={meal.estimatedCaloriesKcal ?? ''} placeholder="Opcional" />
+            </label>
+          </div>
+        </article>
+      ))}
+    </div>
+
+    <button type="button" class="add-meal" data-add-meal>
+      <span aria-hidden="true">+</span>
+      <strong>Agregar otra comida</strong>
+      <small>Desayuno, colación, comida, cena o un tipo personalizado</small>
+    </button>
+  </section>
+
+  <div class="diet-editor__submit">
+    <p>Revisa cantidades y unidades antes de guardar. Podrás editar este documento después.</p>
+    <Button type="submit">{submitLabel}</Button>
+  </div>
+
+  <template data-meal-template>
+    <article class="meal-editor" data-diet-meal>
+      <header class="meal-editor__header">
+        <div><span data-meal-number>Nueva comida</span><strong>Sin título</strong></div>
+        <button type="button" class="editor-action editor-action--danger" data-remove-meal>Eliminar comida</button>
+      </header>
+      <div class="diet-editor__grid diet-editor__grid--three meal-editor__fields">
+        <label><span>Tipo de comida *</span><input data-meal-field="type" type="text" list={`${id}-meal-types`} maxlength="60" required value="Colación" placeholder="Ej. Colación matutina" /></label>
+        <label><span>Título *</span><input data-meal-field="title" type="text" maxlength="120" required placeholder="Ej. Yogur con fruta" /></label>
+        <label><span>Hora opcional</span><input data-meal-field="time" type="time" /></label>
+      </div>
+      <div class="ingredient-editor">
+        <div class="ingredient-editor__heading"><h4>Ingredientes y porciones</h4><button type="button" class="editor-action" data-add-ingredient>+ Agregar ingrediente</button></div>
+        <div class="ingredient-editor__rows" data-ingredient-rows></div>
+      </div>
+      <div class="diet-editor__grid diet-editor__grid--two meal-editor__details">
+        <label><span>Preparación</span><textarea data-meal-field="preparation" maxlength="1000" rows="3"></textarea></label>
+        <label><span>Notas</span><textarea data-meal-field="notes" maxlength="500" rows="3"></textarea></label>
+        <label><span>Calorías aproximadas</span><input data-meal-field="estimatedCaloriesKcal" type="number" min="1" max="10000" step="1" placeholder="Opcional" /></label>
+      </div>
+    </article>
+  </template>
+
+  <template data-ingredient-template>
+    <div class="ingredient-row" data-ingredient-row>
+      <label class="ingredient-row__name"><span>Ingrediente *</span><input data-ingredient-field="name" type="text" maxlength="100" required placeholder="Ej. Manzana" /></label>
+      <label><span>Cantidad *</span><input data-ingredient-field="amount" type="number" min="0.1" max="10000" step="0.1" required value="100" /></label>
+      <label><span>Unidad *</span><select data-ingredient-field="unit" required>{portionUnits.map(([value, label]) => <option value={value}>{label}</option>)}</select></label>
+      <label class="ingredient-row__note"><span>Detalle</span><input data-ingredient-field="note" type="text" maxlength="160" placeholder="Ej. Peso cocido" /></label>
+      <button type="button" class="editor-action editor-action--icon editor-action--danger" data-remove-ingredient aria-label="Eliminar ingrediente">×</button>
+    </div>
+  </template>
+</form>
+
+<script>
+  import '../../scripts/diet-editor';
+</script>
+
+<style>
+  .diet-editor { display: grid; gap: 1.6rem; }
+  .diet-editor__section { padding: clamp(1.8rem, 4vw, 2.8rem); border: 1px solid var(--color-line); background: linear-gradient(145deg, rgb(34 45 39 / 94%), rgb(15 23 18 / 98%)); }
+  .diet-editor__section-heading { display: flex; align-items: start; gap: 1.4rem; margin-bottom: 2.2rem; }
+  .diet-editor__section-heading > span { display: grid; width: 3.8rem; height: 3.8rem; flex: 0 0 auto; place-items: center; border: 1px solid var(--color-line); color: var(--color-gold); font: 700 1.4rem var(--font-display); }
+  .diet-editor__section-heading h3 { margin: 0; font: 700 2.3rem var(--font-display); }
+  .diet-editor__section-heading p { margin: .4rem 0 0; color: var(--color-muted); font-size: 1.35rem; }
+  .diet-editor__grid { display: grid; gap: 1.4rem; }
+  .diet-editor__grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .diet-editor__grid--three { grid-template-columns: 1fr 1.6fr minmax(13rem, .55fr); }
+  .diet-editor__grid--four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  label { display: grid; align-content: start; gap: .65rem; min-width: 0; }
+  label > span, .ingredient-row label > span { color: var(--color-muted); font-size: 1.05rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  input, select, textarea { width: 100%; min-height: 4.7rem; padding: 1rem 1.1rem; border: 1px solid #586057; border-radius: 0; background: #0f1712; color: var(--color-paper); outline: 0; }
+  textarea { resize: vertical; }
+  input:focus, select:focus, textarea:focus { border-color: var(--color-gold); box-shadow: var(--shadow-focus); }
+  .diet-editor__summary-field { grid-column: 1 / -1; }
+  .diet-editor__meals { display: grid; gap: 1.4rem; }
+  .meal-editor { border: 1px solid var(--color-line); background: rgb(8 14 10 / 58%); }
+  .meal-editor__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.3rem 1.6rem; border-bottom: 1px solid var(--color-line-soft); background: rgb(255 255 255 / 2%); }
+  .meal-editor__header > div { display: grid; }
+  .meal-editor__header span { color: var(--color-gold-light); font-size: 1rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+  .meal-editor__header strong { color: var(--color-paper); font: 700 1.7rem var(--font-display); }
+  .meal-editor__fields, .meal-editor__details { padding: 1.6rem; }
+  .ingredient-editor { margin-inline: 1.6rem; padding: 1.5rem; border: 1px solid var(--color-line-soft); background: rgb(255 255 255 / 2%); }
+  .ingredient-editor__heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.2rem; }
+  .ingredient-editor__heading h4 { margin: 0; font: 700 1.5rem var(--font-display); }
+  .ingredient-editor__rows { display: grid; gap: .8rem; }
+  .ingredient-row { display: grid; grid-template-columns: minmax(15rem, 1.5fr) minmax(9rem, .5fr) minmax(13rem, .7fr) minmax(14rem, 1fr) 3.8rem; align-items: end; gap: .8rem; }
+  .ingredient-row input, .ingredient-row select { min-height: 4.3rem; padding: .8rem .9rem; }
+  .editor-action { min-height: 3.8rem; padding: .5rem .9rem; border: 1px solid var(--color-line); background: transparent; color: var(--color-gold-light); font-size: 1.05rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+  .editor-action--danger { border-color: rgb(242 139 121 / 38%); color: var(--color-danger); }
+  .editor-action--icon { width: 3.8rem; padding: 0; font-size: 2rem; }
+  .add-meal { display: grid; width: 100%; margin-top: 1.3rem; padding: 1.7rem; place-items: center; border: 1px dashed var(--color-line); background: rgb(214 166 66 / 4%); color: var(--color-paper); }
+  .add-meal > span { color: var(--color-gold); font-size: 2.5rem; line-height: 1; }
+  .add-meal strong { font-size: 1.3rem; letter-spacing: .08em; text-transform: uppercase; }
+  .add-meal small { color: var(--color-muted); }
+  .diet-editor__submit { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 1.8rem; border: 1px solid var(--color-line); background: rgb(214 166 66 / 6%); }
+  .diet-editor__submit p { max-width: 60rem; margin: 0; color: var(--color-muted); font-size: 1.3rem; }
+  @media (max-width: 900px) {
+    .diet-editor__grid--four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ingredient-row { grid-template-columns: 1.5fr .55fr .8fr 3.8rem; }
+    .ingredient-row__note { grid-column: 1 / -2; }
+  }
+  @media (max-width: 650px) {
+    .diet-editor__grid--two, .diet-editor__grid--three, .diet-editor__grid--four { grid-template-columns: 1fr; }
+    .ingredient-row { grid-template-columns: 1fr 1fr 3.8rem; padding-bottom: 1rem; border-bottom: 1px solid var(--color-line-soft); }
+    .ingredient-row__name, .ingredient-row__note { grid-column: 1 / -1; }
+    .ingredient-row__note { grid-column: 1 / -2; }
+    .meal-editor__header { align-items: start; }
+    .diet-editor__submit { display: grid; }
+  }
+</style>

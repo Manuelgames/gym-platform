@@ -1,0 +1,33 @@
+---
+export interface Props {
+  labelledby?: string;
+  class?: string;
+}
+
+const { labelledby, class: className = "" } = Astro.props;
+---
+
+<section class:list={["routine-workspace", className]} aria-labelledby={labelledby}>
+  <div class="routine-workspace__navigation"><slot name="navigation" /></div>
+  <div class="routine-workspace__panel"><slot /></div>
+</section>
+
+<style>
+  .routine-workspace {
+    display: grid;
+    grid-template-columns: 26rem minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .routine-workspace__navigation,
+  .routine-workspace__panel {
+    min-width: 0;
+  }
+
+  @media (max-width: 800px) {
+    .routine-workspace {
+      grid-template-columns: 1fr;
+      gap: 1.2rem;
+    }
+  }
+</style>

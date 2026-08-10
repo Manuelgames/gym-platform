@@ -1,0 +1,43 @@
+---
+export interface Props {
+  message?: string;
+  tone?: "success" | "error" | "info";
+  live?: "polite" | "assertive" | "off";
+  id?: string;
+  hidden?: boolean;
+}
+
+const {
+  message,
+  tone = "info",
+  live = tone === "error" ? "assertive" : "polite",
+  id,
+  hidden = false,
+} = Astro.props;
+const hasContent = Boolean(message) || Astro.slots.has("default");
+---
+
+<p
+  id={id}
+  class:list={["form-message", `form-message--${tone}`]}
+  aria-live={live}
+  hidden={hidden || !hasContent}
+>
+  <slot>{message}</slot>
+</p>
+
+<style>
+  .form-message {
+    margin: 0;
+    color: var(--color-muted);
+    font-size: 1.4rem;
+  }
+
+  .form-message--success {
+    color: var(--color-success);
+  }
+
+  .form-message--error {
+    color: var(--color-danger);
+  }
+</style>

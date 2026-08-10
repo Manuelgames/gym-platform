@@ -1,0 +1,118 @@
+---
+import StatCard from "../ui/StatCard.astro";
+
+export interface DashboardStat {
+  value: string | number;
+  label: string;
+}
+
+export interface Props {
+  name: string;
+  eyebrow?: string;
+  lead: string;
+  summaryTitle?: string;
+  summary?: string;
+  stats?: DashboardStat[];
+}
+
+const {
+  name,
+  eyebrow = "El viaje de Odiseo comienza con un paso",
+  lead,
+  summaryTitle = "Disciplina antes que gloria.",
+  summary = "Los pequeños actos repetidos son el mapa para cruzar cualquier mar.",
+  stats = [],
+} = Astro.props;
+const firstName = name.trim().split(/\s+/)[0] || "guerrero";
+---
+
+<section class="dashboard-hero" aria-labelledby="dashboard-greeting">
+  <div class="dashboard-hero__copy">
+    <p class="eyebrow">{eyebrow}</p>
+    <h1 class="display-title" id="dashboard-greeting">Salve, {firstName}.</h1>
+    <p class="lead">{lead}</p>
+    {Astro.slots.has("actions") && <div class="dashboard-hero__actions"><slot name="actions" /></div>}
+  </div>
+  <aside class="today-card" aria-label="Resumen de tu jornada">
+    <div>
+      <p class="eyebrow">Tu jornada</p>
+      <h2>{summaryTitle}</h2>
+      <p>{summary}</p>
+    </div>
+    {stats.length > 0 && (
+      <div class="today-card__stats">
+        {stats.map((stat) => <StatCard value={stat.value} label={stat.label} />)}
+      </div>
+    )}
+  </aside>
+</section>
+
+<style>
+  .dashboard-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(32rem, 0.7fr);
+    gap: 2rem;
+    align-items: stretch;
+  }
+
+  .dashboard-hero__copy {
+    padding: 4.5rem;
+    border: 1px solid var(--color-line);
+    background:
+      linear-gradient(130deg, rgb(49 57 39 / 84%), rgb(16 23 18 / 95%)),
+      url("/assets/fondoApp.jpg") center / cover;
+  }
+
+  .dashboard-hero__copy :global(.display-title) {
+    max-width: 62rem;
+  }
+
+  .dashboard-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    margin-top: 2.6rem;
+  }
+
+  .today-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3.3rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+  }
+
+  .today-card h2 {
+    margin: 0;
+    font: 700 2.7rem/1.1 var(--font-display);
+  }
+
+  .today-card p {
+    color: var(--color-muted);
+  }
+
+  .today-card__stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  @media (max-width: 900px) {
+    .dashboard-hero {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 450px) {
+    .dashboard-hero__copy,
+    .today-card {
+      padding: 2rem;
+    }
+
+    .today-card__stats {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

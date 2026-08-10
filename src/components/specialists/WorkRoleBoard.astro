@@ -1,0 +1,121 @@
+---
+import type { SpecialistWorkRoleView, WorkClientView } from '../../application/facade';
+import Button from '../ui/Button.astro';
+import EmptyState from '../ui/EmptyState.astro';
+
+export interface Props {
+  board: SpecialistWorkRoleView;
+}
+
+const { board } = Astro.props;
+const title = board.role === 'trainer' ? 'Entrenamiento' : 'Nutrición';
+const roleLabel = board.role === 'trainer' ? 'entrenamiento personal' : 'orientación nutricional';
+const dates = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium' });
+const formattedDate = (client: WorkClientView) => dates.format(new Date(client.requestedAt));
+---
+
+<section class="work-board" aria-labelledby={`work-${board.role}`}>
+  <header>
+    <p class="eyebrow">Rol activo</p>
+    <h2 id={`work-${board.role}`}>{title}</h2>
+  </header>
+
+  <div class="work-board__columns">
+    <section aria-labelledby={`applicants-${board.role}`}>
+      <h3 id={`applicants-${board.role}`}>Solicitantes <span>{board.applicants.length}</span></h3>
+      {board.applicants.length > 0 ? (
+        <div class="work-list">
+          {board.applicants.map((client) => (
+            <article class="work-person">
+              <div class="work-person__identity">
+                {client.profilePhotoId && <img src={`/api/profile/photo/${client.userId}`} alt="" width="48" height="48" loading="lazy" />}
+                <div>
+                  <strong>{client.name}</strong>
+                  <a href={`mailto:${client.email}`}>{client.email}</a>
+                  <small>Solicitó el {formattedDate(client)}</small>
+                </div>
+              </div>
+              <div class="work-person__actions">
+                <form method="POST" action="/api/specialists/request/action">
+                  <input type="hidden" name="requestId" value={client.requestId} />
+                  <input type="hidden" name="action" value="accept" />
+                  <Button type="submit" size="small">Aceptar</Button>
+                </form>
+                <form method="POST" action="/api/specialists/request/action">
+                  <input type="hidden" name="requestId" value={client.requestId} />
+                  <input type="hidden" name="action" value="reject" />
+                  <Button type="submit" size="small" variant="danger">Rechazar</Button>
+                </form>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : <EmptyState compact message={`Todavía no tienes solicitudes de ${roleLabel}.`} />}
+    </section>
+
+    <section aria-labelledby={`advised-${board.role}`}>
+      <h3 id={`advised-${board.role}`}>Asesorados <span>{board.advised.length}</span></h3>
+      {board.advised.length > 0 ? (
+        <div class="work-list">
+          {board.advised.map((client) => (
+            <article class="work-person">
+              <div class="work-person__identity">
+                {client.profilePhotoId && <img src={`/api/profile/photo/${client.userId}`} alt="" width="48" height="48" loading="lazy" />}
+                <div>
+                  <strong>{client.name}</strong>
+                  <a href={`mailto:${client.email}`}>{client.email}</a>
+                  <small>Relación iniciada desde {formattedDate(client)}</small>
+                </div>
+              </div>
+              <div class="work-person__actions">
+                {board.role === 'nutritionist' && (
+                  <Button
+                    href={`/app/mi-trabajo/nutricion/${client.requestId}`}
+                    size="small"
+                    target="_blank"
+                  >
+                    Crear o editar dieta
+                  </Button>
+                )}
+                {board.role === 'trainer' && (
+                  <Button
+                    href={`/app/mi-trabajo/entrenamiento/${client.requestId}`}
+                    size="small"
+                    target="_blank"
+                  >
+                    Crear o editar rutina
+                  </Button>
+                )}
+                <form method="POST" action="/api/specialists/request/action">
+                  <input type="hidden" name="requestId" value={client.requestId} />
+                  <input type="hidden" name="action" value="close" />
+                  <Button type="submit" size="small" variant="subtle">Cerrar asesoría</Button>
+                </form>
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : <EmptyState compact message={`Aún no hay personas asesoradas en ${roleLabel}.`} />}
+    </section>
+  </div>
+</section>
+
+<style>
+  .work-board { padding: 2.8rem; border: 1px solid var(--color-line); background: var(--color-surface); }
+  .work-board > header h2 { margin: 0.5rem 0 2.4rem; font: 700 3.4rem var(--font-display); }
+  .work-board__columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+  h3 { display: flex; justify-content: space-between; gap: 1rem; margin: 0 0 1.2rem; font: 700 2rem var(--font-display); }
+  h3 span { color: var(--color-gold); }
+  .work-list { display: grid; gap: 1rem; }
+  .work-person { display: grid; gap: 1.4rem; padding: 1.6rem; border: 1px solid var(--color-line); background: #111914; }
+  .work-person__identity { display: flex; align-items: center; gap: 1rem; min-width: 0; }
+  .work-person__identity > div { display: grid; gap: 0.35rem; min-width: 0; }
+  .work-person__identity img { width: 4.8rem; height: 4.8rem; flex: 0 0 auto; border: 1px solid var(--color-line); border-radius: 50%; object-fit: cover; }
+  .work-person strong { color: var(--color-paper); }
+  .work-person a { color: var(--color-gold-light); overflow-wrap: anywhere; }
+  .work-person small { color: var(--color-muted); }
+  .work-person__actions { display: flex; flex-wrap: wrap; gap: 0.8rem; }
+  form { margin: 0; }
+  @media (max-width: 850px) { .work-board__columns { grid-template-columns: 1fr; } }
+  @media (max-width: 450px) { .work-board { padding: 2rem; } }
+</style>

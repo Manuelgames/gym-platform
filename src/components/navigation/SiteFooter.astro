@@ -1,0 +1,21 @@
+---
+export interface Props {
+  /** Texto breve; debe describir la persistencia real y no prometer almacenamiento local. */
+  text?: string;
+}
+
+const { text = "Roman Colosseum · La constancia escribe las leyendas." } = Astro.props;
+---
+
+<footer class="site-footer">
+  <slot>{text}</slot>
+</footer>
+
+<style>
+  .site-footer {
+    padding: 2.2rem var(--page-gutter);
+    border-top: 1px solid var(--color-line);
+    color: var(--color-muted);
+    font-size: 1.3rem;
+  }
+</style>

@@ -1,0 +1,68 @@
+---
+import FeatureCard from '../components/home/FeatureCard.astro';
+import Button from '../components/ui/Button.astro';
+import HeroMedia from '../components/ui/HeroMedia.astro';
+import QuoteBlock from '../components/ui/QuoteBlock.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import PublicLayout from '../layouts/PublicLayout.astro';
+
+const user = Astro.locals.user;
+const demoMode = Astro.locals.accessMode === 'demo';
+const canEnterApp = demoMode || Boolean(user);
+---
+
+<PublicLayout
+  title="Entrena con propósito"
+  description="Organiza tu rutina, crea una guía de alimentación y comprende tu energía en un espacio personal."
+  user={user}
+  currentPath={Astro.url.pathname}
+  footerText="Roman Colosseum · La constancia escribe las leyendas."
+>
+  <HeroMedia
+    image="/assets/fondotitulo.jpg"
+    alt="Estatuas clásicas que evocan disciplina y fuerza"
+    eyebrow="Inspirado en la travesía de Odiseo"
+    title="Tu cuerpo. Tu odisea."
+    lead="Construye una rutina, alimenta tu esfuerzo y mide tu energía en un espacio diseñado para proteger tu progreso."
+    width={1024}
+    height={559}
+    priority
+  >
+    <Fragment slot="actions">
+      <Button href={canEnterApp ? '/app' : '/registro'}>{demoMode ? 'Explorar el menú' : user ? 'Entrar a mi imperio' : 'Comenzar mi viaje'}</Button>
+      <Button href="/blog" variant="ghost">Visitar el blog</Button>
+    </Fragment>
+  </HeroMedia>
+
+  <div class="page-shell">
+    <section class="section-flow" aria-labelledby="features-title">
+      <SectionHeading eyebrow="Un camino claro" title="Todo lo que necesitas para avanzar" id="features-title" />
+      <div class="content-grid content-grid--three" data-tablet-columns="two">
+        <FeatureCard numeral="I" title="Entrena con intención" description="Organiza ejercicios para cada día de la semana y consulta un plan que pertenece a tu cuenta." />
+        <FeatureCard numeral="II" title="Nutre tu templo" description="Genera una guía de comidas según tu objetivo, tu ritmo y tus preferencias." />
+        <FeatureCard numeral="III" title="Entiende tu energía" description="Calcula un punto de partida de calorías y conserva un historial reproducible." />
+      </div>
+    </section>
+
+    <section class="section-flow" aria-label="Cita inspiradora">
+      <QuoteBlock quote="Canta, la historia del hombre de muchos caminos." cite="Homero, La Odisea" />
+    </section>
+
+    <section class="section-flow" aria-labelledby="learning-title">
+      <SectionHeading eyebrow="El círculo de la sabiduría" title="Aprende para entrenar mejor" id="learning-title">
+        <Fragment slot="actions"><Button href="/blog" size="small">Ir al blog</Button></Fragment>
+      </SectionHeading>
+      <HeroMedia
+        image="/assets/alejandria (1) (1).png"
+        alt="Biblioteca antigua iluminada"
+        eyebrow="Lectura destacada"
+        title="La fuerza también se estudia."
+        lead="Principios de hipertrofia, alimentación y descanso para recorrer el camino con inteligencia."
+        variant="compact"
+        headingLevel="h2"
+        width={1408}
+        height={768}
+      />
+    </section>
+  </div>
+</PublicLayout>

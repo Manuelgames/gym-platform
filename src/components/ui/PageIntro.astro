@@ -1,0 +1,39 @@
+---
+export interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  /** Limita el tamaño del título en vistas de herramientas densas. */
+  compact?: boolean;
+}
+
+const { eyebrow, title, lead, compact = false } = Astro.props;
+---
+
+<header class:list={["page-intro", { "page-intro--compact": compact }]}>
+  {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+  <h1 class="display-title">{title}</h1>
+  {lead && <p class="lead">{lead}</p>}
+  {Astro.slots.has("actions") && <div class="page-intro__actions"><slot name="actions" /></div>}
+</header>
+
+<style>
+  .page-intro {
+    max-width: 82rem;
+  }
+
+  .page-intro--compact :global(.display-title) {
+    font-size: clamp(3.4rem, 6vw, 5.8rem);
+  }
+
+  .page-intro :global(.lead) {
+    margin-block: 1.6rem 0;
+  }
+
+  .page-intro__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    margin-top: 2.6rem;
+  }
+</style>

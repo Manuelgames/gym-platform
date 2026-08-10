@@ -1,0 +1,78 @@
+---
+export interface WeekDayItem {
+  key: string;
+  label: string;
+  count: number;
+  href?: string;
+}
+
+export interface Props {
+  days: WeekDayItem[];
+  activeKey: string;
+  basePath?: string;
+}
+
+const { days, activeKey, basePath = "/app/rutina" } = Astro.props;
+const hrefFor = (day: WeekDayItem) => day.href || `${basePath}?dia=${encodeURIComponent(day.key)}`;
+---
+
+<nav class="week-nav" aria-label="Días de la semana">
+  {days.map((day) => (
+    <a
+      href={hrefFor(day)}
+      class:list={{ "is-active": day.key === activeKey }}
+      aria-current={day.key === activeKey ? "true" : undefined}
+    >
+      <b>{day.label}</b>
+      <span>{day.count} {day.count === 1 ? "ejercicio" : "ejercicios"}</span>
+    </a>
+  ))}
+</nav>
+
+<style>
+  .week-nav {
+    display: grid;
+    gap: 0.7rem;
+    align-content: start;
+    padding: 1.2rem;
+    border: 1px solid var(--color-line);
+    background: var(--color-surface);
+  }
+
+  a {
+    display: flex;
+    min-height: 4.8rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.3rem;
+    border: 1px solid transparent;
+    color: var(--color-paper);
+    text-align: left;
+  }
+
+  a span {
+    color: var(--color-muted);
+    font-size: 1.2rem;
+    text-align: right;
+  }
+
+  a.is-active,
+  a:hover {
+    border-color: var(--color-line);
+    background: #101712;
+    color: var(--color-gold-light);
+  }
+
+  @media (max-width: 800px) {
+    .week-nav {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 450px) {
+    .week-nav {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

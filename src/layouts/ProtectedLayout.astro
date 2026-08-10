@@ -1,0 +1,46 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import SiteFooter from "../components/navigation/SiteFooter.astro";
+import SiteHeader from "../components/navigation/SiteHeader.astro";
+
+export interface AuthenticatedUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface Props {
+  title: string;
+  description?: string;
+  canonical?: string | URL;
+  image?: string;
+  /** El middleware garantiza este contrato antes de renderizar; el layout no autentica en cliente. */
+  user: AuthenticatedUser;
+  currentPath: string;
+  footerText?: string;
+  mainClass?: string;
+}
+
+const {
+  title,
+  description,
+  canonical,
+  image,
+  user,
+  currentPath,
+  footerText,
+  mainClass = "page-shell",
+} = Astro.props;
+const resolvedFooterText = footerText ?? (Astro.locals.accessMode === "demo"
+  ? "Roman Colosseum · Vista temporal con un perfil de demostración compartido."
+  : "Roman Colosseum · Tu progreso pertenece a tu cuenta.");
+---
+
+<BaseLayout {title} {description} {canonical} {image} noindex>
+  <Fragment slot="head"><slot name="head" /></Fragment>
+  <SiteHeader {user} {currentPath} variant="app" accessMode={Astro.locals.accessMode} showWork={Astro.locals.specialistRoles.length > 0} />
+  <main id="contenido-principal" class={mainClass} tabindex="-1">
+    <slot />
+  </main>
+  <SiteFooter text={resolvedFooterText} />
+</BaseLayout>

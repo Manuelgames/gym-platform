@@ -1,0 +1,57 @@
+---
+import AuthCard from '../components/auth/AuthCard.astro';
+import AuthProviderSection from '../components/auth/AuthProviderSection.astro';
+import FieldRow from '../components/forms/FieldRow.astro';
+import FormField from '../components/forms/FormField.astro';
+import FormMessage from '../components/forms/FormMessage.astro';
+import FormStack from '../components/forms/FormStack.astro';
+import Button from '../components/ui/Button.astro';
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { readErrorMessage, readInvalidField } from '../presentation/feedback';
+
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+const today = new Date().toISOString().slice(0, 10);
+---
+
+<AuthLayout title="Crear cuenta" description="Crea un perfil privado para organizar tu progreso de entrenamiento.">
+  <AuthCard title="Forja tu leyenda" description="Crea un espacio personal para construir hábitos dignos de un héroe.">
+    <FormStack action="/api/auth/register" autocomplete="on">
+      <FormField label="Nombre" for="register-name" required error={invalidField === 'name' ? errorMessage : undefined}>
+        <input id="register-name" name="name" type="text" autocomplete="name" required minlength="2" maxlength="80" aria-invalid={invalidField === 'name' ? 'true' : undefined} />
+      </FormField>
+      <FormField label="Correo electrónico" for="register-email" required error={(invalidField === 'email' || Astro.url.searchParams.get('error') === 'email-registered') ? errorMessage : undefined}>
+        <input id="register-email" name="email" type="email" autocomplete="email" required maxlength="254" aria-invalid={invalidField === 'email' ? 'true' : undefined} />
+      </FormField>
+      <FormField label="Contraseña" for="register-password" hint="Usa al menos 8 caracteres; se guardará únicamente un hash seguro." required error={invalidField === 'password' ? errorMessage : undefined}>
+        <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" aria-invalid={invalidField === 'password' ? 'true' : undefined} />
+      </FormField>
+      <FieldRow>
+        <FormField label="Nacimiento" for="register-birth" required error={invalidField === 'birthDate' ? errorMessage : undefined}>
+          <input id="register-birth" name="birthDate" type="date" autocomplete="bday" required max={today} aria-invalid={invalidField === 'birthDate' ? 'true' : undefined} />
+        </FormField>
+        <FormField label="Identidad" for="register-sex" required error={invalidField === 'sex' ? errorMessage : undefined}>
+          <select id="register-sex" name="sex" required aria-invalid={invalidField === 'sex' ? 'true' : undefined}>
+            <option value="" selected disabled>Selecciona</option>
+            <option value="mujer">Mujer</option>
+            <option value="hombre">Hombre</option>
+            <option value="prefiero no decirlo">Prefiero no decirlo</option>
+          </select>
+        </FormField>
+      </FieldRow>
+      <FormMessage message={invalidField || Astro.url.searchParams.get('error') === 'email-registered' ? undefined : errorMessage} tone="error" />
+      <Button type="submit">Crear mi perfil</Button>
+    </FormStack>
+
+    <AuthProviderSection>
+      <Button type="button" variant="subtle" disabled aria-describedby="google-status">Registrarme con Google</Button>
+      <p id="google-status" class="provider-note">La interfaz está preparada; el proveedor se habilitará después de la decisión técnica.</p>
+    </AuthProviderSection>
+
+    <Fragment slot="footer">¿Ya eres parte del imperio? <a href="/iniciar-sesion">Inicia sesión</a>.</Fragment>
+  </AuthCard>
+</AuthLayout>
+
+<style>
+  .provider-note { margin: 1rem 0 0; color: var(--color-muted); font-size: 1.25rem; text-align: center; }
+</style>

@@ -1,0 +1,60 @@
+---
+export interface Props {
+  /** Obligatoria porque el contenido visual puede ser solo un símbolo. */
+  label: string;
+  type?: "button" | "submit" | "reset";
+  tone?: "neutral" | "danger";
+  disabled?: boolean;
+  class?: string;
+  [attribute: string]: unknown;
+}
+
+const {
+  label,
+  type = "button",
+  tone = "neutral",
+  disabled = false,
+  class: className = "",
+  ...attributes
+} = Astro.props;
+---
+
+<button
+  {...attributes}
+  class:list={["icon-button", `icon-button--${tone}`, className]}
+  {type}
+  {disabled}
+  aria-label={label}
+  title={label}
+>
+  <slot />
+</button>
+
+<style>
+  .icon-button {
+    display: grid;
+    width: 4.4rem;
+    min-width: 4.4rem;
+    height: 4.4rem;
+    place-items: center;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--color-muted);
+    font-size: 1.8rem;
+  }
+
+  .icon-button:hover {
+    border-color: var(--color-line);
+    color: var(--color-paper);
+  }
+
+  .icon-button--danger:hover {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+  }
+
+  .icon-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+</style>
