@@ -49,7 +49,8 @@ function isCurrentApplicationFacade(
     && typeof facade.saveManualRoutine === 'function'
     && typeof facade.saveSpecialistRoutine === 'function'
     && typeof facade.saveManualDiet === 'function'
-    && typeof facade.saveSpecialistDiet === 'function',
+    && typeof facade.saveSpecialistDiet === 'function'
+    && typeof facade.deleteCalorieCalculation === 'function',
   );
 }
 
@@ -120,6 +121,7 @@ function composeApplication(): ApplicationFacade {
     getDietForDownload: diet.getForDownload.bind(diet),
     getCalories: calories.get.bind(calories),
     calculateCalories: calories.calculate.bind(calories),
+    deleteCalorieCalculation: calories.delete.bind(calories),
     getSpecialistsPage: specialists.getPage.bind(specialists),
     registerSpecialist: specialists.register.bind(specialists),
     requestSpecialist: specialists.request.bind(specialists),

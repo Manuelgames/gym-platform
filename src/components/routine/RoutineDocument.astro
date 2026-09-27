@@ -1,5 +1,5 @@
 ---
-import type { RoutinePlan } from '../../domain/routine/routine';
+import { formatRoutineDuration, type RoutinePlan } from '../../domain/routine/routine';
 import Button from '../ui/Button.astro';
 
 export interface Props {
@@ -25,6 +25,16 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
 ---
 
 <article class="routine-sheet">
+  <img
+    class="routine-sheet__watermark"
+    src="/assets/logosintexto.png"
+    alt=""
+    width="504"
+    height="522"
+    loading="lazy"
+    decoding="async"
+    aria-hidden="true"
+  />
   <header class="routine-sheet__masthead">
     <div>
       <div class="routine-sheet__badges"><span>{sourceLabel}</span><span>{plan.level}</span></div>
@@ -43,14 +53,13 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
     <div><dt>Objetivo</dt><dd>{goalLabels[plan.goal]}</dd></div>
     <div><dt>Nivel</dt><dd>{plan.level}</dd></div>
     <div><dt>Lugar</dt><dd>{locationLabels[plan.location]}</dd></div>
-    <div><dt>Sesión</dt><dd>{plan.sessionDurationMinutes} min</dd></div>
+    <div><dt>Sesión</dt><dd>{formatRoutineDuration(plan.sessionDurationMinutes)}</dd></div>
   </dl>
 
   <dl class="routine-metrics">
     <div><dt>Días activos</dt><dd>{plan.days.length - restCount}</dd></div>
     <div><dt>Días de descanso</dt><dd>{restCount}</dd></div>
     <div><dt>Ejercicios semanales</dt><dd>{totalExercises}</dd></div>
-    <div><dt>Equipo</dt><dd>{plan.availableEquipment || 'No especificado'}</dd></div>
   </dl>
 
   <div class="routine-sheet__title"><span></span><h3>Distribución semanal</h3><span></span></div>
@@ -71,15 +80,15 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
         ) : (
           <div class="routine-exercise-table">
             <div class="routine-exercise-table__heading" aria-hidden="true">
-              <span>Ejercicio</span><span>Grupo</span><span>Series × reps</span><span>Descanso</span><span>Tempo</span>
+              <span>Ejercicio</span><span>Grupo</span><span>Prescripción</span><span>Pausa</span><span>Tempo / ritmo</span>
             </div>
             {day.exercises.map((exercise, exerciseIndex) => (
               <div class="routine-exercise-row">
                 <div><span>{String(exerciseIndex + 1).padStart(2, '0')}</span><strong>{exercise.name}</strong>{exercise.notes && <small>{exercise.notes}</small>}</div>
                 <p data-label="Grupo">{exercise.muscle}</p>
-                <p data-label="Series × reps"><strong>{exercise.sets} × {exercise.reps}</strong></p>
-                <p data-label="Descanso">{exercise.restSeconds ? `${exercise.restSeconds} s` : 'Sin pausa'}</p>
-                <p data-label="Tempo">{exercise.tempo || 'Controlado'}</p>
+                <p data-label="Prescripción"><strong>{exercise.prescriptionType === 'duration' ? formatRoutineDuration(exercise.durationMinutes ?? 0) : `${exercise.sets} × ${exercise.reps}`}</strong></p>
+                <p data-label="Pausa">{exercise.prescriptionType === 'duration' && !exercise.restSeconds ? 'No aplica' : exercise.restSeconds ? `${exercise.restSeconds} s` : 'Sin pausa'}</p>
+                <p data-label="Tempo / ritmo">{exercise.tempo || (exercise.prescriptionType === 'duration' ? 'Ritmo sostenible' : 'Controlado')}</p>
               </div>
             ))}
           </div>
@@ -97,7 +106,9 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
 </article>
 
 <style>
-  .routine-sheet { --sheet-blue: #123c66; --sheet-blue-mid: #28629b; --sheet-red: #a33232; --sheet-line: #c9d5df; display: grid; gap: 1.5rem; width: 100%; padding: clamp(2rem, 5vw, 4.4rem); border: 1px solid #d8e0e6; border-radius: 1.2rem; background: linear-gradient(135deg, rgb(248 251 253 / 98%), rgb(255 255 255 / 98%)); box-shadow: 0 2.5rem 6rem rgb(0 0 0 / 24%); color: #18232d; }
+  .routine-sheet { --sheet-blue: #123c66; --sheet-blue-mid: #28629b; --sheet-red: #a33232; --sheet-line: #c9d5df; position: relative; display: grid; gap: 1.5rem; width: 100%; padding: clamp(2rem, 5vw, 4.4rem); overflow: hidden; border: 1px solid #d8e0e6; border-radius: 1.2rem; background: linear-gradient(135deg, rgb(248 251 253 / 98%), rgb(255 255 255 / 98%)); box-shadow: 0 2.5rem 6rem rgb(0 0 0 / 24%); color: #18232d; }
+  .routine-sheet > :not(.routine-sheet__watermark) { position: relative; z-index: 1; }
+  .routine-sheet__watermark { position: absolute; z-index: 0; top: 50%; left: 50%; width: 20px; height: 20px; border-radius: 15px; opacity: .05; object-fit: cover; pointer-events: none; transform: translate(-50%, -50%); user-select: none; }
   .routine-sheet__masthead { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 1.5rem; padding-right: 7rem; }
   .routine-sheet__badges { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: .8rem; }
   .routine-sheet__badges span { padding: .4rem .75rem; border: 1px solid #9bb3c8; border-radius: 99rem; color: var(--sheet-blue-mid); font-size: .95rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -114,7 +125,7 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
   .routine-profile > div:last-child { border-right: 0; }
   .routine-profile dt, .routine-metrics dt { color: var(--sheet-blue-mid); font-size: 1rem; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
   .routine-profile dd { margin: .3rem 0 0; color: #172633; font-size: 1.25rem; font-weight: 750; text-transform: capitalize; overflow-wrap: anywhere; }
-  .routine-metrics { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; overflow: hidden; border: 1px solid #d6dee4; background: #f5f8fa; }
+  .routine-metrics { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; overflow: hidden; border: 1px solid #d6dee4; background: #f5f8fa; }
   .routine-metrics > div { padding: 1rem 1.2rem; border-right: 1px solid #d6dee4; }
   .routine-metrics > div:last-child { border-right: 0; }
   .routine-metrics dd { margin: .25rem 0 0; color: var(--sheet-blue); font-size: 1.4rem; font-weight: 900; overflow-wrap: anywhere; }

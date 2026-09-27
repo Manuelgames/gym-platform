@@ -11,7 +11,6 @@ export function readEditableRoutineForm(form: FormData): SaveEditableRoutineInpu
     level: readTextField(form, 'level', { maxRawLength: 24 }),
     location: readTextField(form, 'location', { maxRawLength: 24 }),
     sessionDurationMinutes: readNumberField(form, 'sessionDurationMinutes'),
-    availableEquipment: readTextField(form, 'availableEquipment', { optional: true, maxRawLength: 300 }),
     limitations: readTextField(form, 'limitations', { optional: true, maxRawLength: 500 }),
     days: parseRoutineDaysJson(readTextField(form, 'days', { maxRawLength: 240 * 1024 })),
   };

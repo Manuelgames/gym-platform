@@ -9,6 +9,7 @@ import Button from '../../components/ui/Button.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
 import PageIntro from '../../components/ui/PageIntro.astro';
 import Panel from '../../components/ui/Panel.astro';
+import { ROUTINE_SESSION_DURATION_OPTIONS } from '../../domain/routine/routine';
 import { getApplication } from '../../infrastructure/composition/container';
 import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
 import { readErrorMessage, readInvalidField } from '../../presentation/feedback';
@@ -35,6 +36,11 @@ const successMessage = saved === 'ai'
     ? 'Tu rutina manual quedó guardada.'
     : undefined;
 const defaults = automaticRoutine ?? manualRoutine;
+const selectedDuration = defaults?.sessionDurationMinutes ?? 60;
+const durationOptions = ROUTINE_SESSION_DURATION_OPTIONS.includes(selectedDuration as never)
+  ? [...ROUTINE_SESSION_DURATION_OPTIONS]
+  : [...ROUTINE_SESSION_DURATION_OPTIONS, selectedDuration].sort((left, right) => left - right);
+const durationOptionLabel = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')} h ${String(minutes % 60).padStart(2, '0')} min`;
 ---
 
 <ProtectedLayout
@@ -99,40 +105,38 @@ const defaults = automaticRoutine ?? manualRoutine;
                 <option value="mixto" selected={defaults?.location === 'mixto'}>Mixto</option>
               </select>
             </FormField>
-            <FormField label="Duración por sesión" for="routine-duration" hint="Entre 15 y 240 minutos." required error={invalidField === 'sessionDurationMinutes' ? errorMessage : undefined}>
-              <input id="routine-duration" name="sessionDurationMinutes" type="number" min="15" max="240" step="5" required value={defaults?.sessionDurationMinutes ?? 60} />
+            <FormField label="Duración por sesión" for="routine-duration" hint="Selecciona una duración en horas y minutos." required error={invalidField === 'sessionDurationMinutes' ? errorMessage : undefined}>
+              <select id="routine-duration" name="sessionDurationMinutes" required>
+                {durationOptions.map((minutes) => <option value={minutes} selected={minutes === selectedDuration}>{durationOptionLabel(minutes)}</option>)}
+              </select>
             </FormField>
           </FieldRow>
           <FormField label="Días de descanso, lunes a domingo" for="routine-rest" hint="Puedes entrenar el domingo o marcarlo como descanso." required error={invalidField === 'restDays' ? errorMessage : undefined}>
             <input id="routine-rest" name="restDaysCount" type="number" min="0" max="6" step="1" required value={defaults?.days.filter((day) => day.isRestDay).length ?? 2} />
           </FormField>
-          <FormField label="Equipo disponible" for="routine-equipment" hint="Ayuda a elegir ejercicios que realmente puedes realizar.">
-            <textarea id="routine-equipment" name="availableEquipment" maxlength="300" rows="2" placeholder="Ej. Barra, banco, mancuernas y poleas">{defaults?.availableEquipment ?? ''}</textarea>
-          </FormField>
           <FormField label="Limitaciones o consideraciones" for="routine-limitations" hint="No se utiliza para diagnóstico ni rehabilitación.">
             <textarea id="routine-limitations" name="limitations" maxlength="500" rows="3" placeholder="Ej. Prefiero ejercicios de bajo impacto">{defaults?.limitations ?? ''}</textarea>
           </FormField>
           <Button type="submit" data-ai-routine-submit>{automaticRoutine ? 'Regenerar rutina' : 'Generar mi rutina'}</Button>
-          <p class="generation-note" data-ai-routine-status role="status">La generación puede tardar algunos segundos.</p>
         </FormStack>
       </Panel>
       <aside class="week-specification">
         <p class="eyebrow">Formato del documento</p><h2>Semana compatible</h2>
-        <ol><li><strong>7 días visibles</strong><span>Lunes a domingo</span></li><li><strong>Grupos cubiertos</strong><span>Ejercicios para cada grupo anunciado</span></li><li><strong>Prescripción completa</strong><span>Series, reps, pausa y tempo</span></li><li><strong>PDF real</strong><span>Misma información de pantalla</span></li></ol>
+        <ol><li><strong>7 días visibles</strong><span>Lunes a domingo</span></li><li><strong>Grupos cubiertos</strong><span>Ejercicios para cada grupo anunciado</span></li><li><strong>Prescripción adecuada</strong><span>Repeticiones o tiempo según el ejercicio</span></li><li><strong>PDF real</strong><span>Misma información de pantalla</span></li></ol>
       </aside>
     </div>
     <div class="routine-result">
-      {automaticRoutine ? <RoutineDocument plan={automaticRoutine} clientName={user.name} pdfHref="/api/routine/pdf/ai" /> : <EmptyState title="Tu rutina automática aparecerá aquí" message="Selecciona objetivo, descansos, duración, nivel y equipo para crear una semana completa." />}
+      {automaticRoutine ? <RoutineDocument plan={automaticRoutine} clientName={user.name} pdfHref="/api/routine/pdf/ai" /> : <EmptyState title="Tu rutina automática aparecerá aquí" message="Selecciona objetivo, descansos, duración y nivel para crear una semana completa." />}
     </div>
   </section>
 
   <section id="routine-panel-manual" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-manual" hidden={activeTab !== 'manual'} data-routine-panel="manual">
     <header class="panel-intro"><p class="eyebrow">Tu propia programación</p><h2>Rutina manual</h2><p>Define cada día, descanso y ejercicio con la misma estructura que utiliza la IA y el entrenador.</p></header>
-    {manualRoutine && <div class="routine-result routine-result--existing"><RoutineDocument plan={manualRoutine} clientName={user.name} pdfHref="/api/routine/pdf/manual" /></div>}
     <details class="editor-disclosure" open={!manualRoutine}>
       <summary>{manualRoutine ? 'Editar mi rutina manual' : 'Crear mi rutina manual'}</summary>
       <div class="editor-disclosure__content"><RoutinePlanEditor id="manual-routine-editor" action="/api/routine/manual/save" plan={manualRoutine} submitLabel="Guardar mi rutina" /></div>
     </details>
+    {manualRoutine && <div class="routine-result routine-result--existing"><RoutineDocument plan={manualRoutine} clientName={user.name} pdfHref="/api/routine/pdf/manual" /></div>}
   </section>
 
   <section id="routine-panel-specialist" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-specialist" hidden={activeTab !== 'specialist'} data-routine-panel="specialist">
@@ -174,14 +178,13 @@ const defaults = automaticRoutine ?? manualRoutine;
   .routine-panel { margin-top: 2rem; }
   .automatic-planner { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(27rem, .75fr); gap: 1.6rem; }
   .automatic-planner h2, .week-specification h2 { margin: .3rem 0 1.5rem; font: 700 2.6rem var(--font-display); }
-  .generation-note { margin: 0; color: var(--color-muted); font-size: 1.15rem; }
   .week-specification { align-self: start; padding: 2rem; border: 1px solid var(--color-line); background: linear-gradient(150deg, rgb(214 166 66 / 8%), rgb(18 27 21 / 98%)); }
   .week-specification ol { display: grid; gap: .8rem; margin: 0; padding: 0; list-style: none; }
   .week-specification li { display: grid; padding: 1rem; border: 1px solid var(--color-line-soft); }
   .week-specification strong { color: var(--color-gold-light); }
   .week-specification span { color: var(--color-muted); font-size: 1.2rem; }
   .routine-result { margin-top: 2rem; }
-  .routine-result--existing { margin: 0 0 2rem; }
+  .routine-result--existing { margin: 2rem 0 0; }
   .panel-intro { max-width: 78rem; padding: 1.2rem 0 2rem; }
   .panel-intro h2 { margin: 0; font: 700 clamp(3rem, 5vw, 4.5rem) var(--font-display); }
   .panel-intro > p:last-child { color: var(--color-muted); }

@@ -55,6 +55,7 @@ function publicError(error: unknown): { error: string; field?: string } {
       case 'ROUTINE_EXERCISE_NOT_FOUND': return { error: 'exercise-not-found' };
       case 'ROUTINE_PLAN_NOT_FOUND': return { error: 'routine-plan-not-found' };
       case 'TRAINING_RELATION_REQUIRED': return { error: 'training-relation-required' };
+      case 'CALORIE_CALCULATION_NOT_FOUND': return { error: 'calculation-not-found' };
       case 'CALORIE_PROFILE_REQUIRED': return { error: 'calorie-profile-required' };
       case 'DIET_PLAN_NOT_FOUND': return { error: 'diet-plan-not-found' };
       case 'NUTRITION_RELATION_REQUIRED': return { error: 'nutrition-relation-required' };

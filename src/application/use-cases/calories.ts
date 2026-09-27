@@ -4,6 +4,7 @@ import {
   type CalorieCalculation,
 } from '../../domain/calories/calorie';
 import type { CalculateCaloriesInput } from '../facade';
+import { ApplicationError } from '../errors';
 import type { FitnessRepository } from '../ports/repositories';
 import type { Clock, IdGenerator } from '../ports/services';
 
@@ -30,5 +31,16 @@ export class CalorieUseCases {
     });
     await this.fitness.addCalorieCalculation(calculation, CALORIE_HISTORY_LIMIT);
     return calculation;
+  }
+
+  /** Elimina por id y propietario; nunca acepta una posición del historial. */
+  async delete(userId: string, calculationId: string): Promise<void> {
+    if (!calculationId.trim()
+      || !(await this.fitness.deleteCalorieCalculation(userId, calculationId))) {
+      throw new ApplicationError(
+        'CALORIE_CALCULATION_NOT_FOUND',
+        'No se encontró el cálculo de calorías.',
+      );
+    }
   }
 }

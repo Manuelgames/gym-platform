@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage, type RGB } from 'pdf-lib';
-import type { RoutinePlan } from '../../domain/routine/routine';
+import { formatRoutineDuration, type RoutinePlan } from '../../domain/routine/routine';
+import { drawBrandWatermark, embedBrandWatermark } from './pdf-branding';
 
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
@@ -51,7 +52,9 @@ export async function createRoutinePdf(plan: RoutinePlan, options: { clientName:
   const document = await PDFDocument.create();
   const regular = await document.embedFont(StandardFonts.Helvetica);
   const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  const brandWatermark = await embedBrandWatermark(document);
   let page: PDFPage = document.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  drawBrandWatermark(page, brandWatermark);
   let y = PAGE_HEIGHT - MARGIN;
 
   const continuationHeader = () => {
@@ -60,7 +63,11 @@ export async function createRoutinePdf(plan: RoutinePlan, options: { clientName:
     page.drawLine({ start: { x: MARGIN, y: PAGE_HEIGHT - 41 }, end: { x: PAGE_WIDTH - MARGIN, y: PAGE_HEIGHT - 41 }, thickness: .7, color: colors.line });
     y = PAGE_HEIGHT - 60;
   };
-  const addPage = () => { page = document.addPage([PAGE_WIDTH, PAGE_HEIGHT]); continuationHeader(); };
+  const addPage = () => {
+    page = document.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    drawBrandWatermark(page, brandWatermark);
+    continuationHeader();
+  };
   const ensure = (height: number) => { if (y - height < BOTTOM) addPage(); };
   const textLines = (text: string, x: number, width: number, size = 9, font = regular, color: RGB = colors.ink, lineHeight = size * 1.25) => {
     const lines = wrap(text, font, size, width);
@@ -76,7 +83,7 @@ export async function createRoutinePdf(plan: RoutinePlan, options: { clientName:
 
   const profileItems = [
     ['ATLETA', options.clientName], ['OBJETIVO', goalLabels[plan.goal]], ['NIVEL', plan.level],
-    ['LUGAR', plan.location], ['SESIÓN', `${plan.sessionDurationMinutes} min`],
+    ['LUGAR', plan.location], ['SESIÓN', formatRoutineDuration(plan.sessionDurationMinutes)],
   ];
   const profileHeight = 55;
   const profileWidth = CONTENT_WIDTH / profileItems.length;
@@ -96,7 +103,6 @@ export async function createRoutinePdf(plan: RoutinePlan, options: { clientName:
   const metrics = [
     ['DÍAS ACTIVOS', String(plan.days.length - restCount)], ['DESCANSOS', String(restCount)],
     ['EJERCICIOS', String(plan.days.reduce((total, day) => total + day.exercises.length, 0))],
-    ['EQUIPO', plan.availableEquipment || 'No especificado'],
   ];
   const metricHeight = 36;
   const metricWidth = CONTENT_WIDTH / metrics.length;
@@ -137,8 +143,9 @@ export async function createRoutinePdf(plan: RoutinePlan, options: { clientName:
       nameLines.forEach((line) => { page.drawText(line, { x: MARGIN + 9, y: nameY, size: 9.3, font: bold, color: colors.ink }); nameY -= 11; });
       noteLines.forEach((line) => { page.drawText(line, { x: MARGIN + 9, y: nameY, size: 7.5, font: regular, color: colors.muted }); nameY -= 9; });
       const columns = [
-        [exercise.muscle, 270], [`${exercise.sets} x ${exercise.reps}`, 350],
-        [exercise.restSeconds ? `${exercise.restSeconds} s` : 'Sin pausa', 435], [exercise.tempo || 'Controlado', 495],
+        [exercise.muscle, 270], [exercise.prescriptionType === 'duration' ? formatRoutineDuration(exercise.durationMinutes ?? 0) : `${exercise.sets} x ${exercise.reps}`, 350],
+        [exercise.prescriptionType === 'duration' && !exercise.restSeconds ? 'No aplica' : exercise.restSeconds ? `${exercise.restSeconds} s` : 'Sin pausa', 435],
+        [exercise.tempo || (exercise.prescriptionType === 'duration' ? 'Ritmo sostenible' : 'Controlado'), 495],
       ] as const;
       columns.forEach(([value, x]) => page.drawText(fitted(value, regular, 8.2, x === 495 ? 57 : 72), { x, y: rowTop - 22, size: 8.2, font: x === 350 ? bold : regular, color: colors.ink }));
       y -= rowHeight;

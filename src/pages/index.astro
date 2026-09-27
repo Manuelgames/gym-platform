@@ -2,7 +2,6 @@
 import FeatureCard from '../components/home/FeatureCard.astro';
 import Button from '../components/ui/Button.astro';
 import HeroMedia from '../components/ui/HeroMedia.astro';
-import QuoteBlock from '../components/ui/QuoteBlock.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import PublicLayout from '../layouts/PublicLayout.astro';
 
@@ -21,8 +20,8 @@ const canEnterApp = demoMode || Boolean(user);
   <HeroMedia
     image="/assets/fondotitulo.jpg"
     alt="Estatuas clásicas que evocan disciplina y fuerza"
-    eyebrow="Inspirado en la travesía de Odiseo"
-    title="Tu cuerpo. Tu odisea."
+    eyebrow="Inspirado en la travesía de un guerrero"
+    title="Roman Colosseum"
     lead="Construye una rutina, alimenta tu esfuerzo y mide tu energía en un espacio diseñado para proteger tu progreso."
     width={1024}
     height={559}
@@ -38,14 +37,13 @@ const canEnterApp = demoMode || Boolean(user);
     <section class="section-flow" aria-labelledby="features-title">
       <SectionHeading eyebrow="Un camino claro" title="Todo lo que necesitas para avanzar" id="features-title" />
       <div class="content-grid content-grid--three" data-tablet-columns="two">
-        <FeatureCard numeral="I" title="Entrena con intención" description="Organiza ejercicios para cada día de la semana y consulta un plan que pertenece a tu cuenta." />
+        <FeatureCard numeral="I" title="Entrena con intención" description="Organiza ejercicios para cada día de la semana y consulta un plan de acuerdo a tu objetivo." />
         <FeatureCard numeral="II" title="Nutre tu templo" description="Genera una guía de comidas según tu objetivo, tu ritmo y tus preferencias." />
-        <FeatureCard numeral="III" title="Entiende tu energía" description="Calcula un punto de partida de calorías y conserva un historial reproducible." />
+        <FeatureCard numeral="III" title="Entiende tu energía" description="Calcula tu punto de partida calórico y lleva un registro de tu progreso para alcanzar tus objetivos." />
+        <FeatureCard numeral="IV" title="Apoyo profesional" description="Solicita el apoyo de especialistas en entrenamiento y nutrición para encaminarte hacia tu objetivo." />
+        <FeatureCard numeral="V" title="Bienestar a tu alcance" description="Accede a herramientas de entrenamiento, nutrición y seguimiento a un costo accesible, pensadas para acompañarte en cada etapa de tu progreso." />
+        <FeatureCard numeral="VI" title="Impulsa tu progreso con IA" description="Aprovecha la inteligencia artificial como apoyo para crear y adaptar planes de entrenamiento y nutrición enfocados en tu desarrollo físico y tus objetivos." />
       </div>
-    </section>
-
-    <section class="section-flow" aria-label="Cita inspiradora">
-      <QuoteBlock quote="Canta, la historia del hombre de muchos caminos." cite="Homero, La Odisea" />
     </section>
 
     <section class="section-flow" aria-labelledby="learning-title">

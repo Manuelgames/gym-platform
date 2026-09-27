@@ -9,6 +9,7 @@ const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   'exercise-not-found': 'El ejercicio ya no existe o no pertenece a tu cuenta.',
   'routine-plan-not-found': 'La rutina solicitada todavía no existe.',
   'training-relation-required': 'La asesoría de entrenamiento ya no está activa o no te pertenece.',
+  'calculation-not-found': 'El cálculo ya no existe o no pertenece a tu cuenta.',
   'calorie-profile-required': 'Completa primero peso, altura y edad en la Calculadora de calorías.',
   'diet-plan-not-found': 'La dieta solicitada todavía no existe.',
   'nutrition-relation-required': 'La asesoría nutricional ya no está activa o no te pertenece.',

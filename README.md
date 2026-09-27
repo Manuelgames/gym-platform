@@ -23,7 +23,7 @@ La persistencia en archivo está pensada para desarrollo, demostraciones y despl
 - Sesión segura administrada por el servidor.
 - Panel personal con resumen de actividad.
 - Tres modalidades de rutina compatibles: automática con IA, creación manual y asignación por entrenador.
-- Semana visual de lunes a domingo con descansos, series, repeticiones, pausas, tempo y descarga PDF.
+- Semana visual de lunes a domingo con prescripciones por series/repeticiones o por tiempo, pausas, ritmo y descarga PDF.
 - Tres modalidades de dieta compatibles: automática con IA, creación manual y asignación por nutricionista.
 - Ingredientes con cantidad y unidad, objetivos nutricionales aproximados y descarga PDF real.
 - La dieta automática exige un cálculo previo de peso, altura y edad.

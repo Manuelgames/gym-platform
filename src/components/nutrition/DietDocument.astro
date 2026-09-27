@@ -59,6 +59,16 @@ function displayTime(value: string): string {
 ---
 
 <article class="diet-sheet">
+  <img
+    class="diet-sheet__watermark"
+    src="/assets/logosintexto.png"
+    alt=""
+    width="504"
+    height="522"
+    loading="lazy"
+    decoding="async"
+    aria-hidden="true"
+  />
   <svg class="diet-sheet__symbols" aria-hidden="true">
     <defs>
       <symbol id={`${iconPrefix}-user`} viewBox="0 0 48 48">
@@ -236,6 +246,7 @@ function displayTime(value: string): string {
     --sheet-cream: #fbfaf4;
     --sheet-line: #b6c98d;
     --sheet-gold: #c6a26a;
+    position: relative;
     display: grid;
     gap: 1.5rem;
     padding: clamp(1.8rem, 4vw, 3.4rem);
@@ -248,6 +259,8 @@ function displayTime(value: string): string {
     box-shadow: 0 2.2rem 6rem rgb(0 0 0 / 22%);
     color: #152219;
   }
+  .diet-sheet > :not(.diet-sheet__watermark) { position: relative; z-index: 1; }
+  .diet-sheet__watermark { position: absolute; z-index: 0; top: 50%; left: 50%; width: 20px; height: 20px; border-radius: 15px; opacity: .05; object-fit: cover; pointer-events: none; transform: translate(-50%, -50%); user-select: none; }
   .diet-sheet__symbols { position: absolute; width: 0; height: 0; overflow: hidden; }
   .diet-sheet svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .diet-sheet__masthead { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 1.5rem; padding-right: 8rem; }

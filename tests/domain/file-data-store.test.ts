@@ -106,7 +106,7 @@ describe('FileDataStore', () => {
 
     expect(await store.listRoutine('user-1')).toHaveLength(25);
     const persisted = JSON.parse(await readFile(file, 'utf8')) as { schemaVersion: number; routineExercises: unknown[] };
-    expect(persisted.schemaVersion).toBe(6);
+    expect(persisted.schemaVersion).toBe(7);
     expect(persisted.routineExercises).toHaveLength(25);
     expect((await readdir(directory)).filter((name) => name.endsWith('.tmp'))).toEqual([]);
   });
@@ -161,6 +161,38 @@ describe('FileDataStore', () => {
       hasDiet: false,
       calorieCalculationCount: 0,
     });
+  });
+
+  it('elimina solo el cálculo del propietario y conserva las dietas relacionadas', async () => {
+    const { store } = await createStore();
+    await store.create(user('user-1', 'uno@example.com'));
+    await store.create(user('user-2', 'dos@example.com'));
+    const calculation = createCalorieCalculation({
+      id: 'calculation-1',
+      userId: 'user-1',
+      age: 30,
+      sex: 'female',
+      weightKg: 65,
+      heightCm: 165,
+      activityFactor: 1.55,
+      now: '2026-08-05T12:00:00.000Z',
+    });
+    await store.addCalorieCalculation(calculation, 10);
+    await store.saveDiet(createDietPlan({
+      id: 'diet-1',
+      userId: 'user-1',
+      goal: 'mantener',
+      preference: 'general',
+      meals: 3,
+      calorieCalculationId: calculation.id,
+      now: '2026-08-05T12:01:00.000Z',
+    }));
+
+    expect(await store.deleteCalorieCalculation('user-2', calculation.id)).toBe(false);
+    expect(await store.listCalorieCalculations('user-1')).toHaveLength(1);
+    expect(await store.deleteCalorieCalculation('user-1', calculation.id)).toBe(true);
+    expect(await store.listCalorieCalculations('user-1')).toEqual([]);
+    expect(await store.getDiet('user-1')).toMatchObject({ calorieCalculationId: null });
   });
 
   it('conserva un único id y createdAt ante reemplazos concurrentes de dieta', async () => {

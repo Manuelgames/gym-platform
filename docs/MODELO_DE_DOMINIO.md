@@ -136,7 +136,8 @@ type MuscleGroup =
   | 'Hombros'
   | 'Brazos'
   | 'Core'
-  | 'Cardio';
+  | 'Cardio'
+  | 'Acondicionamiento';
 ```
 
 Invariantes:
@@ -149,6 +150,16 @@ Invariantes:
 - `day` y `muscle`: pertenecen a sus catálogos cerrados.
 
 El orden actual es el de inserción dentro de cada día. Si en el futuro se permite reordenar manualmente, se añadirá un campo explícito y una migración de esquema.
+
+Los documentos semanales enriquecidos (`RoutinePlan`) distinguen la prescripción de cada ejercicio:
+
+```ts
+type RoutinePrescription =
+  | { prescriptionType: 'repetitions'; sets: number; reps: string; durationMinutes: null }
+  | { prescriptionType: 'duration'; sets: null; reps: ''; durationMinutes: number };
+```
+
+`Cardio` y `Acondicionamiento` siempre usan `duration`; la suma de sus minutos dentro de un día no puede superar la duración configurada para la sesión.
 
 ## RoutineByDay
 

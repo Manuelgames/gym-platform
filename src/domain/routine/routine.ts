@@ -23,10 +23,32 @@ export const MUSCLE_GROUPS = [
   'Brazos',
   'Core',
   'Cardio',
+  'Acondicionamiento',
 ] as const;
 
 /** Grupo muscular asignable a un ejercicio. */
 export type MuscleGroup = (typeof MUSCLE_GROUPS)[number];
+
+/** Formas de prescribir un ejercicio dentro del plan profesional. */
+export const ROUTINE_PRESCRIPTION_TYPES = ['repetitions', 'duration'] as const;
+export type RoutinePrescriptionType = (typeof ROUTINE_PRESCRIPTION_TYPES)[number];
+
+/** Duraciones seleccionables; se almacenan como minutos totales. */
+export const ROUTINE_SESSION_DURATION_OPTIONS = [15, 30, 45, 60, 75, 90, 105, 120, 150, 180, 240] as const;
+
+/** Presenta minutos como horas y minutos sin perder el valor canónico. */
+export function formatRoutineDuration(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours} h`;
+  return `${hours} h ${minutes} min`;
+}
+
+/** Cardio y acondicionamiento siempre necesitan una duración explícita. */
+export function requiresDurationPrescription(muscle: MuscleGroup): boolean {
+  return muscle === 'Cardio' || muscle === 'Acondicionamiento';
+}
 
 /** Ejercicio persistente y propiedad de un único usuario. */
 export interface RoutineExercise {
@@ -143,8 +165,10 @@ export type RoutineLocation = (typeof ROUTINE_LOCATIONS)[number];
 export interface RoutinePlanExercise {
   name: string;
   muscle: MuscleGroup;
-  sets: number;
+  prescriptionType: RoutinePrescriptionType;
+  sets: number | null;
   reps: string;
+  durationMinutes: number | null;
   restSeconds: number;
   tempo: string;
   notes: string;
@@ -183,8 +207,10 @@ export interface RoutinePlan {
 export interface RoutinePlanExerciseInput {
   name?: unknown;
   muscle?: unknown;
+  prescriptionType?: unknown;
   sets?: unknown;
   reps?: unknown;
+  durationMinutes?: unknown;
   restSeconds?: unknown;
   tempo?: unknown;
   notes?: unknown;
@@ -231,7 +257,6 @@ export interface AutomaticRoutineGenerationInput {
   location: RoutineLocation;
   sessionDurationMinutes: number;
   restDaysCount: number;
-  availableEquipment: string;
   limitations: string;
 }
 
@@ -256,16 +281,30 @@ function optionalRoutineText(value: unknown, field: string, maximum: number): st
 function normalizePlanExercise(value: unknown): RoutinePlanExercise {
   assertDomain(typeof value === 'object' && value !== null && !Array.isArray(value), 'days', 'El ejercicio no es válido.');
   const candidate = value as RoutinePlanExerciseInput;
-  const sets = Number(candidate.sets);
+  const muscle = candidate.muscle as MuscleGroup;
+  const prescriptionType = candidate.prescriptionType as RoutinePrescriptionType;
   const restSeconds = Number(candidate.restSeconds);
-  assertDomain(MUSCLE_GROUPS.includes(candidate.muscle as MuscleGroup), 'muscle', 'Selecciona un grupo muscular válido.');
-  assertDomain(Number.isInteger(sets) && sets >= 1 && sets <= 30, 'sets', 'Las series deben estar entre 1 y 30.');
+  assertDomain(MUSCLE_GROUPS.includes(muscle), 'muscle', 'Selecciona un grupo muscular válido.');
+  assertDomain(ROUTINE_PRESCRIPTION_TYPES.includes(prescriptionType), 'prescriptionType', 'Selecciona series y repeticiones o duración.');
+  assertDomain(!requiresDurationPrescription(muscle) || prescriptionType === 'duration', 'prescriptionType', 'Cardio y acondicionamiento deben indicar su duración.');
   assertDomain(Number.isInteger(restSeconds) && restSeconds >= 0 && restSeconds <= 900, 'restSeconds', 'El descanso debe estar entre 0 y 900 segundos.');
+  const sets = prescriptionType === 'repetitions' ? Number(candidate.sets) : null;
+  const reps = prescriptionType === 'repetitions'
+    ? normalizedRoutineText(candidate.reps, 'reps', 1, 30)
+    : '';
+  const durationMinutes = prescriptionType === 'duration' ? Number(candidate.durationMinutes) : null;
+  if (prescriptionType === 'repetitions') {
+    assertDomain(Number.isInteger(sets) && (sets ?? 0) >= 1 && (sets ?? 0) <= 30, 'sets', 'Las series deben estar entre 1 y 30.');
+  } else {
+    assertDomain(Number.isInteger(durationMinutes) && (durationMinutes ?? 0) >= 1 && (durationMinutes ?? 0) <= 240, 'durationMinutes', 'La duración del ejercicio debe estar entre 1 minuto y 4 horas.');
+  }
   return {
     name: normalizedRoutineText(candidate.name, 'name', 1, 100),
-    muscle: candidate.muscle as MuscleGroup,
+    muscle,
+    prescriptionType,
     sets,
-    reps: normalizedRoutineText(candidate.reps, 'reps', 1, 30),
+    reps,
+    durationMinutes,
     restSeconds,
     tempo: optionalRoutineText(candidate.tempo, 'tempo', 30),
     notes: optionalRoutineText(candidate.notes, 'notes', 300),
@@ -315,6 +354,13 @@ export function createRoutinePlan(input: CreateRoutinePlanInput): RoutinePlan {
   const byDay = new Map(normalizedDays.map((day) => [day.day, day]));
   const days = ROUTINE_PLAN_DAYS.map((day) => byDay.get(day)!);
   assertDomain(days.some((day) => !day.isRestDay), 'days', 'La semana necesita al menos un día de entrenamiento.');
+  for (const day of days) {
+    const timedMinutes = day.exercises.reduce(
+      (total, exercise) => total + (exercise.durationMinutes ?? 0),
+      0,
+    );
+    assertDomain(timedMinutes <= input.sessionDurationMinutes, 'durationMinutes', `La duración de los ejercicios de ${day.day} supera la duración de la sesión.`);
+  }
 
   const source = input.source as RoutinePlanSource;
   const engine = input.generationEngine as RoutineGenerationEngine;
@@ -364,10 +410,10 @@ export function parseRoutineDaysJson(value: string): RoutinePlanDayInput[] {
 const TRAINING_SPLITS: Record<RoutineGoal, readonly MuscleGroup[]> = {
   fuerza: ['Piernas', 'Pecho', 'Espalda', 'Piernas', 'Hombros', 'Core', 'Brazos'],
   hipertrofia: ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Brazos', 'Core', 'Cardio'],
-  perdida_grasa: ['Piernas', 'Pecho', 'Espalda', 'Cardio', 'Hombros', 'Core', 'Brazos'],
-  resistencia: ['Cardio', 'Piernas', 'Espalda', 'Pecho', 'Core', 'Hombros', 'Brazos'],
+  perdida_grasa: ['Piernas', 'Pecho', 'Espalda', 'Cardio', 'Hombros', 'Core', 'Acondicionamiento'],
+  resistencia: ['Cardio', 'Piernas', 'Espalda', 'Pecho', 'Core', 'Hombros', 'Acondicionamiento'],
   movilidad: ['Core', 'Piernas', 'Hombros', 'Espalda', 'Cardio', 'Brazos', 'Pecho'],
-  general: ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Cardio', 'Core', 'Brazos'],
+  general: ['Pecho', 'Espalda', 'Piernas', 'Hombros', 'Cardio', 'Core', 'Acondicionamiento'],
 };
 
 /** Comprueba que los grupos declarados en el título coincidan con los ejercicios. */
@@ -389,6 +435,7 @@ const GYM_EXERCISES: Record<MuscleGroup, readonly string[]> = {
   Brazos: ['Curl con barra', 'Extensión de tríceps', 'Curl martillo', 'Fondos asistidos'],
   Core: ['Plancha frontal', 'Pallof press', 'Elevación de rodillas', 'Dead bug'],
   Cardio: ['Bicicleta estática', 'Caminata inclinada', 'Remo ergómetro', 'Intervalos en elíptica'],
+  Acondicionamiento: ['Empuje de trineo', 'Cuerdas de batalla', 'Circuito con kettlebell', 'Farmer walk'],
 };
 
 const HOME_EXERCISES: Record<MuscleGroup, readonly string[]> = {
@@ -399,15 +446,24 @@ const HOME_EXERCISES: Record<MuscleGroup, readonly string[]> = {
   Brazos: ['Curl con banda', 'Fondos en silla estable', 'Curl martillo con mochila', 'Extensión de tríceps con banda'],
   Core: ['Plancha frontal', 'Plancha lateral', 'Dead bug', 'Escaladores controlados'],
   Cardio: ['Marcha rápida', 'Jumping jacks de bajo impacto', 'Escaladores', 'Circuito de pasos laterales'],
+  Acondicionamiento: ['Circuito de sentadilla y empuje', 'Marcha con carga', 'Circuito de cuerpo completo', 'Subidas a escalón'],
 };
 
-function localExercisePrescription(goal: RoutineGoal): Pick<RoutinePlanExercise, 'sets' | 'reps' | 'restSeconds' | 'tempo'> {
-  if (goal === 'fuerza') return { sets: 4, reps: '4-6', restSeconds: 150, tempo: '2-1-1' };
-  if (goal === 'hipertrofia') return { sets: 4, reps: '8-12', restSeconds: 90, tempo: '3-1-1' };
-  if (goal === 'resistencia') return { sets: 3, reps: '12-20', restSeconds: 45, tempo: '2-0-2' };
-  if (goal === 'movilidad') return { sets: 3, reps: '8-10 por lado', restSeconds: 30, tempo: 'controlado' };
-  if (goal === 'perdida_grasa') return { sets: 3, reps: '10-15', restSeconds: 45, tempo: '2-0-1' };
-  return { sets: 3, reps: '8-12', restSeconds: 75, tempo: 'controlado' };
+function localExercisePrescription(
+  goal: RoutineGoal,
+  muscle: MuscleGroup,
+  timedDurationMinutes: number,
+): Pick<RoutinePlanExercise, 'prescriptionType' | 'sets' | 'reps' | 'durationMinutes' | 'restSeconds' | 'tempo'> {
+  if (requiresDurationPrescription(muscle)) {
+    const tempo = goal === 'resistencia' ? 'Ritmo moderado' : goal === 'perdida_grasa' ? 'Intervalos controlados' : 'Ritmo sostenible';
+    return { prescriptionType: 'duration', sets: null, reps: '', durationMinutes: timedDurationMinutes, restSeconds: 0, tempo };
+  }
+  if (goal === 'fuerza') return { prescriptionType: 'repetitions', sets: 4, reps: '4-6', durationMinutes: null, restSeconds: 150, tempo: '2-1-1' };
+  if (goal === 'hipertrofia') return { prescriptionType: 'repetitions', sets: 4, reps: '8-12', durationMinutes: null, restSeconds: 90, tempo: '3-1-1' };
+  if (goal === 'resistencia') return { prescriptionType: 'repetitions', sets: 3, reps: '12-20', durationMinutes: null, restSeconds: 45, tempo: '2-0-2' };
+  if (goal === 'movilidad') return { prescriptionType: 'repetitions', sets: 3, reps: '8-10 por lado', durationMinutes: null, restSeconds: 30, tempo: 'controlado' };
+  if (goal === 'perdida_grasa') return { prescriptionType: 'repetitions', sets: 3, reps: '10-15', durationMinutes: null, restSeconds: 45, tempo: '2-0-1' };
+  return { prescriptionType: 'repetitions', sets: 3, reps: '8-12', durationMinutes: null, restSeconds: 75, tempo: 'controlado' };
 }
 
 /** Respaldo determinista cuando la integración externa no está configurada o falla. */
@@ -417,7 +473,6 @@ export function buildLocalAutomaticRoutine(input: AutomaticRoutineGenerationInpu
   const restPriority = [2, 5, 6, 3, 1, 4] as const;
   const restIndexes = new Set<number>(restPriority.slice(0, input.restDaysCount));
   const splits = TRAINING_SPLITS[input.goal];
-  const prescription = localExercisePrescription(input.goal);
   const exerciseCount = Math.max(2, Math.min(8, Math.round(input.sessionDurationMinutes / 15)));
   const dayLabels: Record<RoutinePlanDayName, string> = {
     lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo',
@@ -434,23 +489,31 @@ export function buildLocalAutomaticRoutine(input: AutomaticRoutineGenerationInpu
       ...library[primary].slice(0, primaryCount).map((name) => ({ name, muscle: primary })),
       ...library[secondary].slice(0, exerciseCount - primaryCount).map((name) => ({ name, muscle: secondary })),
     ];
+    const timedExerciseCount = selected.filter(({ muscle }) => requiresDurationPrescription(muscle)).length;
+    const allTimed = timedExerciseCount === selected.length;
+    const timedBudget = input.sessionDurationMinutes * (allTimed ? 0.8 : 0.4);
+    const timedDurationMinutes = timedExerciseCount
+      ? Math.max(5, Math.floor(timedBudget / timedExerciseCount / 5) * 5)
+      : 0;
     const exercises: RoutinePlanExerciseInput[] = selected.map(({ name, muscle }, exerciseIndex) => ({
       name,
       muscle,
-      ...prescription,
-      notes: exerciseIndex === 0 ? 'Realiza primero series progresivas de calentamiento sin llegar al fallo.' : 'Conserva una técnica estable y detén la serie si se pierde el control.',
+      ...localExercisePrescription(input.goal, muscle, timedDurationMinutes),
+      notes: requiresDurationPrescription(muscle)
+        ? 'Mantén una intensidad sostenible y reduce el ritmo ante mareo, dolor o falta de control.'
+        : exerciseIndex === 0 ? 'Realiza primero series progresivas de calentamiento sin llegar al fallo.' : 'Conserva una técnica estable y detén la serie si se pierde el control.',
     }));
     return {
       day,
       title: `${dayLabels[day]} · ${primary}${secondary !== primary ? ` y ${secondary}` : ''}`,
-      focus: `Sesión de ${input.sessionDurationMinutes} minutos orientada a ${input.goal.replace('_', ' ')}.`,
+      focus: `Sesión de ${formatRoutineDuration(input.sessionDurationMinutes)} orientada a ${input.goal.replace('_', ' ')}.`,
       isRestDay: false,
       exercises,
     };
   });
   return {
     title: `Rutina semanal de ${input.goal.replace('_', ' ')}`,
-    summary: `Plan de lunes a domingo para nivel ${input.level}, con ${input.restDaysCount} ${input.restDaysCount === 1 ? 'día' : 'días'} de descanso y sesiones aproximadas de ${input.sessionDurationMinutes} minutos.`,
+    summary: `Plan de lunes a domingo para nivel ${input.level}, con ${input.restDaysCount} ${input.restDaysCount === 1 ? 'día' : 'días'} de descanso y sesiones aproximadas de ${formatRoutineDuration(input.sessionDurationMinutes)}.`,
     days,
     engine: 'local',
   };

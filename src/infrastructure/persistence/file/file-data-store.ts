@@ -274,6 +274,23 @@ export class FileDataStore implements UserRepository, FitnessRepository, Special
     });
   }
 
+  /** Elimina por id y propietario y desprende las dietas que usaban ese cálculo. */
+  deleteCalorieCalculation(userId: string, calculationId: string): Promise<boolean> {
+    return this.mutate(async (database) => {
+      const index = database.calorieCalculations.findIndex(
+        (calculation) => calculation.id === calculationId && calculation.userId === userId,
+      );
+      if (index < 0) return false;
+      database.calorieCalculations.splice(index, 1);
+      database.dietPlans = database.dietPlans.map((plan) => (
+        plan.userId === userId && plan.calorieCalculationId === calculationId
+          ? { ...plan, calorieCalculationId: null }
+          : plan
+      ));
+      return true;
+    });
+  }
+
   /** Obtiene métricas desde una sola lectura del documento. */
   async getSummary(userId: string): Promise<FitnessSummary> {
     const database = await this.readConsistentDatabase();

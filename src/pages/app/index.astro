@@ -31,9 +31,9 @@ const dashboard = await getApplication().getDashboard(user.id);
   <section class="section-flow" aria-labelledby="tools-title">
     <SectionHeading eyebrow="Tus herramientas" title="Un santuario para cada hábito" id="tools-title" />
     <div class="content-grid content-grid--three" data-tablet-columns="two">
-      <ModuleCard numeral="I" title="La rutina" description="Diseña ejercicios para cada día de la semana dentro de tu cuenta." href="/app/rutina" actionLabel="Entrenar" />
-      <ModuleCard numeral="II" title="La dieta" description="Genera una guía de comidas según tu objetivo y preferencia." href="/app/dieta" actionLabel="Planificar" />
-      <ModuleCard numeral="III" title="El cálculo" description="Estima tus calorías diarias y consulta tu bitácora personal." href="/app/calculadora" actionLabel="Calcular" />
+      <ModuleCard numeral="I" title="rutina" description="Diseña ejercicios para cada día de la semana dentro de tu cuenta." href="/app/rutina" actionLabel="Entrenar" />
+      <ModuleCard numeral="II" title="dieta" description="Genera una guía de comidas según tu objetivo y preferencia." href="/app/dieta" actionLabel="Planificar" />
+      <ModuleCard numeral="III" title="cálculo" description="Estima tus calorías diarias y consulta tu bitácora personal." href="/app/calculadora" actionLabel="Calcular" />
       <ModuleCard numeral="IV" title="Especialistas" description="Elige hasta un entrenador y un nutricionista, o presenta tu propio perfil profesional." href="/app/especialistas" actionLabel="Explorar" />
       {Astro.locals.specialistRoles.length > 0 && (
         <ModuleCard numeral="V" title="Mi trabajo" description="Gestiona solicitantes y personas asesoradas en cada uno de tus roles activos." href="/app/mi-trabajo" actionLabel="Gestionar" />

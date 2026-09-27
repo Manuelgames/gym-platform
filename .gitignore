@@ -19,3 +19,5 @@ data/*.lock
 .DS_Store
 Thumbs.db
 coverage/
+
+.vscode

@@ -61,6 +61,8 @@ export interface FitnessRepository {
   listCalorieCalculations(userId: string): Promise<CalorieCalculation[]>;
   /** Añade un cálculo y conserva como máximo `limit` registros del usuario. */
   addCalorieCalculation(calculation: CalorieCalculation, limit: number): Promise<void>;
+  /** Elimina un cálculo solo cuando el id pertenece al usuario indicado. */
+  deleteCalorieCalculation(userId: string, calculationId: string): Promise<boolean>;
   /** Calcula contadores sobre una sola instantánea consistente. */
   getSummary(userId: string): Promise<FitnessSummary>;
 }

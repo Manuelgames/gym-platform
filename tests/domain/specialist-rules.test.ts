@@ -75,7 +75,7 @@ describe('reglas de especialistas', () => {
 });
 
 describe('migración del documento', () => {
-  it('convierte v1 a v6 preservando datos y agregando el perfil personal', () => {
+  it('convierte v1 a v7 preservando datos y agregando el perfil personal', () => {
     const user = createPasswordUser({
       id: 'user-1', name: 'Usuario', email: 'usuario@example.com',
       passwordHash: 'hash', birthDate: '1990-01-01', sex: 'prefiero no decirlo', now,
@@ -89,14 +89,14 @@ describe('migración del documento', () => {
       calorieCalculations: [],
     });
     expect(migrated).toMatchObject({
-      schemaVersion: 6,
+      schemaVersion: 7,
       users: [{ id: 'user-1', profilePhoto: null }],
       specialistProfiles: [],
       specialistRequests: [],
     });
   });
 
-  it('convierte v2 a v6 sin perder las colecciones profesionales', () => {
+  it('convierte v2 a v7 sin perder las colecciones profesionales', () => {
     const user = createPasswordUser({
       id: 'user-1', name: 'Usuario', email: 'usuario@example.com',
       passwordHash: 'hash', birthDate: '1990-01-01', sex: 'prefiero no decirlo', now,
@@ -109,7 +109,7 @@ describe('migración del documento', () => {
       specialistProfiles: [], specialistRequests: [],
     });
 
-    expect(migrated.schemaVersion).toBe(6);
+    expect(migrated.schemaVersion).toBe(7);
     expect(migrated.users[0]?.profilePhoto).toBeNull();
   });
 
@@ -140,7 +140,7 @@ describe('migración del documento', () => {
     });
   });
 
-  it('convierte v4 a v6 y recupera los ejercicios anteriores como rutina manual', () => {
+  it('convierte v4 a v7 y recupera los ejercicios anteriores como rutina manual', () => {
     const legacyUser = createPasswordUser({
       id: 'user-1', name: 'Usuario', email: 'usuario@example.com',
       passwordHash: 'hash', birthDate: '1990-01-01', sex: 'prefiero no decirlo', now,
@@ -155,14 +155,15 @@ describe('migración del documento', () => {
       specialistProfiles: [], specialistRequests: [],
     });
 
-    expect(migrated.schemaVersion).toBe(6);
+    expect(migrated.schemaVersion).toBe(7);
     expect(migrated.routineExercises).toEqual([exercise]);
     expect(migrated.routinePlans[0]).toMatchObject({
       userId: 'user-1', source: 'manual', generationEngine: 'manual',
     });
     expect(migrated.routinePlans[0]?.days[0]).toMatchObject({ day: 'lunes', isRestDay: false });
     expect(migrated.routinePlans[0]?.days[0]?.exercises[0]).toMatchObject({
-      name: 'Press de banca', sets: 4, reps: '8-10', restSeconds: 90,
+      name: 'Press de banca', prescriptionType: 'repetitions', sets: 4,
+      reps: '8-10', durationMinutes: null, restSeconds: 90,
     });
     expect(migrated.routinePlans[0]?.days.at(-1)).toMatchObject({ day: 'domingo', isRestDay: true });
   });
@@ -179,7 +180,7 @@ describe('migración del documento', () => {
       days: ROUTINE_PLAN_DAYS.map((day) => ({
         day, title: day === 'lunes' ? 'Pecho' : 'Descanso', focus: '',
         isRestDay: day !== 'lunes',
-        exercises: day === 'lunes' ? [{ name: 'Press', muscle: 'Pecho', sets: 3, reps: '10', restSeconds: 90, tempo: '', notes: '' }] : [],
+        exercises: day === 'lunes' ? [{ name: 'Press', muscle: 'Pecho', prescriptionType: 'repetitions', sets: 3, reps: '10', durationMinutes: null, restSeconds: 90, tempo: '', notes: '' }] : [],
       })),
     });
     const migrated = parsePersistedDatabase({
@@ -188,8 +189,46 @@ describe('migración del documento', () => {
       dietPlans: [], calorieCalculations: [], specialistProfiles: [], specialistRequests: [],
     });
 
-    expect(migrated.schemaVersion).toBe(6);
+    expect(migrated.schemaVersion).toBe(7);
     expect(migrated.routinePlans[0]?.days.slice(0, 6)).toEqual(plan.days.slice(0, 6));
     expect(migrated.routinePlans[0]?.days[6]).toMatchObject({ day: 'domingo', isRestDay: true, exercises: [] });
+  });
+
+  it('convierte cardio v6 a una prescripción explícita por minutos', () => {
+    const user = createPasswordUser({
+      id: 'user-1', name: 'Usuario', email: 'usuario@example.com',
+      passwordHash: 'hash', birthDate: '1990-01-01', sex: 'prefiero no decirlo', now,
+    });
+    const currentPlan = createRoutinePlan({
+      id: 'routine-cardio', userId: user.id, source: 'manual', title: 'Rutina cardio',
+      goal: 'resistencia', level: 'intermedio', location: 'gimnasio', sessionDurationMinutes: 60,
+      availableEquipment: 'Texto anterior', generationEngine: 'manual', now,
+      days: ROUTINE_PLAN_DAYS.map((day) => ({
+        day, title: day === 'lunes' ? 'Cardio' : 'Descanso', focus: '', isRestDay: day !== 'lunes',
+        exercises: day === 'lunes' ? [{
+          name: 'Bicicleta', muscle: 'Cardio', prescriptionType: 'duration', sets: null, reps: '',
+          durationMinutes: 15, restSeconds: 0, tempo: 'Moderado', notes: '',
+        }] : [],
+      })),
+    });
+    const legacyDays = currentPlan.days.map((day) => ({
+      ...day,
+      exercises: day.exercises.map((exercise) => ({
+        name: exercise.name, muscle: exercise.muscle, sets: 3, reps: '10-15',
+        restSeconds: 45, tempo: exercise.tempo, notes: exercise.notes,
+      })),
+    }));
+    const migrated = parsePersistedDatabase({
+      schemaVersion: 6,
+      users: [user], routineExercises: [], routinePlans: [{ ...currentPlan, days: legacyDays }],
+      dietPlans: [], calorieCalculations: [], specialistProfiles: [], specialistRequests: [],
+    });
+
+    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.routinePlans[0]?.availableEquipment).toBe('');
+    expect(migrated.routinePlans[0]?.days[0]?.exercises[0]).toMatchObject({
+      muscle: 'Cardio', prescriptionType: 'duration', sets: null, reps: '',
+      durationMinutes: 15, restSeconds: 0,
+    });
   });
 });

@@ -90,6 +90,7 @@ button {
     width: 3.8rem;
     height: 3.8rem;
     object-fit: contain;
+    border-radius: 15px;
 }
 
 .nav-toggle {
@@ -324,6 +325,7 @@ button {
 
 .auth-brand img {
     width: 4.2rem;
+    border-radius: 15px;
 }
 
 .auth-card h1 {

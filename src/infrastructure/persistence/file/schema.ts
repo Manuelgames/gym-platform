@@ -22,7 +22,9 @@ import {
   ROUTINE_LOCATIONS,
   ROUTINE_PLAN_DAYS,
   ROUTINE_PLAN_SOURCES,
+  ROUTINE_PRESCRIPTION_TYPES,
   WEEK_DAYS,
+  requiresDurationPrescription,
   type RoutineExercise,
   type RoutinePlan,
 } from '../../../domain/routine/routine';
@@ -47,7 +49,7 @@ import {
 } from '../../../domain/users/user';
 
 /** Versión vigente; las versiones anteriores se migran en memoria al leer. */
-export const DATA_SCHEMA_VERSION = 6 as const;
+export const DATA_SCHEMA_VERSION = 7 as const;
 
 /** Documento completo que se reemplaza como una unidad atómica. */
 export interface PersistedDatabase {
@@ -144,11 +146,8 @@ function isRoutineExercise(value: unknown): value is RoutineExercise {
 }
 
 function isRoutinePlanExercise(value: unknown): boolean {
-  return isObject(value)
-    && isString(value.name)
-    && value.name.length >= 1
-    && value.name.length <= 100
-    && MUSCLE_GROUPS.includes(value.muscle as never)
+  if (!isObject(value)) return false;
+  const repetitionsValid = value.prescriptionType === 'repetitions'
     && isFiniteNumber(value.sets)
     && Number.isInteger(value.sets)
     && (value.sets as number) >= 1
@@ -156,6 +155,22 @@ function isRoutinePlanExercise(value: unknown): boolean {
     && isString(value.reps)
     && value.reps.length >= 1
     && value.reps.length <= 30
+    && value.durationMinutes === null;
+  const durationValid = value.prescriptionType === 'duration'
+    && value.sets === null
+    && value.reps === ''
+    && isFiniteNumber(value.durationMinutes)
+    && Number.isInteger(value.durationMinutes)
+    && (value.durationMinutes as number) >= 1
+    && (value.durationMinutes as number) <= 240;
+  const muscleValid = MUSCLE_GROUPS.includes(value.muscle as never)
+    && (!requiresDurationPrescription(value.muscle as never) || value.prescriptionType === 'duration');
+  return isString(value.name)
+    && value.name.length >= 1
+    && value.name.length <= 100
+    && muscleValid
+    && ROUTINE_PRESCRIPTION_TYPES.includes(value.prescriptionType as never)
+    && (repetitionsValid || durationValid)
     && isFiniteNumber(value.restSeconds)
     && Number.isInteger(value.restSeconds)
     && (value.restSeconds as number) >= 0
@@ -440,10 +455,12 @@ function migrateLegacyRoutinePlans(value: unknown): RoutinePlan[] {
             exercises: dayExercises.map((exercise) => ({
               name: exercise.name,
               muscle: exercise.muscle,
-              sets: exercise.sets,
-              reps: exercise.reps,
-              restSeconds: 90,
-              tempo: '',
+              prescriptionType: requiresDurationPrescription(exercise.muscle) ? 'duration' : 'repetitions',
+              sets: requiresDurationPrescription(exercise.muscle) ? null : exercise.sets,
+              reps: requiresDurationPrescription(exercise.muscle) ? '' : exercise.reps,
+              durationMinutes: requiresDurationPrescription(exercise.muscle) ? 15 : null,
+              restSeconds: requiresDurationPrescription(exercise.muscle) ? 0 : 90,
+              tempo: requiresDurationPrescription(exercise.muscle) ? 'Ritmo sostenible' : '',
               notes: exercise.notes,
             })),
           };
@@ -482,11 +499,42 @@ function migrateSixDayRoutinePlans(value: unknown): unknown {
   });
 }
 
+/** Convierte ejercicios v5/v6 al modelo de prescripción por repeticiones o tiempo. */
+function migrateRoutinePlanPrescriptions(value: unknown): unknown {
+  if (!Array.isArray(value)) return value;
+  return value.map((plan) => {
+    if (!isObject(plan) || !Array.isArray(plan.days)) return plan;
+    return {
+      ...plan,
+      availableEquipment: '',
+      days: plan.days.map((day) => {
+        if (!isObject(day) || !Array.isArray(day.exercises)) return day;
+        return {
+          ...day,
+          exercises: day.exercises.map((exercise) => {
+            if (!isObject(exercise)) return exercise;
+            const timed = exercise.muscle === 'Cardio' || exercise.muscle === 'Acondicionamiento';
+            return {
+              ...exercise,
+              prescriptionType: timed ? 'duration' : 'repetitions',
+              sets: timed ? null : exercise.sets,
+              reps: timed ? '' : exercise.reps,
+              durationMinutes: timed ? 15 : null,
+              restSeconds: timed ? 0 : exercise.restSeconds,
+              tempo: timed && !exercise.tempo ? 'Ritmo sostenible' : exercise.tempo,
+            };
+          }),
+        };
+      }),
+    };
+  });
+}
+
 /**
- * Convierte JSON desconocido en v6 y valida relaciones además de tipos.
+ * Convierte JSON desconocido en v7 y valida relaciones además de tipos.
  *
- * v6 amplía los documentos de rutina hasta el domingo. La siguiente escritura
- * persiste la versión vigente sin modificar los seis días anteriores.
+ * v7 distingue ejercicios por repeticiones o duración y retira el equipo de
+ * los documentos visibles. La siguiente escritura persiste la versión vigente.
  */
 export function parsePersistedDatabase(value: unknown): PersistedDatabase {
   if (!isObject(value)) {
@@ -516,7 +564,13 @@ export function parsePersistedDatabase(value: unknown): PersistedDatabase {
     candidate = {
       ...value,
       schemaVersion: DATA_SCHEMA_VERSION,
-      routinePlans: migrateSixDayRoutinePlans(value.routinePlans),
+      routinePlans: migrateRoutinePlanPrescriptions(migrateSixDayRoutinePlans(value.routinePlans)),
+    };
+  } else if (value.schemaVersion === 6) {
+    candidate = {
+      ...value,
+      schemaVersion: DATA_SCHEMA_VERSION,
+      routinePlans: migrateRoutinePlanPrescriptions(value.routinePlans),
     };
   } else if (value.schemaVersion === DATA_SCHEMA_VERSION) {
     candidate = value;

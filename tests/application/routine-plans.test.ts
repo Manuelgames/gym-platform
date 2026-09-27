@@ -30,7 +30,8 @@ function editableDays(): RoutinePlanDayInput[] {
     isRestDay: index === 5,
     exercises: index === 5 ? [] : [{
       name: `Ejercicio ${index + 1}`, muscle: index % 2 ? 'Espalda' : 'Pecho',
-      sets: 3, reps: '8-12', restSeconds: 90, tempo: '3-1-1', notes: 'Técnica controlada.',
+      prescriptionType: 'repetitions', sets: 3, reps: '8-12', durationMinutes: null,
+      restSeconds: 90, tempo: '3-1-1', notes: 'Técnica controlada.',
     }],
   }));
 }
@@ -62,7 +63,7 @@ describe('modalidades de rutina', () => {
     const plan = await useCases.generate('client-1', {
       goal: 'hipertrofia', level: 'intermedio', location: 'gimnasio',
       sessionDurationMinutes: 60, restDaysCount: 2,
-      availableEquipment: 'Barra, mancuernas y poleas', limitations: '',
+      limitations: '',
     });
 
     expect(plan).toMatchObject({ source: 'ai', generationEngine: 'local', goal: 'hipertrofia' });
@@ -74,6 +75,16 @@ describe('modalidades de rutina', () => {
       for (const group of groups) expect(day.title).toContain(group);
     }
     expect(plan.days.filter((day) => !day.isRestDay).every((day) => day.exercises.length > 0)).toBe(true);
+    const timedExercises = plan.days.flatMap((day) => day.exercises)
+      .filter((exercise) => exercise.muscle === 'Cardio' || exercise.muscle === 'Acondicionamiento');
+    expect(timedExercises.length).toBeGreaterThan(0);
+    expect(timedExercises.every((exercise) => (
+      exercise.prescriptionType === 'duration'
+      && exercise.durationMinutes !== null
+      && exercise.sets === null
+      && exercise.reps === ''
+    ))).toBe(true);
+    expect(plan.availableEquipment).toBe('');
     expect(await store.getRoutinePlan('client-1', 'ai')).toEqual(plan);
   });
 
@@ -82,7 +93,7 @@ describe('modalidades de rutina', () => {
     await store.create(user('client-1'));
     const plan = await useCases.saveManual('client-1', {
       title: 'Mi semana', summary: 'Rutina personal.', goal: 'general', level: 'principiante',
-      location: 'casa', sessionDurationMinutes: 45, availableEquipment: 'Bandas', limitations: '',
+      location: 'casa', sessionDurationMinutes: 45, limitations: '',
       days: editableDays(),
     });
 
@@ -113,7 +124,7 @@ describe('modalidades de rutina', () => {
     await store.updateSpecialistRequest({ ...request, status: 'accepted' }, 'pending');
     const input = {
       title: 'Plan del entrenador', summary: 'Progresión profesional.', goal: 'fuerza', level: 'intermedio',
-      location: 'gimnasio', sessionDurationMinutes: 75, availableEquipment: 'Equipo completo', limitations: '',
+      location: 'gimnasio', sessionDurationMinutes: 75, limitations: '',
       days: editableDays(),
     };
 

@@ -127,7 +127,7 @@ async function expectPage(path, text) {
   const response = await request(path);
   const html = await response.text();
   if (response.status !== 200 || !html.includes(text)) {
-    const visibleClue = html.match(/(?:Salve|Vista demo)[^<]{0,80}/)?.[0] ?? 'sin pista visible';
+    const visibleClue = html.match(/(?:Construye|Vista demo)[^<]{0,80}/)?.[0] ?? 'sin pista visible';
     throw new Error(`${path} no mostró el contenido esperado: ${text}. Respuesta: ${visibleClue}.\n${serverOutput}`);
   }
 }
@@ -151,7 +151,7 @@ try {
     name: 'Usuario de prueba', email, password,
     birthDate: '1990-05-10', sex: 'prefiero no decirlo',
   }, '/app');
-  await expectPage('/app', 'Salve, Usuario.');
+  await expectPage('/app', 'Construye, Usuario.');
   const dashboardHtml = await pageHtml('/app');
   for (const label of ['Mi Imperio', 'Herramientas', 'Blog', 'Perfil']) {
     if (!dashboardHtml.includes(label)) {
@@ -172,7 +172,7 @@ try {
   await post('/api/routine/automatic/generate', {
     goal: 'hipertrofia', level: 'intermedio', location: 'gimnasio',
     sessionDurationMinutes: '60', restDaysCount: '2',
-    availableEquipment: 'Barra, mancuernas y poleas', limitations: '',
+    limitations: '',
   }, '/app/rutina?tab=ai&saved=ai');
   await expectPage('/app/rutina?tab=ai', 'Rutina semanal de hipertrofia');
   const automaticRoutinePdf = await request('/api/routine/pdf/ai');
@@ -186,13 +186,14 @@ try {
     isRestDay: index === 6,
     exercises: index === 6 ? [] : [{
       name: `Ejercicio manual ${index + 1}`, muscle: index % 2 ? 'Espalda' : 'Pecho',
-      sets: 3, reps: '8-12', restSeconds: 90, tempo: '3-1-1', notes: 'Registro end-to-end',
+      prescriptionType: 'repetitions', sets: 3, reps: '8-12', durationMinutes: null,
+      restSeconds: 90, tempo: '3-1-1', notes: 'Registro end-to-end',
     }],
   }));
   await post('/api/routine/manual/save', {
     title: 'Rutina manual de prueba', summary: 'Documento semanal creado por el usuario.',
     goal: 'general', level: 'principiante', location: 'casa', sessionDurationMinutes: '45',
-    availableEquipment: 'Bandas', limitations: '', days: JSON.stringify(routineDays),
+    limitations: '', days: JSON.stringify(routineDays),
   }, '/app/rutina?tab=manual&saved=manual');
   await expectPage('/app/rutina?tab=manual', 'Rutina manual de prueba');
   const manualRoutinePdf = await request('/api/routine/pdf/manual');
@@ -410,7 +411,7 @@ try {
     requestId: trainerRequestId,
     title: 'Rutina profesional de prueba', summary: 'Documento asignado por el entrenador.',
     goal: 'fuerza', level: 'intermedio', location: 'gimnasio', sessionDurationMinutes: '60',
-    availableEquipment: 'Equipo completo', limitations: '', days: JSON.stringify(specialistRoutineDays),
+    limitations: '', days: JSON.stringify(specialistRoutineDays),
   }, `${trainingEditorPath}?saved=specialist`);
   await expectPage(trainingEditorPath, 'Rutina profesional de prueba');
 
@@ -453,7 +454,7 @@ try {
   await post('/api/routine/automatic/generate', {
     goal: 'fuerza', level: 'principiante', location: 'casa',
     sessionDurationMinutes: '45', restDaysCount: '2',
-    availableEquipment: 'Bandas y mochila', limitations: '',
+    limitations: '',
   }, '/app/rutina?tab=ai&saved=ai');
   await expectPage('/app/rutina?tab=ai', 'Rutina semanal de fuerza');
 

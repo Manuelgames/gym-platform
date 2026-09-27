@@ -2,6 +2,7 @@
 import {
   MUSCLE_GROUPS,
   ROUTINE_PLAN_DAYS,
+  ROUTINE_SESSION_DURATION_OPTIONS,
   type RoutinePlan,
   type RoutinePlanDay,
   type RoutinePlanDayName,
@@ -17,6 +18,15 @@ export interface Props {
 }
 
 const { id, action, plan = null, requestId, submitLabel = 'Guardar mi rutina' } = Astro.props;
+const selectedDuration = plan?.sessionDurationMinutes ?? 60;
+const durationOptions = ROUTINE_SESSION_DURATION_OPTIONS.includes(selectedDuration as never)
+  ? [...ROUTINE_SESSION_DURATION_OPTIONS]
+  : [...ROUTINE_SESSION_DURATION_OPTIONS, selectedDuration].sort((left, right) => left - right);
+const durationOptionLabel = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')} h ${String(minutes % 60).padStart(2, '0')} min`;
+const exerciseDurationOptions = [5, 10, 15, 20, 25, 30, 40, 45, 60];
+const exerciseDurationChoices = (selected: number) => exerciseDurationOptions.includes(selected)
+  ? exerciseDurationOptions
+  : [...exerciseDurationOptions, selected].sort((left, right) => left - right);
 const dayLabels: Record<RoutinePlanDayName, string> = {
   lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo',
 };
@@ -26,7 +36,7 @@ const defaultDays: RoutinePlanDay[] = ROUTINE_PLAN_DAYS.map((day, index) => ({
   focus: '',
   isRestDay: index !== 0,
   exercises: index === 0 ? [{
-    name: '', muscle: 'Pecho', sets: 3, reps: '8-12', restSeconds: 90, tempo: '', notes: '',
+    name: '', muscle: 'Pecho', prescriptionType: 'repetitions', sets: 3, reps: '8-12', durationMinutes: null, restSeconds: 90, tempo: '', notes: '',
   }] : [],
 }));
 const days = plan?.days.length ? plan.days : defaultDays;
@@ -70,8 +80,7 @@ const days = plan?.days.length ? plan.days : defaultDays;
           <option value="mixto" selected={plan?.location === 'mixto'}>Mixto</option>
         </select>
       </label>
-      <label><span>Duración por sesión *</span><input name="sessionDurationMinutes" type="number" min="15" max="240" step="5" required value={plan?.sessionDurationMinutes ?? 60} /></label>
-      <label><span>Equipo disponible</span><input name="availableEquipment" maxlength="300" value={plan?.availableEquipment ?? ''} placeholder="Ej. Mancuernas, barra, banco y poleas" /></label>
+      <label><span>Duración por sesión *</span><select name="sessionDurationMinutes" required>{durationOptions.map((minutes) => <option value={minutes} selected={minutes === selectedDuration}>{durationOptionLabel(minutes)}</option>)}</select></label>
       <label class="routine-editor__wide"><span>Descripción general</span><textarea name="summary" maxlength="900" rows="3" placeholder="Propósito, progresión o indicaciones de la semana.">{plan?.summary ?? ''}</textarea></label>
       <label class="routine-editor__wide"><span>Limitaciones o consideraciones</span><textarea name="limitations" maxlength="500" rows="3" placeholder="Ej. Evitar impacto; no sustituye una valoración profesional.">{plan?.limitations ?? ''}</textarea></label>
     </div>
@@ -102,10 +111,12 @@ const days = plan?.days.length ? plan.days : defaultDays;
                   <div class="routine-exercise-editor__main">
                     <label class="routine-exercise-editor__name"><span>Ejercicio *</span><input required maxlength="100" value={exercise.name} data-exercise-field="name" placeholder="Ej. Press con barra" /></label>
                     <label><span>Grupo *</span><select required data-exercise-field="muscle">{MUSCLE_GROUPS.map((muscle) => <option value={muscle} selected={exercise.muscle === muscle}>{muscle}</option>)}</select></label>
-                    <label><span>Series *</span><input required type="number" min="1" max="30" value={exercise.sets} data-exercise-field="sets" /></label>
-                    <label><span>Repeticiones *</span><input required maxlength="30" value={exercise.reps} data-exercise-field="reps" placeholder="8-12" /></label>
-                    <label><span>Descanso (s) *</span><input required type="number" min="0" max="900" step="5" value={exercise.restSeconds} data-exercise-field="restSeconds" /></label>
-                    <label><span>Tempo</span><input maxlength="30" value={exercise.tempo} data-exercise-field="tempo" placeholder="3-1-1" /></label>
+                    <label><span>Prescripción *</span><select required data-exercise-field="prescriptionType"><option value="repetitions" selected={exercise.prescriptionType === 'repetitions'}>Series y reps</option><option value="duration" selected={exercise.prescriptionType === 'duration'}>Por tiempo</option></select></label>
+                    <label data-repetition-field hidden={exercise.prescriptionType === 'duration'}><span>Series *</span><input required={exercise.prescriptionType === 'repetitions'} type="number" min="1" max="30" value={exercise.sets ?? 3} data-exercise-field="sets" /></label>
+                    <label data-repetition-field hidden={exercise.prescriptionType === 'duration'}><span>Repeticiones *</span><input required={exercise.prescriptionType === 'repetitions'} maxlength="30" value={exercise.reps} data-exercise-field="reps" placeholder="8-12" /></label>
+                    <label data-duration-field hidden={exercise.prescriptionType !== 'duration'}><span>Duración *</span><select required={exercise.prescriptionType === 'duration'} data-exercise-field="durationMinutes">{exerciseDurationChoices(exercise.durationMinutes ?? 15).map((minutes) => <option value={minutes} selected={(exercise.durationMinutes ?? 15) === minutes}>{minutes} min</option>)}</select></label>
+                    <label><span>Pausa posterior (s) *</span><input required type="number" min="0" max="900" step="5" value={exercise.restSeconds} data-exercise-field="restSeconds" /></label>
+                    <label><span>Tempo / ritmo</span><input maxlength="30" value={exercise.tempo} data-exercise-field="tempo" placeholder={exercise.prescriptionType === 'duration' ? 'Ritmo moderado' : '3-1-1'} /></label>
                     <button type="button" class="routine-action routine-action--danger" data-remove-routine-exercise aria-label={`Eliminar ${exercise.name || 'ejercicio'}`}>Eliminar</button>
                   </div>
                   <label><span>Notas técnicas</span><textarea maxlength="300" rows="2" data-exercise-field="notes" placeholder="Técnica, intensidad o alternativa.">{exercise.notes}</textarea></label>
@@ -128,10 +139,12 @@ const days = plan?.days.length ? plan.days : defaultDays;
       <div class="routine-exercise-editor__main">
         <label class="routine-exercise-editor__name"><span>Ejercicio *</span><input required maxlength="100" data-exercise-field="name" placeholder="Ej. Sentadilla" /></label>
         <label><span>Grupo *</span><select required data-exercise-field="muscle">{MUSCLE_GROUPS.map((muscle) => <option value={muscle}>{muscle}</option>)}</select></label>
-        <label><span>Series *</span><input required type="number" min="1" max="30" value="3" data-exercise-field="sets" /></label>
-        <label><span>Repeticiones *</span><input required maxlength="30" value="8-12" data-exercise-field="reps" /></label>
-        <label><span>Descanso (s) *</span><input required type="number" min="0" max="900" step="5" value="90" data-exercise-field="restSeconds" /></label>
-        <label><span>Tempo</span><input maxlength="30" data-exercise-field="tempo" placeholder="Controlado" /></label>
+        <label><span>Prescripción *</span><select required data-exercise-field="prescriptionType"><option value="repetitions">Series y reps</option><option value="duration">Por tiempo</option></select></label>
+        <label data-repetition-field><span>Series *</span><input required type="number" min="1" max="30" value="3" data-exercise-field="sets" /></label>
+        <label data-repetition-field><span>Repeticiones *</span><input required maxlength="30" value="8-12" data-exercise-field="reps" /></label>
+        <label data-duration-field hidden><span>Duración *</span><select data-exercise-field="durationMinutes">{exerciseDurationOptions.map((minutes) => <option value={minutes} selected={minutes === 15}>{minutes} min</option>)}</select></label>
+        <label><span>Pausa posterior (s) *</span><input required type="number" min="0" max="900" step="5" value="90" data-exercise-field="restSeconds" /></label>
+        <label><span>Tempo / ritmo</span><input maxlength="30" data-exercise-field="tempo" placeholder="Controlado" /></label>
         <button type="button" class="routine-action routine-action--danger" data-remove-routine-exercise>Eliminar</button>
       </div>
       <label><span>Notas técnicas</span><textarea maxlength="300" rows="2" data-exercise-field="notes"></textarea></label>
@@ -176,7 +189,7 @@ const days = plan?.days.length ? plan.days : defaultDays;
   .routine-day-editor__toolbar h5 { margin: 0; font: 700 1.5rem var(--font-display); }
   .routine-exercise-list { display: grid; gap: .9rem; }
   .routine-exercise-editor { display: grid; gap: .9rem; padding: 1.2rem; border: 1px solid var(--color-line-soft); background: rgb(255 255 255 / 2%); }
-  .routine-exercise-editor__main { display: grid; grid-template-columns: minmax(16rem, 1.5fr) minmax(11rem, .8fr) repeat(4, minmax(8rem, .5fr)) auto; align-items: end; gap: .7rem; }
+  .routine-exercise-editor__main { display: grid; grid-template-columns: minmax(16rem, 1.5fr) repeat(2, minmax(11rem, .8fr)) repeat(4, minmax(8rem, .55fr)) auto; align-items: end; gap: .7rem; }
   .routine-exercise-editor input, .routine-exercise-editor select { min-height: 4rem; padding: .7rem .8rem; }
   .routine-action { min-height: 3.8rem; padding: .5rem .9rem; border: 1px solid var(--color-line); background: transparent; color: var(--color-gold-light); font-size: 1rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
   .routine-action--danger { border-color: rgb(242 139 121 / 38%); color: var(--color-danger); }

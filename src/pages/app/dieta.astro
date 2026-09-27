@@ -166,7 +166,6 @@ const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
             <input id="diet-meals" name="meals" type="number" min="1" max="24" step="1" required value={mealCount} />
           </FormField>
           <Button type="submit" disabled={!latestCalories} data-ai-submit>Generar mi dieta</Button>
-          <p class="generation-note" data-ai-status role="status">La generación puede tardar algunos segundos.</p>
         </FormStack>
       </Panel>
 
@@ -317,7 +316,6 @@ const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
   .calorie-snapshot dd { margin: .35rem 0 0; color: var(--color-paper); font: 700 2.2rem var(--font-display); }
   .calorie-snapshot dd span { color: var(--color-muted); font: 500 1.1rem var(--font-body); }
   .calorie-snapshot__note { color: var(--color-muted); font-size: 1.2rem; }
-  .generation-note { margin: -.6rem 0 0; color: var(--color-muted); font-size: 1.2rem; }
   .diet-result { margin-top: 2rem; }
   .diet-result--existing { margin: 0 0 2rem; }
   .panel-intro { max-width: 78rem; padding: 1.2rem 0 2rem; }

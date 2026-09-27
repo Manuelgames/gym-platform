@@ -7,6 +7,7 @@ import {
   type RGB,
 } from 'pdf-lib';
 import type { DietMeal, DietPlan } from '../../domain/diet/diet';
+import { drawBrandWatermark, embedBrandWatermark } from './pdf-branding';
 
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
@@ -144,7 +145,9 @@ export async function createDietPdf(plan: DietPlan, options: DietPdfOptions): Pr
   const document = await PDFDocument.create();
   const regular = await document.embedFont(StandardFonts.Helvetica);
   const bold = await document.embedFont(StandardFonts.HelveticaBold);
+  const brandWatermark = await embedBrandWatermark(document);
   let page: PDFPage = document.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+  drawBrandWatermark(page, brandWatermark);
   let y = PAGE_HEIGHT - MARGIN;
 
   const drawContinuationHeader = () => {
@@ -173,6 +176,7 @@ export async function createDietPdf(plan: DietPlan, options: DietPdfOptions): Pr
 
   const addPage = (continuation = true) => {
     page = document.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
+    drawBrandWatermark(page, brandWatermark);
     if (continuation) drawContinuationHeader();
     else y = PAGE_HEIGHT - MARGIN;
   };

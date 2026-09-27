@@ -1,7 +1,6 @@
 ---
 import ArticleCard from '../components/blog/ArticleCard.astro';
 import HeroMedia from '../components/ui/HeroMedia.astro';
-import QuoteBlock from '../components/ui/QuoteBlock.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import PublicLayout from '../layouts/PublicLayout.astro';
 
@@ -48,13 +47,10 @@ const articles = [
   />
   <div class="page-shell">
     <section class="section-flow" aria-labelledby="articles-title">
-      <SectionHeading eyebrow="Lecturas para tu travesía" title="Los pilares de una gran historia" id="articles-title" />
+      <SectionHeading eyebrow="Lecturas para tu travesía" title="Artículos que cultivarán tu conocimiento." id="articles-title" />
       <div class="content-grid content-grid--three" data-tablet-columns="two">
         {articles.map((article) => <ArticleCard {...article} />)}
       </div>
-    </section>
-    <section class="section-flow" aria-label="Cita inspiradora">
-      <QuoteBlock quote="Nadie llega a Ítaca sin haber aprendido algo en el viaje." cite="Inspirado en Cavafis y La Odisea" />
     </section>
   </div>
 </PublicLayout>

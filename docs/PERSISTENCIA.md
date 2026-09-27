@@ -10,11 +10,11 @@ Los casos de uso conocen interfaces de repositorio. El archivo JSON actual y un 
 
 Mientras no se elija una base de datos definitiva, el adaptador inicial guarda un documento JSON versionado en `DATA_FILE_PATH`.
 
-Esquema raíz v6:
+Esquema raíz v7:
 
 ```ts
-interface DatabaseDocumentV6 {
-  schemaVersion: 6;
+interface DatabaseDocumentV7 {
+  schemaVersion: 7;
   users: User[];
   routineExercises: RoutineExercise[];
   routinePlans: RoutinePlan[];
@@ -29,7 +29,7 @@ Ejemplo vacío:
 
 ```json
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "users": [],
   "routineExercises": [],
   "routinePlans": [],

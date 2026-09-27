@@ -71,7 +71,6 @@ export interface GenerateRoutineInput {
   location: string;
   sessionDurationMinutes: number;
   restDaysCount: number;
-  availableEquipment: string;
   limitations: string;
 }
 
@@ -83,7 +82,6 @@ export interface SaveEditableRoutineInput {
   level: string;
   location: string;
   sessionDurationMinutes: number;
-  availableEquipment: string;
   limitations: string;
   days: RoutinePlanDayInput[];
 }
@@ -257,6 +255,7 @@ export interface ApplicationFacade {
   getDietForDownload(userId: string, source: DietPlanSource): Promise<DietPlan>;
   getCalories(userId: string): Promise<CalorieCalculation[]>;
   calculateCalories(userId: string, input: CalculateCaloriesInput): Promise<CalorieCalculation>;
+  deleteCalorieCalculation(userId: string, calculationId: string): Promise<void>;
   getSpecialistsPage(userId: string): Promise<SpecialistsPageView>;
   registerSpecialist(userId: string, input: RegisterSpecialistInput): Promise<SpecialistProfileView>;
   requestSpecialist(userId: string, specialistProfileId: string, role: string): Promise<void>;

@@ -18,7 +18,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
       location: readTextField(form, 'location', { maxRawLength: 24 }),
       sessionDurationMinutes: readNumberField(form, 'sessionDurationMinutes'),
       restDaysCount: readNumberField(form, 'restDaysCount'),
-      availableEquipment: readTextField(form, 'availableEquipment', { optional: true, maxRawLength: 300 }),
       limitations: readTextField(form, 'limitations', { optional: true, maxRawLength: 500 }),
     });
     return redirectAfterPost(request, '/app/rutina', { tab: 'ai', saved: 'ai' });
