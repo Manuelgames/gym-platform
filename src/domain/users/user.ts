@@ -53,6 +53,18 @@ export interface FirebaseUserIdentity extends BaseUserIdentity {
  */
 export type UserIdentity = PasswordUserIdentity | GoogleUserIdentity | FirebaseUserIdentity;
 
+/** Solo se conserva la huella del enlace, nunca la credencial enviada por correo. */
+export interface PasswordResetRequest {
+  tokenDigest: string;
+  expiresAt: string;
+}
+
+/** Confirmación pendiente de propiedad del correo; nunca guarda el token original. */
+export interface EmailVerificationRequest {
+  tokenDigest: string;
+  expiresAt: string;
+}
+
 /** Usuario persistente de Roman Colosseum. */
 export interface User {
   id: string;
@@ -62,6 +74,10 @@ export interface User {
   sex: ProfileSex;
   profilePhoto: StoredMediaReference | null;
   identities: UserIdentity[];
+  passwordReset: PasswordResetRequest | null;
+  emailVerification: EmailVerificationRequest | null;
+  emailVerifiedAt: string | null;
+  sessionVersion: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -152,6 +168,10 @@ export function createPasswordUser(input: CreatePasswordUserInput): User {
     birthDate,
     sex,
     profilePhoto: null,
+    passwordReset: null,
+    emailVerification: null,
+    emailVerifiedAt: null,
+    sessionVersion: 0,
     identities: [{
       provider: 'password',
       subject: email,

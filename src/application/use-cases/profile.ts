@@ -122,6 +122,8 @@ export class ProfileUseCases {
       identities: current.identities.map((candidate) => (
         candidate.provider === 'password' ? { ...candidate, credentialHash } : candidate
       )),
+      passwordReset: null,
+      sessionVersion: current.sessionVersion + 1,
       updatedAt: nextUpdatedAt(current.updatedAt, this.clock.now()),
     };
     await this.persist(current, updated);

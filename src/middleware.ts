@@ -19,7 +19,12 @@ function isPrivateApi(pathname: string): boolean {
 }
 
 function isAuthenticationPage(pathname: string): boolean {
-  return pathname === '/iniciar-sesion' || pathname === '/registro';
+  return pathname === '/iniciar-sesion'
+    || pathname === '/registro'
+    || pathname === '/confirmar-correo'
+    || pathname === '/verificar-correo'
+    || pathname === '/recuperar-contrasena'
+    || pathname === '/restablecer-contrasena';
 }
 
 function isAuthenticationApi(pathname: string): boolean {
@@ -28,9 +33,10 @@ function isAuthenticationApi(pathname: string): boolean {
 
 function withSessionAwareCacheHeaders(
   response: Response,
-  options: { noStore: boolean; varyCookie: boolean },
+  options: { noStore: boolean; varyCookie: boolean; noReferrer?: boolean },
 ): Response {
   const headers = new Headers(response.headers);
+  if (options.noReferrer) headers.set('Referrer-Policy', 'no-referrer');
   if (options.noStore) {
     headers.set('Cache-Control', 'private, no-store, max-age=0');
     headers.set('Pragma', 'no-cache');
@@ -84,7 +90,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const storedUserId = await context.session?.get('userId');
     if (typeof storedUserId === 'string' && storedUserId.length > 0) {
       const user = await getApplication().getCurrentUser(storedUserId);
-      if (user) context.locals.user = user;
+      const sessionVersion = await context.session?.get('sessionVersion');
+      if (user && sessionVersion === user.sessionVersion) context.locals.user = user;
       else context.session?.destroy();
     } else if (storedUserId !== undefined) {
       context.session?.destroy();
@@ -110,7 +117,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (
     context.locals.user
     && context.request.method === 'GET'
-    && isAuthenticationPage(pathname)
+    && (pathname === '/iniciar-sesion' || pathname === '/registro')
   ) {
     return withSessionAwareCacheHeaders(
       context.redirect('/app', 302),
@@ -122,7 +129,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const isHtml = response.headers.get('Content-Type')?.includes('text/html') ?? false;
   const isApi = pathname.startsWith('/api/');
   return withSessionAwareCacheHeaders(response, {
-    noStore: privatePage || privateApi || isApi || Boolean(context.locals.user),
+    noStore: privatePage || privateApi || isApi || isAuthenticationPage(pathname) || Boolean(context.locals.user),
     varyCookie: isHtml || isApi,
+    noReferrer: pathname === '/restablecer-contrasena' || pathname === '/verificar-correo',
   });
 });

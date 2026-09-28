@@ -49,7 +49,7 @@ import {
 } from '../../../domain/users/user';
 
 /** Versión vigente; las versiones anteriores se migran en memoria al leer. */
-export const DATA_SCHEMA_VERSION = 7 as const;
+export const DATA_SCHEMA_VERSION = 9 as const;
 
 /** Documento completo que se reemplaza como una unidad atómica. */
 export interface PersistedDatabase {
@@ -116,6 +116,20 @@ function isUser(value: unknown): value is User {
     && PROFILE_IMAGE_MIME_TYPES.includes(value.profilePhoto.mimeType as never)
     && value.profilePhoto.sizeBytes <= USER_PROFILE_PHOTO_LIMITS.photoBytes
   );
+  const resetValid = value.passwordReset === null || (
+    isObject(value.passwordReset)
+    && isString(value.passwordReset.tokenDigest)
+    && /^[a-f0-9]{64}$/.test(value.passwordReset.tokenDigest)
+    && isString(value.passwordReset.expiresAt)
+    && !Number.isNaN(Date.parse(value.passwordReset.expiresAt))
+  );
+  const verificationValid = value.emailVerification === null || (
+    isObject(value.emailVerification)
+    && isString(value.emailVerification.tokenDigest)
+    && /^[a-f0-9]{64}$/.test(value.emailVerification.tokenDigest)
+    && isString(value.emailVerification.expiresAt)
+    && !Number.isNaN(Date.parse(value.emailVerification.expiresAt))
+  );
   return identitiesValid
     && value.identities.length > 0
     && isString(value.id)
@@ -124,6 +138,16 @@ function isUser(value: unknown): value is User {
     && isString(value.birthDate)
     && PROFILE_SEX_VALUES.includes(value.sex as never)
     && profilePhotoValid
+    && resetValid
+    && verificationValid
+    && (value.emailVerifiedAt === null || (
+      isString(value.emailVerifiedAt)
+      && !Number.isNaN(Date.parse(value.emailVerifiedAt))
+    ))
+    && (value.emailVerifiedAt === null || value.emailVerification === null)
+    && Number.isInteger(value.sessionVersion)
+    && (value.sessionVersion as number) >= 0
+    && (value.passwordReset === null || value.identities.some((identity) => identity.provider === 'password'))
     && isString(value.createdAt)
     && isString(value.updatedAt);
 }
@@ -531,10 +555,11 @@ function migrateRoutinePlanPrescriptions(value: unknown): unknown {
 }
 
 /**
- * Convierte JSON desconocido en v7 y valida relaciones además de tipos.
+ * Convierte JSON desconocido en v9 y valida relaciones además de tipos.
  *
- * v7 distingue ejercicios por repeticiones o duración y retira el equipo de
- * los documentos visibles. La siguiente escritura persiste la versión vigente.
+ * v8 añade el estado de recuperación y la versión de sesiones al usuario.
+ * v9 añade la confirmación de propiedad del correo.
+ * La siguiente escritura persiste la versión vigente.
  */
 export function parsePersistedDatabase(value: unknown): PersistedDatabase {
   if (!isObject(value)) {
@@ -572,6 +597,10 @@ export function parsePersistedDatabase(value: unknown): PersistedDatabase {
       schemaVersion: DATA_SCHEMA_VERSION,
       routinePlans: migrateRoutinePlanPrescriptions(value.routinePlans),
     };
+  } else if (value.schemaVersion === 7) {
+    candidate = { ...value, schemaVersion: DATA_SCHEMA_VERSION };
+  } else if (value.schemaVersion === 8) {
+    candidate = { ...value, schemaVersion: DATA_SCHEMA_VERSION };
   } else if (value.schemaVersion === DATA_SCHEMA_VERSION) {
     candidate = value;
   } else {
@@ -583,6 +612,26 @@ export function parsePersistedDatabase(value: unknown): PersistedDatabase {
       schemaVersion: DATA_SCHEMA_VERSION,
       dietPlans: migrateLegacyDietPlans(legacyCandidate.dietPlans),
       routinePlans: migrateLegacyRoutinePlans(legacyCandidate.routineExercises),
+    };
+  }
+  if (value.schemaVersion !== 8 && value.schemaVersion !== DATA_SCHEMA_VERSION) {
+    candidate = {
+      ...candidate,
+      users: Array.isArray(candidate.users)
+        ? candidate.users.map((user) => (isObject(user)
+          ? { ...user, passwordReset: null, sessionVersion: 0 }
+          : user))
+        : candidate.users,
+    };
+  }
+  if (value.schemaVersion !== DATA_SCHEMA_VERSION) {
+    candidate = {
+      ...candidate,
+      users: Array.isArray(candidate.users)
+        ? candidate.users.map((user) => (isObject(user)
+          ? { ...user, emailVerification: null, emailVerifiedAt: null }
+          : user))
+        : candidate.users,
     };
   }
 

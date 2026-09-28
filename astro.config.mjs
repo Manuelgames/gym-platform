@@ -78,6 +78,9 @@ export default defineConfig({
         default: 604800,
       }),
       OPENAI_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      BREVO_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      RECOVERY_EMAIL_FROM: envField.string({ context: 'server', access: 'secret', optional: true }),
       OPENAI_MODEL: envField.string({
         context: 'server',
         access: 'secret',

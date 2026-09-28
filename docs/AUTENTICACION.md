@@ -58,8 +58,8 @@ Los tipos y errores propios de cada SDK quedan dentro de infraestructura.
 
 `APP_ACCESS_MODE=demo` es una política de presentación y autorización temporal; no es un proveedor de identidad. En este modo:
 
-1. `/iniciar-sesion` y `/registro` redirigen a `/app`.
-2. Los endpoints `/api/auth/*` no ejecutan registro, login ni logout.
+1. `/iniciar-sesion`, `/registro` y las pantallas de recuperación redirigen a `/app`.
+2. Los endpoints `/api/auth/*` no ejecutan registro, login, recuperación ni logout.
 3. Middleware obtiene o crea `demo-user-v1` y lo publica como `Astro.locals.user` solo para las rutas funcionales.
 4. Rutina, dieta y cálculos siguen recibiendo el propietario desde `locals`, nunca desde el formulario.
 5. No se crea una cookie de sesión para el perfil demo.
@@ -82,11 +82,11 @@ Con `AUTH_PROVIDER=password`, la aplicación administra una identidad local.
 4. Comprobación de unicidad del email.
 5. Hash `scrypt` con sal aleatoria.
 6. Creación atómica de `User` con identidad `password`.
-7. Regeneración de Astro Session.
-8. Escritura exclusiva de `userId` en la sesión.
-9. Redirección a `/app`.
+7. Emisión de un token aleatorio cuya única huella se guarda durante 24 horas.
+8. Envío del enlace de confirmación mediante Brevo o Resend.
+9. Redirección a `/confirmar-correo` sin crear todavía una sesión.
 
-La contraseña original solo existe durante la petición y nunca se persiste ni se registra.
+La contraseña original solo existe durante la petición y nunca se persiste ni se registra. El enlace abre `/verificar-correo` y se consume mediante POST para evitar que un previsualizador de correo active la cuenta. Después de confirmarlo, la persona inicia sesión normalmente. Solicitar otro enlace invalida el anterior y usa respuestas genéricas para no revelar si una cuenta existe.
 
 ### Inicio de sesión
 
@@ -95,13 +95,22 @@ La contraseña original solo existe durante la petición y nunca se persiste ni 
 1. Normaliza el email.
 2. Busca el usuario y su identidad `password`.
 3. Verifica el hash con el servicio de seguridad.
-4. Regenera la sesión para prevenir fijación.
-5. Guarda únicamente `userId`.
-6. Redirige al panel.
+4. Rechaza la cuenta si su correo aún no fue confirmado.
+5. Regenera la sesión para prevenir fijación.
+6. Guarda `userId` y `sessionVersion`.
+7. Redirige al panel.
 
 La respuesta pública debe ser genérica, por ejemplo “Correo o contraseña incorrectos”. Diferenciar email inexistente de contraseña incorrecta facilita enumerar cuentas.
 
-Los endpoints aplican un limitador por proceso: login por IP y cuenta seudonimizada, y registro por IP. Los intentos correctos de login liberan su reserva para no penalizar al usuario legítimo. Este adaptador protege una sola instancia; un despliegue con varias réplicas debe sustituirlo por un limitador compartido (por ejemplo, Redis o el servicio equivalente de la plataforma).
+Los endpoints aplican un limitador por proceso: login por IP y cuenta seudonimizada, registro por IP, y confirmación/reenvío por IP y cuenta seudonimizada. Los intentos correctos de login liberan su reserva para no penalizar al usuario legítimo. Este adaptador protege una sola instancia; un despliegue con varias réplicas debe sustituirlo por un limitador compartido (por ejemplo, Redis o el servicio equivalente de la plataforma).
+
+### Recuperación de contraseña
+
+Desde `/iniciar-sesion` se accede a `/recuperar-contrasena`. El servidor siempre muestra la misma confirmación para un correo existente o desconocido. Para una cuenta local genera 32 bytes aleatorios, guarda únicamente SHA-256 del token en `User.passwordReset` con vencimiento de 30 minutos y envía un enlace mediante una API HTTPS. Un nuevo enlace reemplaza el anterior.
+
+`/restablecer-contrasena` permite establecer una nueva contraseña con el token. La actualización del hash, el consumo del enlace y el incremento de `sessionVersion` ocurren en una sola actualización condicional del usuario. El middleware rechaza las sesiones con una versión anterior. El enlace no inicia sesión automáticamente. Se limita la frecuencia por IP y correo seudonimizado.
+
+El envío de recuperación y confirmación usa la API HTTPS de Brevo, compatible con Railway Hobby y su plan gratuito. Se configuran `BREVO_API_KEY` y `RECOVERY_EMAIL_FROM` con una dirección propia verificada en Brevo; no hace falta comprar un dominio al inicio. Si el remitente es un correo gratuito, Brevo puede sustituir la dirección visible por una propia y la entrega puede ser menos fiable. Al contar con dominio propio, se podrá verificar para mejorar la entrega o cambiar a Resend mediante `RESEND_API_KEY`; si ambas claves están presentes, se prefiere Brevo. Sin clave y remitente, ambos formularios informan que el correo no está disponible. Los adaptadores comparten el mismo puerto y no cambian el caso de uso. Los enlaces se construyen con `APP_ORIGIN`, nunca con la cabecera Host.
 
 ## Astro Sessions
 
@@ -112,6 +121,7 @@ Contenido funcional de sesión:
 ```ts
 interface SessionData {
   userId: string;
+  sessionVersion: number;
 }
 ```
 
@@ -134,10 +144,10 @@ La forma concreta de almacenamiento y el identificador interno son responsabilid
 
 Con `APP_ACCESS_MODE=authenticated`, en cada ruta privada:
 
-1. Lee `userId` desde `Astro.session`.
+1. Lee `userId` y `sessionVersion` desde `Astro.session`.
 2. Busca el usuario actual.
 3. Coloca un DTO seguro en `Astro.locals` si existe.
-4. Si el usuario ya no existe, destruye la sesión inválida.
+4. Si el usuario ya no existe o la versión no coincide, destruye la sesión inválida.
 5. Si no hay usuario, redirige a `/iniciar-sesion` antes de renderizar datos privados.
 
 El middleware no acepta `userId` desde query, formulario, cabecera personalizada ni cuerpo HTTP.
@@ -150,7 +160,7 @@ Logout no usa `GET`, ya que una precarga, robot o enlace externo podría activar
 
 ### Revocación
 
-El diseño actual permite destruir la sesión presente. Revocar todas las sesiones, listar dispositivos o invalidar una sesión concreta requiere capacidades adicionales del driver o un registro explícito de sesiones. Esa evolución debe documentarse con un ADR y no se simula dentro del JSON funcional.
+Un restablecimiento o cambio de contraseña incrementa `sessionVersion` e invalida todas las sesiones anteriores del usuario en su siguiente petición. Listar dispositivos o invalidar una sesión concreta requiere capacidades adicionales del driver o un registro explícito de sesiones.
 
 ## Google Identity Services
 
@@ -184,7 +194,7 @@ SignInWithFederatedIdentity
   │ resuelve UserIdentity por google + subject
   ▼
 Astro.session.regenerate()
-  │ guarda solo userId
+  │ guarda userId y sessionVersion
   ▼
 Cookie de Astro Session
 ```
@@ -218,7 +228,7 @@ Las variables `PUBLIC_FIREBASE_*` identifican la aplicación web y no conceden p
 
 Firebase Authentication puede usar Google como proveedor ascendente. Para Roman Colosseum esa identidad se registra como `firebase` y su subject es el UID de Firebase, no el access token de Google.
 
-Después de verificar el token, el endpoint regenera Astro Session y guarda `userId`, igual que los otros proveedores.
+Después de verificar el token, el endpoint regenera Astro Session y guarda `userId` y `sessionVersion`, igual que los otros proveedores.
 
 ## Creación y vinculación
 
@@ -272,7 +282,7 @@ La configuración actual selecciona un solo proveedor. Habilitar varios a la vez
 - Dos hashes de la misma contraseña usan sales diferentes.
 - Contraseña correcta e incorrecta se verifican apropiadamente.
 - Registro y login regeneran sesión.
-- La sesión contiene únicamente `userId`.
+- La sesión contiene únicamente `userId` y `sessionVersion`.
 - Logout destruye la sesión.
 - Middleware destruye sesión de un usuario eliminado.
 - Ruta privada sin sesión redirige antes de renderizar.

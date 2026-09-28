@@ -1,0 +1,35 @@
+---
+import AuthCard from '../components/auth/AuthCard.astro';
+import FormMessage from '../components/forms/FormMessage.astro';
+import FormStack from '../components/forms/FormStack.astro';
+import Button from '../components/ui/Button.astro';
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { readErrorMessage } from '../presentation/feedback';
+
+const userId = Astro.url.searchParams.get('userId') ?? '';
+const token = Astro.url.searchParams.get('token') ?? '';
+const hasLink = userId.length > 0 && token.length > 0;
+const errorMessage = readErrorMessage(Astro.url);
+---
+
+<AuthLayout title="Verificar correo" description="Completa la activación segura de tu cuenta.">
+  <AuthCard title="Activa tu cuenta" description="Confirma que deseas verificar este correo. Después podrás iniciar sesión normalmente.">
+    {hasLink && !errorMessage ? (
+      <FormStack action="/api/auth/email-verification/confirm" autocomplete="off">
+        <input type="hidden" name="userId" value={userId} />
+        <input type="hidden" name="token" value={token} />
+        <Button type="submit">Confirmar mi correo</Button>
+      </FormStack>
+    ) : (
+      <>
+        <FormMessage tone="error" message={errorMessage ?? 'Falta el enlace de confirmación. Solicita uno nuevo.'} />
+        <Button href="/confirmar-correo" variant="subtle">Solicitar otro enlace</Button>
+      </>
+    )}
+    <Fragment slot="footer"><a href="/iniciar-sesion">Volver a iniciar sesión</a>.</Fragment>
+  </AuthCard>
+</AuthLayout>
+
+<style>
+  :global(.auth-card__content > .button) { margin-top: 1.6rem; width: 100%; }
+</style>

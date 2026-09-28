@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
+import { randomBytes, scrypt } from 'node:crypto';
 import { once } from 'node:events';
-import { rm } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 const workspace = process.cwd();
@@ -17,6 +18,55 @@ let serverOutput = '';
 
 if (dirname(dataFile) !== dataDirectory || dirname(uploadsDirectory) !== dataDirectory) {
   throw new Error('La prueba solo puede eliminar su archivo dentro de .data.');
+}
+
+function derivePassword(password, salt) {
+  return new Promise((resolveHash, rejectHash) => {
+    scrypt(password, salt, 64, { N: 32_768, r: 8, p: 3, maxmem: 64 * 1024 * 1024 }, (error, digest) => (
+      error ? rejectHash(error) : resolveHash(digest)
+    ));
+  });
+}
+
+async function passwordHash(password) {
+  const salt = randomBytes(16);
+  const digest = await derivePassword(password, salt);
+  return `scrypt$v1$32768$8$3$${salt.toString('base64')}$${digest.toString('base64')}`;
+}
+
+async function seedVerifiedUsers(users) {
+  const now = '2026-09-27T12:00:00.000Z';
+  const storedUsers = await Promise.all(users.map(async (user) => ({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    birthDate: user.birthDate,
+    sex: 'prefiero no decirlo',
+    profilePhoto: null,
+    identities: [{
+      provider: 'password',
+      subject: user.email,
+      credentialHash: await passwordHash(user.password),
+      createdAt: now,
+    }],
+    passwordReset: null,
+    emailVerification: null,
+    emailVerifiedAt: now,
+    sessionVersion: 0,
+    createdAt: now,
+    updatedAt: now,
+  })));
+  await mkdir(dataDirectory, { recursive: true });
+  await writeFile(dataFile, JSON.stringify({
+    schemaVersion: 9,
+    users: storedUsers,
+    routineExercises: [],
+    routinePlans: [],
+    dietPlans: [],
+    calorieCalculations: [],
+    specialistProfiles: [],
+    specialistRequests: [],
+  }), 'utf8');
 }
 
 function rememberCookies(response) {
@@ -142,15 +192,18 @@ async function expectRedirect(path, expectedLocation, expectedStatus = 302) {
 try {
   await rm(dataFile, { force: true });
   await rm(uploadsDirectory, { recursive: true, force: true });
+  const email = `smoke-${Date.now()}@example.test`;
+  const clientEmail = `cliente-${Date.now()}@example.test`;
+  let password = 'Prueba-segura-2026';
+  const renewedPassword = 'Prueba-renovada-2026';
+  await seedVerifiedUsers([
+    { id: 'smoke-user', name: 'Usuario de prueba', email, password, birthDate: '1990-05-10' },
+    { id: 'smoke-client', name: 'Cliente de prueba', email: clientEmail, password: renewedPassword, birthDate: '1994-02-20' },
+  ]);
   startServer();
   await waitForServer();
 
-  const email = `smoke-${Date.now()}@example.test`;
-  let password = 'Prueba-segura-2026';
-  await post('/api/auth/register', {
-    name: 'Usuario de prueba', email, password,
-    birthDate: '1990-05-10', sex: 'prefiero no decirlo',
-  }, '/app');
+  await post('/api/auth/login', { email, password }, '/app');
   await expectPage('/app', 'Construye, Usuario.');
   const dashboardHtml = await pageHtml('/app');
   for (const label of ['Mi Imperio', 'Herramientas', 'Blog', 'Perfil']) {
@@ -161,7 +214,6 @@ try {
   await expectPage('/app/perfil', 'Mi perfil');
   await post('/api/profile/name', { name: 'Usuario actualizado' }, '/app/perfil?updated=name');
   await expectPage('/app/perfil', 'Usuario actualizado');
-  const renewedPassword = 'Prueba-renovada-2026';
   await post('/api/profile/password', {
     currentPassword: password,
     newPassword: renewedPassword,
@@ -306,11 +358,7 @@ try {
   await expectPage('/app/mi-trabajo', 'Mi trabajo');
 
   await post('/api/auth/logout', {}, '/');
-  const clientEmail = `cliente-${Date.now()}@example.test`;
-  await post('/api/auth/register', {
-    name: 'Cliente de prueba', email: clientEmail, password,
-    birthDate: '1994-02-20', sex: 'prefiero no decirlo',
-  }, '/app');
+  await post('/api/auth/login', { email: clientEmail, password }, '/app');
   const directoryHtml = await pageHtml('/app/especialistas');
   if (!directoryHtml.includes('Usuario actualizado')) {
     throw new Error('El directorio no mostró al especialista registrado.');

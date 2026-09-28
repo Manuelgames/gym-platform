@@ -1,0 +1,35 @@
+---
+import AuthCard from '../components/auth/AuthCard.astro';
+import FormField from '../components/forms/FormField.astro';
+import FormMessage from '../components/forms/FormMessage.astro';
+import FormStack from '../components/forms/FormStack.astro';
+import Button from '../components/ui/Button.astro';
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { readErrorMessage, readInvalidField } from '../presentation/feedback';
+
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+const sent = Astro.url.searchParams.has('sent');
+const registered = Astro.url.searchParams.has('registered');
+---
+
+<AuthLayout title="Confirmar correo" description="Activa tu cuenta mediante un enlace seguro enviado a tu correo.">
+  <AuthCard title="Confirma tu correo" description="Antes de iniciar sesión necesitamos comprobar que la dirección te pertenece.">
+    {sent && (
+      <FormMessage
+        tone="success"
+        message={registered
+          ? 'Tu cuenta fue creada. Enviamos un enlace de confirmación; revisa también la carpeta de spam.'
+          : 'Si la cuenta existe y aún está pendiente, enviaremos un enlace nuevo. Revisa también la carpeta de spam.'}
+      />
+    )}
+    <FormMessage message={invalidField ? undefined : errorMessage} tone="error" />
+    <FormStack action="/api/auth/email-verification/request" autocomplete="on">
+      <FormField label="Correo electrónico" for="verification-email" required error={invalidField === 'email' ? errorMessage : undefined}>
+        <input id="verification-email" name="email" type="email" autocomplete="email" required maxlength="254" aria-invalid={invalidField === 'email' ? 'true' : undefined} />
+      </FormField>
+      <Button type="submit">Reenviar enlace</Button>
+    </FormStack>
+    <Fragment slot="footer"><a href="/iniciar-sesion">Volver a iniciar sesión</a>.</Fragment>
+  </AuthCard>
+</AuthLayout>

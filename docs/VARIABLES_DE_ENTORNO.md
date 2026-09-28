@@ -25,6 +25,9 @@ Reglas:
 | `UPLOADS_DIRECTORY` | Con medios administrados | `.data/uploads` | Fotografías personales, profesionales y certificados privados |
 | `AUTH_PROVIDER` | Sí | `password` | `password`, `google` o `firebase` |
 | `SESSION_TTL_SECONDS` | Sí | `604800` | Duración máxima de sesión en segundos |
+| `BREVO_API_KEY` | Para recuperación con Brevo | Secreto de Brevo | Permite enviar enlaces mediante API HTTPS sin dominio propio |
+| `RECOVERY_EMAIL_FROM` | Para recuperación por correo | `tucorreo@gmail.com` | Dirección remitente verificada en el proveedor elegido |
+| `RESEND_API_KEY` | Opcional, alternativa a Brevo | Secreto de Resend | Requiere un dominio propio verificado para usuarios reales |
 | `OPENAI_API_KEY` | No | `sk-...` | Habilita generación remota de dietas; nunca llega al navegador |
 | `OPENAI_MODEL` | No | `gpt-5.6-terra` | Modelo de Responses API; usa el valor predeterminado si se omite |
 
@@ -56,7 +59,7 @@ Valores admitidos:
 authenticated | demo
 ```
 
-`authenticated` resuelve el usuario desde Astro Sessions y protege `/app`. Es el valor seguro usado si la variable no existe. `demo` oculta y bloquea las rutas de registro, login y logout; middleware asigna el propietario persistente `demo-user-v1` a las páginas y APIs funcionales.
+`authenticated` resuelve el usuario desde Astro Sessions y protege `/app`. Es el valor seguro usado si la variable no existe. `demo` oculta y bloquea las rutas de registro, login, recuperación y logout; middleware asigna el propietario persistente `demo-user-v1` a las páginas y APIs funcionales.
 
 El perfil demo se comparte dentro de la instancia y no proporciona aislamiento entre visitantes. Debe limitarse al desarrollo o a una demostración controlada. Esta variable no selecciona Google, Firebase ni la base de datos; esas decisiones permanecen separadas.
 
@@ -85,6 +88,10 @@ La validación debe rechazar cualquier otro valor con un mensaje claro de config
 Debe ser un entero positivo. Siete días equivalen a `604800`. La configuración de Astro Sessions y la vigencia de su cookie deben derivarse del mismo valor.
 
 El nombre `roman_colosseum_session` y los atributos `HttpOnly`, `SameSite=Lax`, `Secure` en producción y `Path=/` pertenecen a la configuración de Astro. No se introdujo otra variable de entorno para evitar una opción innecesaria; cambiar el nombre requiere actualizar esa configuración y las pruebas de integración.
+
+### Confirmación y recuperación por correo
+
+`BREVO_API_KEY` y `RECOVERY_EMAIL_FROM` se configuran juntas, exclusivamente en el servidor. Sirven tanto para activar cuentas nuevas como para recuperar contraseñas. Primero se verifica en Brevo una dirección de correo a la que tengas acceso. Brevo puede sustituir la dirección visible si se utiliza un correo gratuito; es una solución temporal y la entrega no está garantizada. El plan gratuito tiene un límite diario y la cuenta puede requerir aprobación para empezar a enviar. La alternativa `RESEND_API_KEY` requiere un dominio propio verificado para destinatarios reales; si se configuran ambas claves, se usa Brevo. Si faltan la clave del proveedor y el remitente, los formularios indican que el envío aún no está disponible; no se expone si la cuenta existe. Railway Hobby requiere una API HTTPS porque no habilita SMTP saliente. `APP_ORIGIN` debe coincidir con la URL pública HTTPS, ya que se usa para construir ambos enlaces.
 
 ### Generación de dietas con IA
 

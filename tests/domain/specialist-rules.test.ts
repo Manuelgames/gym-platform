@@ -75,7 +75,7 @@ describe('reglas de especialistas', () => {
 });
 
 describe('migración del documento', () => {
-  it('convierte v1 a v7 preservando datos y agregando el perfil personal', () => {
+  it('convierte v1 a v9 preservando datos y agregando el perfil personal', () => {
     const user = createPasswordUser({
       id: 'user-1', name: 'Usuario', email: 'usuario@example.com',
       passwordHash: 'hash', birthDate: '1990-01-01', sex: 'prefiero no decirlo', now,
@@ -89,14 +89,14 @@ describe('migración del documento', () => {
       calorieCalculations: [],
     });
     expect(migrated).toMatchObject({
-      schemaVersion: 7,
+      schemaVersion: 9,
       users: [{ id: 'user-1', profilePhoto: null }],
       specialistProfiles: [],
       specialistRequests: [],
     });
   });
 
-  it('convierte v2 a v7 sin perder las colecciones profesionales', () => {
+  it('convierte v2 a v9 sin perder las colecciones profesionales', () => {
     const user = createPasswordUser({
       id: 'user-1', name: 'Usuario', email: 'usuario@example.com',
       passwordHash: 'hash', birthDate: '1990-01-01', sex: 'prefiero no decirlo', now,
@@ -109,7 +109,7 @@ describe('migración del documento', () => {
       specialistProfiles: [], specialistRequests: [],
     });
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.users[0]?.profilePhoto).toBeNull();
   });
 
@@ -140,7 +140,7 @@ describe('migración del documento', () => {
     });
   });
 
-  it('convierte v4 a v7 y recupera los ejercicios anteriores como rutina manual', () => {
+  it('convierte v4 a v9 y recupera los ejercicios anteriores como rutina manual', () => {
     const legacyUser = createPasswordUser({
       id: 'user-1', name: 'Usuario', email: 'usuario@example.com',
       passwordHash: 'hash', birthDate: '1990-01-01', sex: 'prefiero no decirlo', now,
@@ -155,7 +155,7 @@ describe('migración del documento', () => {
       specialistProfiles: [], specialistRequests: [],
     });
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.routineExercises).toEqual([exercise]);
     expect(migrated.routinePlans[0]).toMatchObject({
       userId: 'user-1', source: 'manual', generationEngine: 'manual',
@@ -189,7 +189,7 @@ describe('migración del documento', () => {
       dietPlans: [], calorieCalculations: [], specialistProfiles: [], specialistRequests: [],
     });
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.routinePlans[0]?.days.slice(0, 6)).toEqual(plan.days.slice(0, 6));
     expect(migrated.routinePlans[0]?.days[6]).toMatchObject({ day: 'domingo', isRestDay: true, exercises: [] });
   });
@@ -224,7 +224,7 @@ describe('migración del documento', () => {
       dietPlans: [], calorieCalculations: [], specialistProfiles: [], specialistRequests: [],
     });
 
-    expect(migrated.schemaVersion).toBe(7);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.routinePlans[0]?.availableEquipment).toBe('');
     expect(migrated.routinePlans[0]?.days[0]?.exercises[0]).toMatchObject({
       muscle: 'Cardio', prescriptionType: 'duration', sets: null, reps: '',

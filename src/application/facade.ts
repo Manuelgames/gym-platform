@@ -29,6 +29,7 @@ export interface PublicUser {
   birthDate: string;
   sex: ProfileSex;
   profilePhotoId: string | null;
+  sessionVersion: number;
   createdAt: string;
 }
 
@@ -47,6 +48,9 @@ export interface RegisterInput {
   birthDate: string;
   sex: string;
 }
+
+/** El registro se crea pendiente incluso si el proveedor rechazó el primer envío. */
+export type RegistrationDelivery = 'sent' | 'failed';
 
 /** Credenciales del formulario de inicio de sesión. */
 export interface LoginInput {
@@ -219,8 +223,12 @@ export interface MyWorkView {
  * exclusivamente el identificador resuelto desde Astro Sessions.
  */
 export interface ApplicationFacade {
-  register(input: RegisterInput): Promise<PublicUser>;
+  register(input: RegisterInput): Promise<RegistrationDelivery>;
   login(input: LoginInput): Promise<PublicUser>;
+  requestEmailVerification(email: string): Promise<void>;
+  verifyEmail(userId: string, token: string): Promise<void>;
+  requestPasswordReset(email: string): Promise<void>;
+  resetPassword(userId: string, token: string, password: string, confirmation: string): Promise<void>;
   /** Obtiene o crea el perfil reservado usado únicamente por el modo demo. */
   getDemoUser(): Promise<PublicUser>;
   getCurrentUser(userId: string): Promise<PublicUser | null>;

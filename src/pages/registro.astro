@@ -15,7 +15,7 @@ const today = new Date().toISOString().slice(0, 10);
 ---
 
 <AuthLayout title="Crear cuenta" description="Crea un perfil privado para organizar tu progreso de entrenamiento.">
-  <AuthCard title="Forja tu leyenda" description="Crea un espacio personal para construir hábitos dignos de un héroe.">
+  <AuthCard title="Forja tu leyenda" description="Crea un espacio personal y confirma tu correo para comenzar.">
     <FormStack action="/api/auth/register" autocomplete="on">
       <FormField label="Nombre" for="register-name" required error={invalidField === 'name' ? errorMessage : undefined}>
         <input id="register-name" name="name" type="text" autocomplete="name" required minlength="2" maxlength="80" aria-invalid={invalidField === 'name' ? 'true' : undefined} />

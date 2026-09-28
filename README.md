@@ -18,7 +18,8 @@ La persistencia en archivo está pensada para desarrollo, demostraciones y despl
 
 ## Funciones de la aplicación
 
-- Registro e inicio de sesión con correo y contraseña cuando `APP_ACCESS_MODE=authenticated`.
+- Registro e inicio de sesión con correo y contraseña, incluida la confirmación de propiedad del correo, cuando `APP_ACCESS_MODE=authenticated`.
+- Recuperación de contraseña por enlace temporal enviado por correo cuando se configura Brevo o Resend.
 - Acceso directo al menú y sus módulos cuando `APP_ACCESS_MODE=demo`.
 - Sesión segura administrada por el servidor.
 - Panel personal con resumen de actividad.
@@ -111,6 +112,8 @@ npm run test:smoke
 | `/blog` | Público | Contenido educativo |
 | `/iniciar-sesion` | Invitado | Inicio de sesión; redirige a `/app` en modo demo |
 | `/registro` | Invitado | Creación de cuenta; redirige a `/app` en modo demo |
+| `/confirmar-correo` | Invitado | Estado y reenvío del enlace de activación |
+| `/verificar-correo` | Invitado | Consumo del enlace de activación de un solo uso |
 | `/app` | Autenticado | Resumen personal |
 | `/app/rutina` | Autenticado | Rutina automática, manual y de especialista |
 | `/app/dieta` | Autenticado | Dieta automática, manual y de especialista |
@@ -150,14 +153,14 @@ La composición de dependencias ocurre en un punto único del servidor. La prese
 
 - No se guardan datos funcionales en `localStorage` ni `sessionStorage`.
 - Las contraseñas se almacenan únicamente como hashes `scrypt` con sal dentro de la identidad `password`.
-- Astro Sessions guarda únicamente el `userId`; rutina, dieta y cálculos nunca se duplican en la sesión.
+- Astro Sessions guarda `userId` y `sessionVersion`; rutina, dieta y cálculos nunca se duplican en la sesión.
 - El identificador del usuario se obtiene de la sesión, nunca del cuerpo de una petición.
 - Las páginas privadas se validan antes de renderizarse.
 - `.env`, el archivo de datos y cualquier credencial de proveedor deben permanecer fuera de Git.
 
 ## Modo demo temporal
 
-El entorno local incluido usa `APP_ACCESS_MODE=demo`. Login, registro, logout y sus endpoints quedan ocultos o redirigidos, mientras `/app`, rutina, dieta, calculadora y especialistas funcionan con el propietario reservado `demo-user-v1`. Sus datos siguen guardándose en el servidor y sobreviven reinicios.
+El entorno local incluido usa `APP_ACCESS_MODE=demo`. Login, registro, recuperación de contraseña, logout y sus endpoints quedan ocultos o redirigidos, mientras `/app`, rutina, dieta, calculadora y especialistas funcionan con el propietario reservado `demo-user-v1`. Sus datos siguen guardándose en el servidor y sobreviven reinicios.
 
 El perfil es compartido por todos los visitantes de esa instancia. No debe exponerse así en producción pública: cualquier visitante podría leer o modificar el mismo progreso. Para restaurar el comportamiento privado basta cambiar:
 

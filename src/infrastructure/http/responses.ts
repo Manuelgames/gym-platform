@@ -48,9 +48,14 @@ function publicError(error: unknown): { error: string; field?: string } {
   if (error instanceof ApplicationError) {
     switch (error.code) {
       case 'EMAIL_ALREADY_REGISTERED': return { error: 'email-registered' };
+      case 'EMAIL_VERIFICATION_UNAVAILABLE': return { error: 'email-verification-unavailable' };
+      case 'EMAIL_VERIFICATION_INVALID': return { error: 'email-verification-invalid' };
+      case 'EMAIL_NOT_VERIFIED': return { error: 'email-not-verified' };
       case 'INVALID_CREDENTIALS': return { error: 'invalid-credentials' };
       case 'CURRENT_PASSWORD_INVALID': return { error: 'current-password-invalid', field: 'currentPassword' };
       case 'PASSWORD_CHANGE_UNAVAILABLE': return { error: 'password-change-unavailable' };
+      case 'RECOVERY_UNAVAILABLE': return { error: 'recovery-unavailable' };
+      case 'RESET_LINK_INVALID': return { error: 'reset-link-invalid' };
       case 'PROFILE_UPDATE_CONFLICT': return { error: 'profile-update-conflict' };
       case 'ROUTINE_EXERCISE_NOT_FOUND': return { error: 'exercise-not-found' };
       case 'ROUTINE_PLAN_NOT_FOUND': return { error: 'routine-plan-not-found' };
@@ -77,10 +82,12 @@ export function redirectEndpointError(
   request: Request,
   pathname: string,
   error: unknown,
+  query: Record<string, string> = {},
 ): Response {
   const safe = publicError(error);
   if (safe.error === 'unexpected') console.error('Error inesperado en endpoint.', error);
   const response = redirectAfterPost(request, pathname, {
+    ...query,
     error: safe.error,
     ...(safe.field ? { field: safe.field } : {}),
   });

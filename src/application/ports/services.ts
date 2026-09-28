@@ -21,6 +21,23 @@ export interface IdGenerator {
   next(): string;
 }
 
+/** Credencial opaca de recuperación; el servidor solo persiste su huella. */
+export interface RecoveryTokenService {
+  issue(): { token: string; digest: string };
+  digest(token: string): string | null;
+}
+
+/** Envío de seguridad independiente del proveedor de correo. */
+export interface PasswordRecoveryMailer {
+  sendResetLink(to: string, url: string): Promise<void>;
+  sendPasswordChanged(to: string): Promise<void>;
+}
+
+/** Envío de enlaces de confirmación de correo, independiente del proveedor. */
+export interface EmailVerificationMailer {
+  sendVerificationLink(to: string, url: string): Promise<void>;
+}
+
 /** Claims mínimos y estables que puede entregar Google o Firebase verificados. */
 export interface VerifiedExternalIdentity {
   provider: 'google' | 'firebase';

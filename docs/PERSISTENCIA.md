@@ -4,17 +4,17 @@
 
 Los datos funcionales de Roman Colosseum pertenecen al servidor. El navegador no usa `localStorage` ni `sessionStorage` como base de datos o caché duradera.
 
-Los casos de uso conocen interfaces de repositorio. El archivo JSON actual y un futuro Firestore son adaptadores sustituibles. Astro Sessions administra por separado el contexto de sesión y conserva únicamente `userId`.
+Los casos de uso conocen interfaces de repositorio. El archivo JSON actual y una futura base de datos son adaptadores sustituibles. Astro Sessions administra por separado el contexto de sesión y conserva `userId` y `sessionVersion`.
 
 ## Estrategia actual: archivo JSON
 
 Mientras no se elija una base de datos definitiva, el adaptador inicial guarda un documento JSON versionado en `DATA_FILE_PATH`.
 
-Esquema raíz v7:
+Esquema raíz v9:
 
 ```ts
-interface DatabaseDocumentV7 {
-  schemaVersion: 7;
+interface DatabaseDocumentV9 {
+  schemaVersion: 9;
   users: User[];
   routineExercises: RoutineExercise[];
   routinePlans: RoutinePlan[];
@@ -29,7 +29,7 @@ Ejemplo vacío:
 
 ```json
 {
-  "schemaVersion": 7,
+  "schemaVersion": 9,
   "users": [],
   "routineExercises": [],
   "routinePlans": [],
@@ -40,7 +40,7 @@ Ejemplo vacío:
 }
 ```
 
-Las identidades se almacenan dentro de cada `User.identities`. Una identidad `password` contiene `credentialHash`; Google y Firebase contienen únicamente provider, subject y fecha. El documento nunca contiene contraseñas originales ni tokens externos.
+Las identidades se almacenan dentro de cada `User.identities`. Una identidad `password` contiene `credentialHash`; Google y Firebase contienen únicamente provider, subject y fecha. `User.passwordReset` y `User.emailVerification` conservan solo la huella y expiración de sus enlaces; `emailVerifiedAt` registra la activación y `sessionVersion` permite invalidar sesiones anteriores al cambiar la contraseña. El documento nunca contiene contraseñas originales ni los tokens enviados por correo.
 
 En `APP_ACCESS_MODE=demo`, el mismo esquema contiene un único usuario reservado con `id=demo-user-v1`. Rutina, dieta y cálculos se relacionan con ese ID como cualquier otro agregado. Su credencial se genera desde un secreto aleatorio descartado y nunca habilita login. El contenido demo es compartido por toda la instancia y no se migra automáticamente a cuentas reales.
 
@@ -135,18 +135,18 @@ Aunque un repositorio de archivo pueda completar operaciones inmediatamente, sus
 
 ## Sesiones Astro
 
-El documento funcional no implementa un repositorio de sesiones. En registro e inicio de sesión el endpoint:
+El documento funcional no implementa un repositorio de sesiones. El registro guarda una cuenta pendiente y no crea sesión. Después de confirmar el correo, el endpoint de inicio de sesión:
 
 1. autentica mediante el caso de uso;
 2. regenera la Astro Session;
-3. guarda solamente `userId`;
+3. guarda `userId` y `sessionVersion`;
 4. permite que Astro emita la cookie configurada.
 
-Logout llama a `destroy()`. Middleware también destruye una sesión cuyo `userId` ya no corresponde a un usuario.
+Logout llama a `destroy()`. Middleware también destruye una sesión cuyo `userId` ya no corresponde a un usuario o cuya `sessionVersion` quedó obsoleta después de cambiar la contraseña.
 
 La expiración procede de `SESSION_TTL_SECONDS`. La forma en que Astro almacena identificadores, cookies o estado interno depende del driver configurado y debe revisarse al cambiar de adaptador de despliegue.
 
-La revocación individual o global de sesiones no está incluida en el documento funcional. Si se convierte en requisito, debe elegirse un driver que exponga esa capacidad o introducir un registro explícito mediante un ADR.
+El cambio y el restablecimiento de contraseña invalidan todas las sesiones anteriores del usuario en su siguiente petición. La revocación de una sesión individual no está incluida en el documento funcional; si se requiere, debe elegirse un driver que exponga esa capacidad o introducir un registro explícito mediante un ADR.
 
 ## Contraseñas e identidades
 
@@ -171,9 +171,9 @@ Nunca se persisten:
 6. Valida el resultado.
 7. Escribe de forma atómica la versión nueva.
 
-Un error no debe reemplazar silenciosamente los datos con un documento vacío.
+Un error no debe reemplazar silenciosamente los datos con un documento vacío. La migración v7→v8 agrega `passwordReset: null` y `sessionVersion: 0`; la migración v8→v9 agrega `emailVerification: null` y `emailVerifiedAt: null` sin cambiar contraseñas ni documentos fitness. Una cuenta local migrada debe solicitar un enlace para confirmar su correo antes del siguiente acceso.
 
-Las migraciones implementadas son aditivas: v1 agrega las colecciones profesionales y v1/v2 agregan `profilePhoto: null` a cada usuario. La siguiente escritura atómica deja persistida la versión 3.
+Las migraciones históricas agregan colecciones, campos de perfil y planes de entrenamiento según la versión de origen. La siguiente escritura atómica deja persistida la versión vigente (v9).
 
 ## Copias de seguridad
 

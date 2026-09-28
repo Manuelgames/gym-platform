@@ -40,6 +40,7 @@ export const POST: APIRoute = async ({ request, locals, session }) => {
     limiter.release(lease);
     await writableSession.regenerate();
     writableSession.set('userId', user.id, { ttl: environment.sessionTtlSeconds });
+    writableSession.set('sessionVersion', user.sessionVersion + 1, { ttl: environment.sessionTtlSeconds });
     return redirectAfterPost(request, '/app/perfil', { updated: 'password' });
   } catch (error) {
     return redirectEndpointError(request, '/app/perfil', error);

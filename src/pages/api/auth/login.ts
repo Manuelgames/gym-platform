@@ -12,7 +12,7 @@ import {
 
 export const prerender = false;
 
-/** Autentica, regenera el identificador de sesión y guarda solo userId. */
+/** Autentica, regenera el identificador de sesión y guarda usuario y versión de sesión. */
 export const POST: APIRoute = async ({ request, session, clientAddress }) => {
   try {
     const environment = loadAstroServerEnvironment();
@@ -42,6 +42,7 @@ export const POST: APIRoute = async ({ request, session, clientAddress }) => {
     // La rotación elimina la posibilidad de fijar un identificador previo.
     await writableSession.regenerate();
     writableSession.set('userId', user.id, { ttl: environment.sessionTtlSeconds });
+    writableSession.set('sessionVersion', user.sessionVersion, { ttl: environment.sessionTtlSeconds });
     return redirectAfterPost(request, '/app');
   } catch (error) {
     return redirectEndpointError(request, '/iniciar-sesion', error);

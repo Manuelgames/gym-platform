@@ -97,4 +97,10 @@ export const AUTH_RATE_LIMITS = Object.freeze({
   loginAccount: { limit: 8, windowMs: 15 * 60 * 1000 },
   register: { limit: 5, windowMs: 60 * 60 * 1000 },
   passwordChange: { limit: 8, windowMs: 15 * 60 * 1000 },
+  recoveryIp: { limit: 10, windowMs: 60 * 60 * 1000 },
+  recoveryAccount: { limit: 3, windowMs: 60 * 60 * 1000 },
+  resetIp: { limit: 20, windowMs: 15 * 60 * 1000 },
+  verificationIp: { limit: 10, windowMs: 60 * 60 * 1000 },
+  verificationAccount: { limit: 3, windowMs: 60 * 60 * 1000 },
+  verificationConfirmIp: { limit: 20, windowMs: 15 * 60 * 1000 },
 });

@@ -10,6 +10,7 @@ import { readErrorMessage, readInvalidField } from '../presentation/feedback';
 
 const errorMessage = readErrorMessage(Astro.url);
 const invalidField = readInvalidField(Astro.url);
+const emailNotVerified = Astro.url.searchParams.get('error') === 'email-not-verified';
 ---
 
 <AuthLayout title="Iniciar sesión" description="Accede a tu rutina, dieta e historial personal.">
@@ -21,7 +22,11 @@ const invalidField = readInvalidField(Astro.url);
       <FormField label="Contraseña" for="login-password" required error={invalidField === 'password' ? errorMessage : undefined}>
         <input id="login-password" name="password" type="password" autocomplete="current-password" required minlength="8" maxlength="128" aria-invalid={invalidField === 'password' ? 'true' : undefined} />
       </FormField>
+      <p class="password-help"><a href="/recuperar-contrasena">¿Olvidaste tu contraseña?</a></p>
+      {Astro.url.searchParams.has('reset') && <FormMessage tone="success" message="Contraseña actualizada. Ya puedes iniciar sesión." />}
+      {Astro.url.searchParams.has('verified') && <FormMessage tone="success" message="Correo confirmado. Ya puedes iniciar sesión." />}
       <FormMessage message={invalidField ? undefined : errorMessage} tone="error" />
+      {emailNotVerified && <p class="verification-help"><a href="/confirmar-correo">Reenviar el enlace de confirmación</a></p>}
       <Button type="submit">Entrar al imperio</Button>
     </FormStack>
 
@@ -36,4 +41,8 @@ const invalidField = readInvalidField(Astro.url);
 
 <style>
   .provider-note { margin: 1rem 0 0; color: var(--color-muted); font-size: 1.25rem; text-align: center; }
+  .password-help { margin: -.5rem 0 0; text-align: right; font-size: 1.3rem; }
+  .password-help a { color: var(--color-gold-light); text-decoration: underline; text-underline-offset: .25em; }
+  .verification-help { margin: -.5rem 0 0; font-size: 1.3rem; }
+  .verification-help a { color: var(--color-gold-light); text-decoration: underline; text-underline-offset: .25em; }
 </style>

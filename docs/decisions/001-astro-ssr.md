@@ -17,7 +17,7 @@ La nueva versión necesita:
 
 ## Decisión
 
-Usar Astro en modo SSR con un adaptador de servidor. Astro Sessions guarda únicamente `userId`; el middleware resuelve ese usuario y las páginas protegidas se autorizan antes de renderizarse.
+Usar Astro en modo SSR con un adaptador de servidor. Astro Sessions guarda `userId` y `sessionVersion`; el middleware resuelve ese usuario y las páginas protegidas se autorizan antes de renderizarse.
 
 La portada, el blog y los formularios también pueden renderizarse en servidor para producir una navegación consistente con la sesión. La interactividad se implementa con JavaScript cliente pequeño y mejora progresiva.
 

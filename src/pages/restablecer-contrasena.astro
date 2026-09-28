@@ -1,0 +1,37 @@
+---
+import AuthCard from '../components/auth/AuthCard.astro';
+import FormField from '../components/forms/FormField.astro';
+import FormMessage from '../components/forms/FormMessage.astro';
+import FormStack from '../components/forms/FormStack.astro';
+import Button from '../components/ui/Button.astro';
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { readErrorMessage, readInvalidField } from '../presentation/feedback';
+
+const userId = Astro.url.searchParams.get('userId') ?? '';
+const token = Astro.url.searchParams.get('token') ?? '';
+const hasLink = userId.length > 0 && token.length > 0;
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+---
+
+<AuthLayout title="Nueva contraseña" description="Establece una nueva contraseña para tu cuenta.">
+  <AuthCard title="Crea una nueva clave" description="Elige una contraseña de al menos 8 caracteres. El enlace solo puede usarse una vez.">
+    {hasLink ? (
+      <FormStack action="/api/auth/password-reset/confirm" autocomplete="on">
+        <input type="hidden" name="userId" value={userId} />
+        <input type="hidden" name="token" value={token} />
+        <FormField label="Nueva contraseña" for="reset-password" required error={invalidField === 'newPassword' ? errorMessage : undefined}>
+          <input id="reset-password" name="newPassword" type="password" autocomplete="new-password" required minlength="8" maxlength="128" aria-invalid={invalidField === 'newPassword' ? 'true' : undefined} />
+        </FormField>
+        <FormField label="Confirmar contraseña" for="reset-confirmation" required error={invalidField === 'passwordConfirmation' ? errorMessage : undefined}>
+          <input id="reset-confirmation" name="passwordConfirmation" type="password" autocomplete="new-password" required minlength="8" maxlength="128" aria-invalid={invalidField === 'passwordConfirmation' ? 'true' : undefined} />
+        </FormField>
+        <FormMessage message={invalidField ? undefined : errorMessage} tone="error" />
+        <Button type="submit">Guardar contraseña</Button>
+      </FormStack>
+    ) : (
+      <FormMessage tone="error" message="Falta el enlace de recuperación. Solicita uno nuevo desde la pantalla de acceso." />
+    )}
+    <Fragment slot="footer"><a href="/recuperar-contrasena">Solicitar otro enlace</a>.</Fragment>
+  </AuthCard>
+</AuthLayout>

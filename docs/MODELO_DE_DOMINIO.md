@@ -16,7 +16,7 @@ User
 
 `User` es la identidad interna estable. `UserIdentity` indica cómo se autentica. Los datos de progreso siempre pertenecen al `id` interno, nunca al email, al índice de un arreglo o al subject del proveedor.
 
-Astro Sessions no forma parte de este modelo persistente: conserva únicamente el `userId` necesario para construir el contexto autenticado de una petición.
+Astro Sessions no forma parte de este modelo persistente: conserva `userId` y `sessionVersion` para construir el contexto autenticado e invalidar sesiones anteriores al cambiar la contraseña.
 
 ## Identificadores y fechas
 
@@ -37,6 +37,8 @@ interface User {
   sex: 'mujer' | 'hombre' | 'prefiero no decirlo';
   profilePhoto: StoredMediaReference | null;
   identities: UserIdentity[];
+  passwordReset: { tokenDigest: string; expiresAt: string } | null;
+  sessionVersion: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -51,6 +53,10 @@ interface User {
 | `sex` | Uno de los tres valores admitidos por el perfil |
 | `profilePhoto` | Referencia opcional a una imagen privada servida únicamente a cuentas autenticadas |
 | `identities` | Al menos una forma de autenticación válida |
+| `passwordReset` | Solo huella SHA-256 y vencimiento de un enlace de un solo uso; nunca el token original |
+| `emailVerification` | Solo huella SHA-256 y vencimiento del enlace de activación; nunca el token original |
+| `emailVerifiedAt` | Instante de confirmación; las cuentas locales pendientes no pueden iniciar sesión |
+| `sessionVersion` | Aumenta al cambiar o restablecer la contraseña para invalidar sesiones previas |
 | `createdAt` / `updatedAt` | Instantes asignados por el servidor |
 
 El campo `sex` representa la selección de perfil actual. No selecciona automáticamente la ecuación calórica; la calculadora solicita por separado `male` o `female` porque esas son las dos constantes publicadas de Mifflin-St Jeor.
@@ -90,7 +96,7 @@ interface SessionData {
 }
 ```
 
-En registro e inicio correctos el endpoint regenera la sesión antes de guardar `userId`, lo que evita reutilizar un identificador de sesión anterior. En logout se destruye. Si middleware encuentra un `userId` cuyo usuario ya no existe, destruye esa sesión inválida.
+El registro no abre sesión: primero exige confirmar el correo. En un inicio correcto el endpoint regenera la sesión antes de guardar `userId`, lo que evita reutilizar un identificador anterior. En logout se destruye. Si middleware encuentra un `userId` cuyo usuario ya no existe, destruye esa sesión inválida.
 
 La duración se deriva de `SESSION_TTL_SECONDS`. La forma interna de la cookie o del almacén de sesión pertenece a la configuración de Astro, no al dominio.
 

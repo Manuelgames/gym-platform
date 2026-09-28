@@ -15,6 +15,9 @@ export interface ServerEnvironment {
   sessionTtlSeconds: number;
   openAiApiKey: string | null;
   openAiModel: string;
+  brevoApiKey: string | null;
+  resendApiKey: string | null;
+  recoveryEmailFrom: string | null;
 }
 
 function readNodeEnv(value: string | undefined): ServerEnvironment['nodeEnv'] {
@@ -73,5 +76,8 @@ export function loadServerEnvironment(
     sessionTtlSeconds: readPositiveInteger(env.SESSION_TTL_SECONDS, 60 * 60 * 24 * 7),
     openAiApiKey: env.OPENAI_API_KEY?.trim() || null,
     openAiModel: env.OPENAI_MODEL?.trim() || 'gpt-5.6-terra',
+    brevoApiKey: env.BREVO_API_KEY?.trim() || null,
+    resendApiKey: env.RESEND_API_KEY?.trim() || null,
+    recoveryEmailFrom: env.RECOVERY_EMAIL_FROM?.trim() || null,
   };
 }

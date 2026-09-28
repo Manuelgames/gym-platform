@@ -16,7 +16,7 @@ Separar:
 - `User`, identidad interna de la aplicación;
 - `UserIdentity`, vínculo discriminado para `password`, `google` o `firebase`;
 - `ExternalIdentityVerifier`, puerto para verificar credenciales externas;
-- Astro Sessions, que conserva únicamente el `userId` después de autenticar;
+- Astro Sessions, que conserva `userId` y `sessionVersion` después de autenticar;
 - repositorios funcionales, independientes de autenticación.
 
 Los verificadores de Google y Firebase producen un resultado común con proveedor, subject, email, estado de verificación y perfil opcional.
@@ -38,7 +38,7 @@ Los verificadores de Google y Firebase producen un resultado común con proveedo
 - Debe definirse una política explícita de creación y vinculación.
 - La configuración actual selecciona un único proveedor; habilitar varios simultáneamente requerirá evolucionarla.
 - Cada adaptador debe validar issuer, audience, firma y expiración correctamente.
-- La recuperación de cuenta depende del proveedor y necesita diseño de producto.
+- La recuperación de cuenta depende del proveedor; para `password` se implementó mediante enlaces de un solo uso y un adaptador de correo sustituible.
 
 ## Política de seguridad
 
@@ -47,7 +47,7 @@ Los verificadores de Google y Firebase producen un resultado común con proveedo
 - No guardar ID tokens ni access tokens salvo una necesidad futura justificada y protegida.
 - No vincular cuentas automáticamente solo por email.
 - Derivar el usuario de la sesión en todas las operaciones.
-- Regenerar Astro Session después de verificar identidad, guardar solo `userId` y emitir una cookie `HttpOnly`.
+- Regenerar Astro Session después de verificar identidad, guardar `userId` y `sessionVersion`, y emitir una cookie `HttpOnly`.
 
 ## Alternativas consideradas
 

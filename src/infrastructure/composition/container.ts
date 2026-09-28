@@ -1,5 +1,6 @@
 import type { ApplicationFacade } from '../../application/facade';
 import { AuthUseCases } from '../../application/use-cases/auth';
+import { PasswordRecoveryUseCases } from '../../application/use-cases/password-recovery';
 import { CalorieUseCases } from '../../application/use-cases/calories';
 import { DashboardUseCase } from '../../application/use-cases/dashboard';
 import { DietUseCases } from '../../application/use-cases/diet';
@@ -9,10 +10,13 @@ import { SpecialistUseCases } from '../../application/use-cases/specialists';
 import { OpenAIDietGenerator } from '../ai/openai-diet-generator';
 import { OpenAIRoutineGenerator } from '../ai/openai-routine-generator';
 import { loadAstroServerEnvironment } from '../config/astro-environment';
+import { BrevoRecoveryMailer } from '../email/brevo-recovery-mailer';
+import { ResendRecoveryMailer } from '../email/resend-recovery-mailer';
 import { FileDataStore } from '../persistence/file/file-data-store';
 import { DATA_SCHEMA_VERSION } from '../persistence/file/schema';
 import { LocalMediaStore } from '../persistence/file/local-media-store';
 import { ScryptPasswordHasher } from '../security/scrypt-password-hasher';
+import { CryptoRecoveryTokenService } from '../security/recovery-token-service';
 import { CryptoIdGenerator, SystemClock } from '../system/node-services';
 
 type GlobalContainer = typeof globalThis & {
@@ -50,7 +54,11 @@ function isCurrentApplicationFacade(
     && typeof facade.saveSpecialistRoutine === 'function'
     && typeof facade.saveManualDiet === 'function'
     && typeof facade.saveSpecialistDiet === 'function'
-    && typeof facade.deleteCalorieCalculation === 'function',
+    && typeof facade.deleteCalorieCalculation === 'function'
+    && typeof facade.requestPasswordReset === 'function'
+    && typeof facade.resetPassword === 'function'
+    && typeof facade.requestEmailVerification === 'function'
+    && typeof facade.verifyEmail === 'function'
   );
 }
 
@@ -64,7 +72,25 @@ function composeApplication(): ApplicationFacade {
   const store = new FileDataStore(environment.dataFilePath);
   const clock = new SystemClock();
   const ids = new CryptoIdGenerator();
-  const auth = new AuthUseCases(store, new ScryptPasswordHasher(), clock, ids);
+  const recoveryMailer = environment.recoveryEmailFrom
+    ? environment.brevoApiKey
+      ? new BrevoRecoveryMailer(environment.brevoApiKey, environment.recoveryEmailFrom)
+      : environment.resendApiKey
+        ? new ResendRecoveryMailer(environment.resendApiKey, environment.recoveryEmailFrom)
+        : null
+    : null;
+  if (recoveryMailer && environment.nodeEnv === 'production'
+    && new URL(environment.appOrigin).protocol !== 'https:') {
+    throw new Error('APP_ORIGIN debe usar HTTPS para enviar enlaces de recuperación en producción.');
+  }
+  const auth = new AuthUseCases(
+    store, new ScryptPasswordHasher(), clock, ids, new CryptoRecoveryTokenService(),
+    recoveryMailer, environment.appOrigin,
+  );
+  const recovery = new PasswordRecoveryUseCases(
+    store, new ScryptPasswordHasher(), clock, new CryptoRecoveryTokenService(),
+    recoveryMailer, environment.appOrigin,
+  );
   const routine = new RoutineUseCases(
     store,
     store,
@@ -96,6 +122,10 @@ function composeApplication(): ApplicationFacade {
   return Object.freeze({
     register: auth.register.bind(auth),
     login: auth.login.bind(auth),
+    requestEmailVerification: auth.requestEmailVerification.bind(auth),
+    verifyEmail: auth.verifyEmail.bind(auth),
+    requestPasswordReset: recovery.request.bind(recovery),
+    resetPassword: recovery.reset.bind(recovery),
     getDemoUser: auth.getDemoUser.bind(auth),
     getCurrentUser: auth.getCurrentUser.bind(auth),
     getProfile: profile.get.bind(profile),

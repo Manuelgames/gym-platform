@@ -53,6 +53,9 @@ describe('FileDataStore', () => {
       },
       { now: () => '2026-08-05T12:00:00.000Z' },
       { next: () => `secreto-${nextId += 1}` },
+      { issue: () => ({ token: 'token', digest: 'a'.repeat(64) }), digest: () => 'a'.repeat(64) },
+      null,
+      'https://gym.example',
     );
 
     const [first, second] = await Promise.all([
@@ -106,7 +109,7 @@ describe('FileDataStore', () => {
 
     expect(await store.listRoutine('user-1')).toHaveLength(25);
     const persisted = JSON.parse(await readFile(file, 'utf8')) as { schemaVersion: number; routineExercises: unknown[] };
-    expect(persisted.schemaVersion).toBe(7);
+    expect(persisted.schemaVersion).toBe(9);
     expect(persisted.routineExercises).toHaveLength(25);
     expect((await readdir(directory)).filter((name) => name.endsWith('.tmp'))).toEqual([]);
   });
