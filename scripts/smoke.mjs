@@ -203,6 +203,18 @@ try {
   startServer();
   await waitForServer();
 
+  for (const sensitivePath of [
+    `/verificar-correo?userId=smoke-user&token=${'a'.repeat(43)}`,
+    `/restablecer-contrasena?userId=smoke-user&token=${'a'.repeat(43)}`,
+  ]) {
+    const sensitiveResponse = await request(sensitivePath);
+    await sensitiveResponse.text();
+    if (sensitiveResponse.status !== 200
+      || sensitiveResponse.headers.get('referrer-policy') !== 'strict-origin') {
+      throw new Error(`${sensitivePath} no protegió el token con una política compatible con formularios.`);
+    }
+  }
+
   await post('/api/auth/login', { email, password }, '/app');
   await expectPage('/app', 'Construye, Usuario.');
   const dashboardHtml = await pageHtml('/app');

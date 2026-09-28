@@ -33,10 +33,14 @@ function isAuthenticationApi(pathname: string): boolean {
 
 function withSessionAwareCacheHeaders(
   response: Response,
-  options: { noStore: boolean; varyCookie: boolean; noReferrer?: boolean },
+  options: {
+    noStore: boolean;
+    varyCookie: boolean;
+    referrerPolicy?: 'no-referrer' | 'strict-origin';
+  },
 ): Response {
   const headers = new Headers(response.headers);
-  if (options.noReferrer) headers.set('Referrer-Policy', 'no-referrer');
+  if (options.referrerPolicy) headers.set('Referrer-Policy', options.referrerPolicy);
   if (options.noStore) {
     headers.set('Cache-Control', 'private, no-store, max-age=0');
     headers.set('Pragma', 'no-cache');
@@ -131,6 +135,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
   return withSessionAwareCacheHeaders(response, {
     noStore: privatePage || privateApi || isApi || isAuthenticationPage(pathname) || Boolean(context.locals.user),
     varyCookie: isHtml || isApi,
-    noReferrer: pathname === '/restablecer-contrasena' || pathname === '/verificar-correo',
+    referrerPolicy: pathname === '/restablecer-contrasena' || pathname === '/verificar-correo'
+      ? 'strict-origin'
+      : undefined,
   });
 });
