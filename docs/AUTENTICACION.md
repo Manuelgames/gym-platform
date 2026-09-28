@@ -104,6 +104,8 @@ La respuesta pública debe ser genérica, por ejemplo “Correo o contraseña in
 
 Los endpoints aplican un limitador por proceso: login por IP y cuenta seudonimizada, registro por IP, y confirmación/reenvío por IP y cuenta seudonimizada. Los intentos correctos de login liberan su reserva para no penalizar al usuario legítimo. Este adaptador protege una sola instancia; un despliegue con varias réplicas debe sustituirlo por un limitador compartido (por ejemplo, Redis o el servicio equivalente de la plataforma).
 
+Railway termina HTTPS delante del proceso Node y le entrega una URL interna diferente del `Origin` público. Por ello se desactiva `security.checkOrigin` de Astro, que compararía esos dos valores y rechazaría formularios legítimos. La protección CSRF no se elimina: todos los endpoints POST llaman `assertTrustedFormOrigin` y comparan el encabezado del navegador contra el origen exacto de `APP_ORIGIN`. Una prueba de cobertura impide añadir un POST sin esa validación.
+
 ### Recuperación de contraseña
 
 Desde `/iniciar-sesion` se accede a `/recuperar-contrasena`. El servidor siempre muestra la misma confirmación para un correo existente o desconocido. Para una cuenta local genera 32 bytes aleatorios, guarda únicamente SHA-256 del token en `User.passwordReset` con vencimiento de 30 minutos y envía un enlace mediante una API HTTPS. Un nuevo enlace reemplaza el anterior.

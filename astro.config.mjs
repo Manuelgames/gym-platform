@@ -21,6 +21,11 @@ export default defineConfig({
     // El formulario profesional admite una foto y hasta tres PDF de 4 MB.
     bodySizeLimit: 18 * 1024 * 1024,
   }),
+  security: {
+    // Railway termina TLS en su proxy y Astro recibe una URL interna distinta
+    // del Origin público. Cada endpoint mutable valida APP_ORIGIN explícitamente.
+    checkOrigin: false,
+  },
   compressHTML: true,
   devToolbar: { enabled: false },
   session: {
