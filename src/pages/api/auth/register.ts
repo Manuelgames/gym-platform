@@ -18,6 +18,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
       name: readTextField(form, 'name', { maxRawLength: 80 }),
       email: readTextField(form, 'email', { maxRawLength: 254 }),
       password: readTextField(form, 'password', { maxRawLength: 128 }),
+      passwordConfirmation: readTextField(form, 'passwordConfirmation', { maxRawLength: 128 }),
       birthDate: readTextField(form, 'birthDate', { maxRawLength: 10 }),
       sex: readTextField(form, 'sex', { maxRawLength: 32 }),
     });

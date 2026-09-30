@@ -17,6 +17,7 @@ import type { IdentityProvider, User } from '../../domain/users/user';
 /** Resumen agregado que evita múltiples lecturas inconsistentes del almacén. */
 export interface FitnessSummary {
   exerciseCount: number;
+  hasRoutine: boolean;
   hasDiet: boolean;
   calorieCalculationCount: number;
 }

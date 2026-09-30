@@ -3,6 +3,7 @@ import {
   findIdentity,
   normalizePersonName,
   USER_PROFILE_PHOTO_LIMITS,
+  validateNewPassword,
   validatePassword,
   type User,
 } from '../../domain/users/user';
@@ -28,9 +29,13 @@ function nextUpdatedAt(previous: string, candidate: string): string {
     : candidate;
 }
 
-function validatePasswordField(value: string, field: string): string {
+function validatePasswordField(
+  value: string,
+  field: string,
+  validator: (password: string) => string = validatePassword,
+): string {
   try {
-    return validatePassword(value);
+    return validator(value);
   } catch (error) {
     if (error instanceof DomainValidationError) {
       throw new DomainValidationError(field, error.message);
@@ -106,7 +111,7 @@ export class ProfileUseCases {
       throw new ApplicationError('PASSWORD_CHANGE_UNAVAILABLE', 'La cuenta no usa contraseña local.');
     }
     validatePasswordField(input.currentPassword, 'currentPassword');
-    const newPassword = validatePasswordField(input.newPassword, 'newPassword');
+    const newPassword = validatePasswordField(input.newPassword, 'newPassword', validateNewPassword);
     if (newPassword !== input.passwordConfirmation) {
       throw new DomainValidationError('passwordConfirmation', 'La confirmación no coincide con la nueva contraseña.');
     }

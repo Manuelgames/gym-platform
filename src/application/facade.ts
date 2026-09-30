@@ -18,7 +18,7 @@ import type {
   SpecialistRequestStatus,
   SpecialistRole,
 } from '../domain/specialists/specialist';
-import type { ProfileSex } from '../domain/users/user';
+import type { IdentityProvider, ProfileSex } from '../domain/users/user';
 import type { MediaContent, MediaUpload, SpecialistMediaContent, SpecialistMediaUpload } from './ports/services';
 
 /** Usuario seguro para UI; excluye identidades y hashes de credenciales. */
@@ -29,8 +29,30 @@ export interface PublicUser {
   birthDate: string;
   sex: ProfileSex;
   profilePhotoId: string | null;
+  identityProviders: IdentityProvider[];
   sessionVersion: number;
   createdAt: string;
+}
+
+/** Claims verificados conservados temporalmente mientras se completa el perfil. */
+export interface PendingExternalRegistration {
+  provider: Exclude<IdentityProvider, 'password'>;
+  subject: string;
+  email: string;
+  displayName: string;
+  expiresAt: string;
+}
+
+/** Resultado seguro del primer intercambio con un proveedor externo. */
+export type ExternalAuthenticationResult =
+  | { kind: 'authenticated'; user: PublicUser }
+  | { kind: 'profile-required'; pending: PendingExternalRegistration };
+
+/** Datos que Google no proporciona y requiere el perfil de la aplicación. */
+export interface CompleteExternalRegistrationInput {
+  pending: PendingExternalRegistration;
+  birthDate: string;
+  sex: string;
 }
 
 /** Campos exigidos para sustituir una credencial local. */
@@ -45,6 +67,7 @@ export interface RegisterInput {
   name: string;
   email: string;
   password: string;
+  passwordConfirmation: string;
   birthDate: string;
   sex: string;
 }
@@ -150,6 +173,7 @@ export interface NutritionClientDietView {
 export interface DashboardView {
   user: PublicUser;
   exerciseCount: number;
+  hasRoutine: boolean;
   hasDiet: boolean;
   calorieCalculationCount: number;
 }
@@ -225,6 +249,9 @@ export interface MyWorkView {
 export interface ApplicationFacade {
   register(input: RegisterInput): Promise<RegistrationDelivery>;
   login(input: LoginInput): Promise<PublicUser>;
+  authenticateWithExternalIdentity(idToken: string): Promise<ExternalAuthenticationResult>;
+  completeExternalRegistration(input: CompleteExternalRegistrationInput): Promise<PublicUser>;
+  linkExternalIdentity(userId: string, idToken: string): Promise<PublicUser>;
   requestEmailVerification(email: string): Promise<void>;
   verifyEmail(userId: string, token: string): Promise<void>;
   requestPasswordReset(email: string): Promise<void>;

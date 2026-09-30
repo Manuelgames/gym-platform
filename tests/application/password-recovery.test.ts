@@ -65,15 +65,15 @@ describe('recuperación de contraseña', () => {
     const userId = link.searchParams.get('userId')!;
 
     const outcomes = await Promise.allSettled([
-      recovery.reset(userId, token, 'segunda-clave', 'segunda-clave'),
-      recovery.reset(userId, token, 'tercera-clave', 'tercera-clave'),
+      recovery.reset(userId, token, 'segunda-clave2', 'segunda-clave2'),
+      recovery.reset(userId, token, 'tercera-clave3', 'tercera-clave3'),
     ]);
     expect(outcomes.filter((item) => item.status === 'fulfilled')).toHaveLength(1);
     const user = (await store.findById(userId))!;
     expect(user.passwordReset).toBeNull();
     expect(user.sessionVersion).toBe(1);
     expect(await passwords.verify('primera-clave', user.identities[0]?.provider === 'password' ? user.identities[0].credentialHash : '')).toBe(false);
-    await expect(recovery.reset(userId, token, 'cuarta-clave', 'cuarta-clave')).rejects.toMatchObject({ code: 'RESET_LINK_INVALID' });
+    await expect(recovery.reset(userId, token, 'cuarta-clave4', 'cuarta-clave4')).rejects.toMatchObject({ code: 'RESET_LINK_INVALID' });
     expect(mailer.sendPasswordChanged).toHaveBeenCalledTimes(1);
   });
 
@@ -84,7 +84,7 @@ describe('recuperación de contraseña', () => {
     setNow('2026-09-27T12:31:00.000Z');
     await expect(recovery.reset(
       link.searchParams.get('userId')!, link.searchParams.get('token')!,
-      'segunda-clave', 'segunda-clave',
+      'segunda-clave2', 'segunda-clave2',
     )).rejects.toMatchObject({ code: 'RESET_LINK_INVALID' });
     expect((await store.findById('user-1'))?.sessionVersion).toBe(0);
   });

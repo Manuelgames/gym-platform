@@ -172,15 +172,15 @@ El valor predeterminado del código es `authenticated`, de forma que omitir la v
 
 Los datos antiguos de `localStorage` no constituyen una fuente confiable de identidad. Las contraseñas y sesiones heredadas se descartan. Si se ofrece una importación temporal, solo debe copiar progreso hacia una cuenta nueva ya autenticada.
 
-## Elegir autenticación futura
+## Elegir autenticación
 
 `AUTH_PROVIDER` reserva la selección del mecanismo de identidad y es independiente de `APP_ACCESS_MODE`:
 
-- `password`: credenciales administradas por la aplicación; es el único modo operativo en la versión inicial.
-- `google`: contrato preparado para un futuro adaptador de Google Identity Services.
+- `password`: credenciales administradas por la aplicación.
+- `google`: conserva el acceso por contraseña y añade Google Identity Services; requiere `PUBLIC_GOOGLE_CLIENT_ID`.
 - `firebase`: contrato preparado para un futuro adaptador de Firebase Authentication.
 
-Seleccionar `google` o `firebase` antes de instalar su adaptador debe detener el arranque con un error claro. La aplicación nunca cambia silenciosamente a contraseña.
+Seleccionar `google` sin Client ID o seleccionar `firebase` detiene el arranque con un error claro.
 
 La elección de autenticación es independiente de dónde se guardan los datos. Es posible, por ejemplo, usar Google Identity Services con Firestore o Firebase Authentication con PostgreSQL.
 

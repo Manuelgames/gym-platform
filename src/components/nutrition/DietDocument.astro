@@ -18,7 +18,7 @@ export interface Props {
 
 const { plan, pdfHref, authorName, profile } = Astro.props;
 const sourceLabel = plan.source === 'ai'
-  ? plan.generationEngine === 'openai' ? 'Generada con IA' : 'Generación automática local'
+  ? plan.generationEngine === 'openai' ? 'Generada con IA' : 'Generación automática'
   : plan.source === 'manual' ? 'Creada por ti' : 'Asignada por especialista';
 const preferenceLabels = {
   general: 'Alimentación general',

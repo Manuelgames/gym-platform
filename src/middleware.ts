@@ -21,6 +21,7 @@ function isPrivateApi(pathname: string): boolean {
 function isAuthenticationPage(pathname: string): boolean {
   return pathname === '/iniciar-sesion'
     || pathname === '/registro'
+    || pathname === '/completar-perfil-google'
     || pathname === '/confirmar-correo'
     || pathname === '/verificar-correo'
     || pathname === '/recuperar-contrasena'
@@ -37,10 +38,12 @@ function withSessionAwareCacheHeaders(
     noStore: boolean;
     varyCookie: boolean;
     referrerPolicy?: 'no-referrer' | 'strict-origin';
+    allowPopups?: boolean;
   },
 ): Response {
   const headers = new Headers(response.headers);
   if (options.referrerPolicy) headers.set('Referrer-Policy', options.referrerPolicy);
+  if (options.allowPopups) headers.set('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
   if (options.noStore) {
     headers.set('Cache-Control', 'private, no-store, max-age=0');
     headers.set('Pragma', 'no-cache');
@@ -121,7 +124,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (
     context.locals.user
     && context.request.method === 'GET'
-    && (pathname === '/iniciar-sesion' || pathname === '/registro')
+    && (
+      pathname === '/iniciar-sesion'
+      || pathname === '/registro'
+      || pathname === '/completar-perfil-google'
+    )
   ) {
     return withSessionAwareCacheHeaders(
       context.redirect('/app', 302),
@@ -138,5 +145,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     referrerPolicy: pathname === '/restablecer-contrasena' || pathname === '/verificar-correo'
       ? 'strict-origin'
       : undefined,
+    allowPopups: pathname === '/app/perfil',
   });
 });

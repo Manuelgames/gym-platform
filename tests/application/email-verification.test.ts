@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AuthUseCases } from '../../src/application/use-cases/auth';
+import { createPasswordUser } from '../../src/domain/users/user';
 import { FileDataStore } from '../../src/infrastructure/persistence/file/file-data-store';
 import { CryptoRecoveryTokenService } from '../../src/infrastructure/security/recovery-token-service';
 import { ScryptPasswordHasher } from '../../src/infrastructure/security/scrypt-password-hasher';
@@ -19,9 +20,10 @@ async function fixture() {
   const mailer = {
     sendVerificationLink: vi.fn(async (_to: string, _url: string) => undefined),
   };
+  const passwords = new ScryptPasswordHasher();
   const auth = new AuthUseCases(
     store,
-    new ScryptPasswordHasher(),
+    passwords,
     { now: () => now },
     { next: () => `user-${nextId += 1}` },
     new CryptoRecoveryTokenService(),
@@ -32,10 +34,11 @@ async function fixture() {
     name: 'Usuario de prueba',
     email: 'usuario@example.com',
     password: 'clave-segura-2026',
+    passwordConfirmation: 'clave-segura-2026',
     birthDate: '1990-01-01',
     sex: 'prefiero no decirlo',
   };
-  return { auth, file, mailer, registration, store, setNow: (value: string) => { now = value; } };
+  return { auth, file, mailer, passwords, registration, store, setNow: (value: string) => { now = value; } };
 }
 
 afterEach(async () => {
@@ -43,6 +46,52 @@ afterEach(async () => {
 });
 
 describe('confirmación de correo', () => {
+  it('exige la política vigente y dos contraseñas coincidentes al registrar', async () => {
+    const { auth, registration } = await fixture();
+
+    await expect(auth.register({
+      ...registration,
+      email: 'sin-simbolo@example.com',
+      password: 'ClaveSegura1',
+      passwordConfirmation: 'ClaveSegura1',
+    })).rejects.toMatchObject({ field: 'password' });
+
+    await expect(auth.register({
+      ...registration,
+      email: 'sin-numero@example.com',
+      password: 'clave-segura',
+      passwordConfirmation: 'clave-segura',
+    })).rejects.toMatchObject({ field: 'password' });
+
+    await expect(auth.register({
+      ...registration,
+      email: 'no-coincide@example.com',
+      passwordConfirmation: 'otra-clave-2026',
+    })).rejects.toMatchObject({ field: 'passwordConfirmation' });
+  });
+
+  it('permite iniciar sesión a una cuenta anterior cuya contraseña no cumple la política nueva', async () => {
+    const { auth, passwords, store } = await fixture();
+    const now = '2026-09-27T12:00:00.000Z';
+    await store.create({
+      ...createPasswordUser({
+        id: 'legacy-user',
+        name: 'Cuenta anterior',
+        email: 'anterior@example.com',
+        passwordHash: await passwords.hash('claveheredada'),
+        birthDate: '1990-01-01',
+        sex: 'prefiero no decirlo',
+        now,
+      }),
+      emailVerifiedAt: now,
+    });
+
+    await expect(auth.login({
+      email: 'anterior@example.com',
+      password: 'claveheredada',
+    })).resolves.toMatchObject({ id: 'legacy-user' });
+  });
+
   it('bloquea el acceso hasta consumir una sola vez el enlace recibido', async () => {
     const { auth, file, mailer, registration } = await fixture();
     await expect(auth.register(registration)).resolves.toBe('sent');

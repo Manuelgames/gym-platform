@@ -1,0 +1,63 @@
+---
+export interface Props {
+  clientId: string;
+  action: string;
+  csrfToken: string;
+  context?: 'signin' | 'signup' | 'use';
+}
+
+const { clientId, action, csrfToken, context = 'signin' } = Astro.props;
+---
+
+<div class="google-sign-in" id={`google-sign-in-${context}`}></div>
+<noscript>Activa JavaScript para continuar con Google.</noscript>
+
+<script is:inline define:vars={{ clientId, action, csrfToken, context }}>
+  window.__renderRomanGoogleSignIn = () => {
+    if (!window.google?.accounts?.id) return;
+    const container = document.getElementById(`google-sign-in-${context}`);
+    if (!container) return;
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      use_fedcm_for_button: true,
+      callback: ({ credential }) => {
+        if (!credential) return;
+        const form = document.createElement('form');
+        form.method = 'post';
+        form.action = action;
+        const credentialField = document.createElement('input');
+        credentialField.type = 'hidden';
+        credentialField.name = 'credential';
+        credentialField.value = credential;
+        const csrfField = document.createElement('input');
+        csrfField.type = 'hidden';
+        csrfField.name = 'csrfToken';
+        csrfField.value = csrfToken;
+        form.append(credentialField, csrfField);
+        document.body.append(form);
+        form.submit();
+      },
+    });
+    window.google.accounts.id.renderButton(container, {
+      type: 'standard',
+      size: 'large',
+      theme: 'outline',
+      text: 'continue_with',
+      shape: 'rectangular',
+      logo_alignment: 'left',
+      locale: 'es',
+      context,
+    });
+  };
+</script>
+<script
+  is:inline
+  src="https://accounts.google.com/gsi/client?hl=es"
+  async
+  onload="window.__renderRomanGoogleSignIn?.()"
+></script>
+
+<style>
+.google-sign-in { display: grid; justify-items: center; width: 100%; min-height: 4.4rem; }
+noscript { color: var(--color-muted); font-size: 1.3rem; }
+</style>

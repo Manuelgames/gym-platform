@@ -33,7 +33,6 @@ const roleNames = work.profile.roles.map((role) => (
   description="Gestiona solicitudes y personas asesoradas por especialidad."
   {user}
   currentPath={Astro.url.pathname}
-  footerText="Roman Colosseum · Cada solicitud conserva su especialidad, propietario y estado."
 >
   <PageIntro
     eyebrow="Tu actividad profesional"
@@ -49,7 +48,6 @@ const roleNames = work.profile.roles.map((role) => (
     <h2 id="professional-summary">Perfil profesional</h2>
     <p><strong>Identificador:</strong> <code>{work.profile.id}</code></p>
     <p><strong>Roles activos:</strong> {roleNames.join(' y ')}.</p>
-    <p>El identificador no cambia si posteriormente se modifica el estado de uno de tus roles.</p>
   </Panel>
 
   <div class="work-boards section-flow">

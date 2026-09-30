@@ -9,6 +9,7 @@ import { RoutineUseCases } from '../../application/use-cases/routine';
 import { SpecialistUseCases } from '../../application/use-cases/specialists';
 import { OpenAIDietGenerator } from '../ai/openai-diet-generator';
 import { OpenAIRoutineGenerator } from '../ai/openai-routine-generator';
+import { GoogleIdentityVerifier } from '../auth/google-identity-verifier';
 import { loadAstroServerEnvironment } from '../config/astro-environment';
 import { BrevoRecoveryMailer } from '../email/brevo-recovery-mailer';
 import { ResendRecoveryMailer } from '../email/resend-recovery-mailer';
@@ -26,7 +27,7 @@ type GlobalContainer = typeof globalThis & {
 
 // El contrato usa un bloque propio y suma el esquema vigente. Así un cambio de
 // persistencia invalida automáticamente el singleton que sobrevive al hot reload.
-const APPLICATION_FACADE_VERSION = 4_000 + DATA_SCHEMA_VERSION;
+const APPLICATION_FACADE_VERSION = 5_000 + DATA_SCHEMA_VERSION;
 
 function shouldReplaceApplicationFacade(
   storedVersion: number | undefined,
@@ -59,15 +60,21 @@ function isCurrentApplicationFacade(
     && typeof facade.resetPassword === 'function'
     && typeof facade.requestEmailVerification === 'function'
     && typeof facade.verifyEmail === 'function'
+    && typeof facade.authenticateWithExternalIdentity === 'function'
+    && typeof facade.completeExternalRegistration === 'function'
+    && typeof facade.linkExternalIdentity === 'function'
   );
 }
 
 function composeApplication(): ApplicationFacade {
   const environment = loadAstroServerEnvironment();
-  if (environment.authProvider !== 'password') {
+  if (environment.authProvider === 'firebase') {
     throw new Error(
       `AUTH_PROVIDER=${environment.authProvider} está reservado para un adaptador futuro y aún no está implementado.`,
     );
+  }
+  if (environment.authProvider === 'google' && !environment.googleClientId) {
+    throw new Error('PUBLIC_GOOGLE_CLIENT_ID es obligatorio cuando AUTH_PROVIDER=google.');
   }
   const store = new FileDataStore(environment.dataFilePath);
   const clock = new SystemClock();
@@ -86,6 +93,9 @@ function composeApplication(): ApplicationFacade {
   const auth = new AuthUseCases(
     store, new ScryptPasswordHasher(), clock, ids, new CryptoRecoveryTokenService(),
     recoveryMailer, environment.appOrigin,
+    environment.authProvider === 'google'
+      ? new GoogleIdentityVerifier(environment.googleClientId!)
+      : null,
   );
   const recovery = new PasswordRecoveryUseCases(
     store, new ScryptPasswordHasher(), clock, new CryptoRecoveryTokenService(),
@@ -122,6 +132,9 @@ function composeApplication(): ApplicationFacade {
   return Object.freeze({
     register: auth.register.bind(auth),
     login: auth.login.bind(auth),
+    authenticateWithExternalIdentity: auth.authenticateWithExternalIdentity.bind(auth),
+    completeExternalRegistration: auth.completeExternalRegistration.bind(auth),
+    linkExternalIdentity: auth.linkExternalIdentity.bind(auth),
     requestEmailVerification: auth.requestEmailVerification.bind(auth),
     verifyEmail: auth.verifyEmail.bind(auth),
     requestPasswordReset: recovery.request.bind(recovery),

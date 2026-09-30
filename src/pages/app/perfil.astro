@@ -1,11 +1,14 @@
 ---
+import { randomBytes } from 'node:crypto';
 import FormField from '../../components/forms/FormField.astro';
+import GoogleLinkButton from '../../components/auth/GoogleLinkButton.astro';
 import FormMessage from '../../components/forms/FormMessage.astro';
 import FormStack from '../../components/forms/FormStack.astro';
 import Button from '../../components/ui/Button.astro';
 import PageIntro from '../../components/ui/PageIntro.astro';
 import Panel from '../../components/ui/Panel.astro';
 import { getApplication } from '../../infrastructure/composition/container';
+import { loadAstroServerEnvironment } from '../../infrastructure/config/astro-environment';
 import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
 import { readErrorMessage, readInvalidField } from '../../presentation/feedback';
 
@@ -20,7 +23,9 @@ const successMessage = updated === 'photo'
   : updated === 'name'
     ? 'Tu nombre fue actualizado.'
     : updated === 'password'
-      ? 'Tu contraseña fue actualizada y la sesión se renovó.'
+      ? 'Tu contraseña fue actualizada.'
+      : updated === 'google'
+        ? 'Tu cuenta de Google fue vinculada.'
       : undefined;
 const initials = profile.name
   .split(/\s+/)
@@ -28,6 +33,15 @@ const initials = profile.name
   .map((part) => part[0]?.toUpperCase())
   .join('');
 const demoMode = Astro.locals.accessMode === 'demo';
+const environment = loadAstroServerEnvironment();
+const googleEnabled = environment.authProvider === 'google' && Boolean(environment.googleClientId);
+const googleLinkUri = new URL('/api/profile/google', environment.appOrigin).toString();
+const hasPassword = profile.identityProviders.includes('password');
+const hasGoogle = profile.identityProviders.includes('google');
+const googleLinkCsrf = !demoMode && googleEnabled && !hasGoogle
+  ? randomBytes(32).toString('base64url')
+  : null;
+if (googleLinkCsrf) Astro.session?.set('googleLinkCsrf', googleLinkCsrf, { ttl: 10 * 60 });
 ---
 
 <ProtectedLayout
@@ -35,12 +49,10 @@ const demoMode = Astro.locals.accessMode === 'demo';
   description="Administra tu identidad visible y la seguridad de tu cuenta."
   {user}
   currentPath={Astro.url.pathname}
-  footerText="Roman Colosseum · Tu identidad y tus credenciales se administran por separado."
 >
   <PageIntro
     eyebrow="Tu cuenta"
     title="Mi perfil"
-    lead="Actualiza cada sección de forma independiente. Más adelante podremos añadir nuevos datos sin modificar las demás funciones."
     compact
   />
 
@@ -99,7 +111,7 @@ const demoMode = Astro.locals.accessMode === 'demo';
         </FormStack>
       </Panel>
 
-      <Panel labelledby="password-title">
+      {(demoMode || hasPassword) && <Panel labelledby="password-title">
         <h2 id="password-title">Contraseña</h2>
         {demoMode ? (
           <p>La contraseña no puede cambiarse en la vista demo compartida.</p>
@@ -110,17 +122,33 @@ const demoMode = Astro.locals.accessMode === 'demo';
               <FormField label="Contraseña actual" for="current-password" required error={invalidField === 'currentPassword' ? errorMessage : undefined}>
                 <input id="current-password" name="currentPassword" type="password" autocomplete="current-password" minlength="8" maxlength="128" required />
               </FormField>
-              <FormField label="Nueva contraseña" for="new-password" hint="Debe tener entre 8 y 128 caracteres." required error={invalidField === 'newPassword' ? errorMessage : undefined}>
+              <FormField label="Nueva contraseña" for="new-password" hint="Usa de 8 a 128 caracteres, al menos un número y un carácter especial." required error={invalidField === 'newPassword' ? 'La nueva contraseña no cumple los requisitos o coincide con la actual.' : undefined}>
                 <input id="new-password" name="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required />
               </FormField>
-              <FormField label="Confirmar nueva contraseña" for="password-confirmation" required error={invalidField === 'passwordConfirmation' ? errorMessage : undefined}>
+              <FormField label="Confirmar nueva contraseña" for="password-confirmation" required error={invalidField === 'passwordConfirmation' ? 'Las contraseñas no coinciden.' : undefined}>
                 <input id="password-confirmation" name="passwordConfirmation" type="password" autocomplete="new-password" minlength="8" maxlength="128" required />
               </FormField>
               <Button type="submit">Cambiar contraseña</Button>
             </FormStack>
           </Fragment>
         )}
-      </Panel>
+      </Panel>}
+
+      {!demoMode && googleEnabled && environment.googleClientId && (
+        <Panel labelledby="google-title">
+          <h2 id="google-title">Acceso con Google</h2>
+          {hasGoogle ? (
+            <p>Tu cuenta está conectada con Google.</p>
+          ) : (
+            <Fragment>
+              <p>También podrás entrar a este mismo perfil con tu cuenta de Google.</p>
+              {googleLinkCsrf && (
+                <GoogleLinkButton clientId={environment.googleClientId} action={googleLinkUri} csrfToken={googleLinkCsrf} />
+              )}
+            </Fragment>
+          )}
+        </Panel>
+      )}
     </div>
   </section>
 </ProtectedLayout>

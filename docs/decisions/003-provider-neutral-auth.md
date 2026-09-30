@@ -5,7 +5,7 @@
 
 ## Contexto
 
-La aplicación puede utilizar en el futuro Google Identity Services o Firebase Authentication, pero la decisión no es definitiva. El modelo original mezclaba usuario, contraseña, sesión y datos funcionales en un mismo objeto de `localStorage`.
+La aplicación utiliza Google Identity Services como opción adicional y conserva Firebase Authentication como posible evolución. El modelo original mezclaba usuario, contraseña, sesión y datos funcionales en un mismo objeto de `localStorage`.
 
 Google Identity Services y Firebase Authentication emiten identidades con SDK y tokens distintos. Además, GIS no almacena datos funcionales y Firebase Authentication no implica necesariamente que se use Firestore.
 
@@ -21,7 +21,7 @@ Separar:
 
 Los verificadores de Google y Firebase producen un resultado común con proveedor, subject, email, estado de verificación y perfil opcional.
 
-`AUTH_PROVIDER` seleccionará el adaptador activo sin introducir condicionales de proveedor en los casos de uso. La primera versión implementa solo `password`; `google` y `firebase` son contratos de evolución y provocan un error claro mientras no exista su adaptador.
+`AUTH_PROVIDER=password` habilita solo la identidad local. `AUTH_PROVIDER=google` mantiene contraseña y añade el adaptador Google sin introducir dependencias del SDK en el dominio. Firebase continúa como contrato de evolución y provoca un error claro mientras no exista su adaptador.
 
 ## Consecuencias positivas
 
@@ -29,14 +29,13 @@ Los verificadores de Google y Firebase producen un resultado común con proveedo
 - Se puede probar el inicio federado con un verificador falso.
 - Cambiar autenticación no mueve rutinas ni dietas.
 - Cambiar persistencia no obliga a cambiar login.
-- Es posible vincular más de una identidad a un usuario en una evolución futura.
+- Es posible vincular contraseña y Google al mismo usuario.
 - Los tokens externos no se almacenan como datos de aplicación.
 
 ## Costes y decisiones pendientes
 
 - Se necesita garantizar unicidad lógica de `(provider, subject)` aunque el adaptador actual guarde las identidades dentro de `User`.
-- Debe definirse una política explícita de creación y vinculación.
-- La configuración actual selecciona un único proveedor; habilitar varios simultáneamente requerirá evolucionarla.
+- La creación solicita los datos de perfil que Google no entrega y la vinculación exige una sesión local válida.
 - Cada adaptador debe validar issuer, audience, firma y expiración correctamente.
 - La recuperación de cuenta depende del proveedor; para `password` se implementó mediante enlaces de un solo uso y un adaptador de correo sustituible.
 

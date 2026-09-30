@@ -95,6 +95,7 @@ export function rateLimitSubject(value: string): string {
 export const AUTH_RATE_LIMITS = Object.freeze({
   loginIp: { limit: 30, windowMs: 15 * 60 * 1000 },
   loginAccount: { limit: 8, windowMs: 15 * 60 * 1000 },
+  googleIp: { limit: 30, windowMs: 15 * 60 * 1000 },
   register: { limit: 5, windowMs: 60 * 60 * 1000 },
   passwordChange: { limit: 8, windowMs: 15 * 60 * 1000 },
   recoveryIp: { limit: 10, windowMs: 60 * 60 * 1000 },

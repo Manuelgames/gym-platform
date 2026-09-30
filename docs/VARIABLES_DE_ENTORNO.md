@@ -81,7 +81,7 @@ Valores admitidos:
 password | google | firebase
 ```
 
-La validación debe rechazar cualquier otro valor con un mensaje claro de configuración. En la versión inicial solo `password` tiene un adaptador operativo. `google` y `firebase` son valores reservados: seleccionarlos antes de implementar su integración debe producir un error explícito, no un fallback.
+La validación rechaza cualquier otro valor. `password` ofrece únicamente el acceso local. `google` conserva contraseña y añade Google Identity Services. `firebase` sigue reservado y produce un error explícito al arrancar.
 
 ### `SESSION_TTL_SECONDS`
 
@@ -104,20 +104,22 @@ Las peticiones remotas usan Responses API, salida estructurada con JSON Schema e
 | Variable | Exposición | Uso |
 | --- | --- | --- |
 | `PUBLIC_GOOGLE_CLIENT_ID` | Cliente y servidor | Identifica la aplicación y se valida como audiencia |
-| `GOOGLE_CLIENT_SECRET` | Solo servidor | Intercambio de código si el flujo lo requiere |
-| `GOOGLE_REDIRECT_URI` | Solo servidor/configuración | Callback registrado en Google Cloud |
 
-Cuando `AUTH_PROVIDER=google`, son obligatorios `PUBLIC_GOOGLE_CLIENT_ID` y `GOOGLE_REDIRECT_URI`. `GOOGLE_CLIENT_SECRET` solo se exige si la implementación usa código de autorización.
+Cuando `AUTH_PROVIDER=google`, `PUBLIC_GOOGLE_CLIENT_ID` es obligatorio. El flujo implementado utiliza ID tokens y no necesita client secret.
 
 Ejemplo local, sin valores reales:
 
 ```dotenv
 PUBLIC_GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
-GOOGLE_REDIRECT_URI=http://localhost:4321/api/auth/google/callback
 ```
 
-El redirect URI debe coincidir exactamente con uno registrado en la consola de Google, incluido esquema, puerto y ruta.
+Google Cloud debe registrar `APP_ORIGIN` como origen JavaScript autorizado y la siguiente URI como redirección autorizada, tanto para localhost como para producción:
+
+```text
+https://tu-dominio/api/auth/google
+```
+
+La vinculación desde Mi perfil usa el callback popup de Google y envía la credencial al mismo origen, por lo que `/api/profile/google` no se registra como URI de redirección.
 
 ## Firebase
 
@@ -166,7 +168,7 @@ El resultado completo se coloca como secreto `FIREBASE_SERVICE_ACCOUNT_JSON_BASE
 | Proveedor | Variables adicionales requeridas |
 | --- | --- |
 | `password` | Ninguna de Google o Firebase |
-| `google` | Adaptador futuro; después requerirá `PUBLIC_GOOGLE_CLIENT_ID`, `GOOGLE_REDIRECT_URI` y secret si usa code flow |
+| `google` | `PUBLIC_GOOGLE_CLIENT_ID` |
 | `firebase` | Adaptador futuro; después requerirá configuración Firebase y credenciales Admin |
 
 `DATA_FILE_PATH` sigue siendo necesario con cualquiera de los tres proveedores mientras el adaptador de persistencia sea el archivo. Seleccionar Google o Firebase Authentication no mueve automáticamente los datos.

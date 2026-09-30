@@ -1,17 +1,29 @@
 ---
 import AuthCard from '../components/auth/AuthCard.astro';
 import AuthProviderSection from '../components/auth/AuthProviderSection.astro';
+import GoogleSignInButton from '../components/auth/GoogleSignInButton.astro';
 import FieldRow from '../components/forms/FieldRow.astro';
 import FormField from '../components/forms/FormField.astro';
 import FormMessage from '../components/forms/FormMessage.astro';
 import FormStack from '../components/forms/FormStack.astro';
 import Button from '../components/ui/Button.astro';
 import AuthLayout from '../layouts/AuthLayout.astro';
+import { randomBytes } from 'node:crypto';
+import { loadAstroServerEnvironment } from '../infrastructure/config/astro-environment';
 import { readErrorMessage, readInvalidField } from '../presentation/feedback';
 
 const errorMessage = readErrorMessage(Astro.url);
 const invalidField = readInvalidField(Astro.url);
 const today = new Date().toISOString().slice(0, 10);
+const passwordRequirements = 'Usa de 8 a 128 caracteres, al menos un número y un carácter especial.';
+const passwordError = invalidField === 'password' ? passwordRequirements : undefined;
+const confirmationError = invalidField === 'passwordConfirmation'
+  ? 'Las contraseñas no coinciden.'
+  : undefined;
+const environment = loadAstroServerEnvironment();
+const googleEnabled = environment.authProvider === 'google' && Boolean(environment.googleClientId);
+const googleAuthCsrf = googleEnabled ? randomBytes(32).toString('base64url') : null;
+if (googleAuthCsrf) Astro.session?.set('googleAuthCsrf', googleAuthCsrf, { ttl: 10 * 60 });
 ---
 
 <AuthLayout title="Crear cuenta" description="Crea un perfil privado para organizar tu progreso de entrenamiento.">
@@ -23,8 +35,11 @@ const today = new Date().toISOString().slice(0, 10);
       <FormField label="Correo electrónico" for="register-email" required error={(invalidField === 'email' || Astro.url.searchParams.get('error') === 'email-registered') ? errorMessage : undefined}>
         <input id="register-email" name="email" type="email" autocomplete="email" required maxlength="254" aria-invalid={invalidField === 'email' ? 'true' : undefined} />
       </FormField>
-      <FormField label="Contraseña" for="register-password" hint="Usa al menos 8 caracteres; se guardará únicamente un hash seguro." required error={invalidField === 'password' ? errorMessage : undefined}>
+      <FormField label="Contraseña" for="register-password" hint={passwordRequirements} required error={passwordError}>
         <input id="register-password" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" aria-invalid={invalidField === 'password' ? 'true' : undefined} />
+      </FormField>
+      <FormField label="Confirmar contraseña" for="register-password-confirmation" hint="Escríbela nuevamente para confirmar." required error={confirmationError}>
+        <input id="register-password-confirmation" name="passwordConfirmation" type="password" autocomplete="new-password" required minlength="8" maxlength="128" aria-invalid={invalidField === 'passwordConfirmation' ? 'true' : undefined} />
       </FormField>
       <FieldRow>
         <FormField label="Nacimiento" for="register-birth" required error={invalidField === 'birthDate' ? errorMessage : undefined}>
@@ -43,15 +58,19 @@ const today = new Date().toISOString().slice(0, 10);
       <Button type="submit">Crear mi perfil</Button>
     </FormStack>
 
-    <AuthProviderSection>
-      <Button type="button" variant="subtle" disabled aria-describedby="google-status">Registrarme con Google</Button>
-      <p id="google-status" class="provider-note">La interfaz está preparada; el proveedor se habilitará después de la decisión técnica.</p>
-    </AuthProviderSection>
+    {googleEnabled && environment.googleClientId && (
+      <AuthProviderSection>
+        {googleAuthCsrf && (
+          <GoogleSignInButton
+            clientId={environment.googleClientId}
+            action="/api/auth/google"
+            csrfToken={googleAuthCsrf}
+            context="signup"
+          />
+        )}
+      </AuthProviderSection>
+    )}
 
     <Fragment slot="footer">¿Ya eres parte del imperio? <a href="/iniciar-sesion">Inicia sesión</a>.</Fragment>
   </AuthCard>
 </AuthLayout>
-
-<style>
-  .provider-note { margin: 1rem 0 0; color: var(--color-muted); font-size: 1.25rem; text-align: center; }
-</style>

@@ -5,13 +5,15 @@ export interface Props {
   title: string;
   description: string;
   labelledby?: string;
+  /** Evita repetir la marca cuando ya aparece en el encabezado de una vista compacta. */
+  showBrand?: boolean;
 }
 
-const { title, description, labelledby = "auth-title" } = Astro.props;
+const { title, description, labelledby = "auth-title", showBrand = true } = Astro.props;
 ---
 
-<section class="auth-card" aria-labelledby={labelledby}>
-  <Brand href="/" />
+<section class:list={["auth-card", { "auth-card--without-brand": !showBrand }]} aria-labelledby={labelledby}>
+  {showBrand && <Brand href="/" />}
   <h1 id={labelledby}>{title}</h1>
   <p>{description}</p>
   <div class="auth-card__content"><slot /></div>
@@ -30,6 +32,10 @@ const { title, description, labelledby = "auth-title" } = Astro.props;
   h1 {
     margin: 3.7rem 0 0.7rem;
     font: 700 3.8rem/1 var(--font-display);
+  }
+
+  .auth-card--without-brand h1 {
+    margin-top: 0;
   }
 
   p {

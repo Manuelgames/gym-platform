@@ -78,15 +78,18 @@ Con `AUTH_PROVIDER=password`, la aplicación administra una identidad local.
 
 1. Lectura y validación del formulario.
 2. Normalización de email y nombre.
-3. Validación de contraseña de 8 a 128 caracteres.
-4. Comprobación de unicidad del email.
-5. Hash `scrypt` con sal aleatoria.
-6. Creación atómica de `User` con identidad `password`.
-7. Emisión de un token aleatorio cuya única huella se guarda durante 24 horas.
-8. Envío del enlace de confirmación mediante Brevo o Resend.
-9. Redirección a `/confirmar-correo` sin crear todavía una sesión.
+3. Validación de contraseña de 8 a 128 caracteres, con al menos un número y un carácter especial.
+4. Comprobación server-side de que la confirmación coincide.
+5. Comprobación de unicidad del email.
+6. Hash `scrypt` con sal aleatoria.
+7. Creación atómica de `User` con identidad `password`.
+8. Emisión de un token aleatorio cuya única huella se guarda durante 24 horas.
+9. Envío del enlace de confirmación mediante Brevo o Resend.
+10. Redirección a `/confirmar-correo` sin crear todavía una sesión.
 
 La contraseña original solo existe durante la petición y nunca se persiste ni se registra. El enlace abre `/verificar-correo` y se consume mediante POST para evitar que un previsualizador de correo active la cuenta. Después de confirmarlo, la persona inicia sesión normalmente. Solicitar otro enlace invalida el anterior y usa respuestas genéricas para no revelar si una cuenta existe.
+
+La política reforzada solo se aplica al crear una credencial nueva (registro, cambio o recuperación). El inicio de sesión conserva la validación de longitud compatible con cuentas anteriores: un hash `scrypt` no permite inspeccionar retroactivamente la composición de la contraseña original.
 
 ### Inicio de sesión
 
@@ -182,7 +185,7 @@ Un restablecimiento o cambio de contraseña incrementa `sessionVersion` e invali
 - No guarda historial calórico.
 - No reemplaza Firestore, SQL ni el archivo JSON.
 
-### Flujo propuesto
+### Flujo implementado
 
 ```text
 Navegador
@@ -191,7 +194,7 @@ Navegador
 Endpoint Astro
   │ invoca GoogleIdentityServicesVerifier
   ▼
-Firma · issuer · audience · expiración · nonce
+Firma · issuer · audience · expiración · email verificado
   │
   ▼
 SignInWithFederatedIdentity
@@ -210,11 +213,12 @@ El servidor valida:
 - `aud` igual a `PUBLIC_GOOGLE_CLIENT_ID`;
 - expiración;
 - `email_verified` cuando la política depende del email;
-- nonce si el flujo lo utiliza.
+- cookie CSRF de doble envío emitida por Google Identity Services en login;
+- token CSRF de sesión y mismo origen al vincular Google desde un perfil autenticado.
 
 Decodificar un JWT no equivale a verificarlo.
 
-`GOOGLE_CLIENT_SECRET` se utiliza únicamente si se implementa un flujo de código de autorización. En un flujo basado solo en ID token puede permanecer vacío; no se debe inventar ni publicar un valor.
+El flujo utiliza un ID token y no solicita acceso a APIs de Google, por lo que no requiere ni configura un `GOOGLE_CLIENT_SECRET`.
 
 ## Firebase Authentication
 
@@ -236,10 +240,7 @@ Después de verificar el token, el endpoint regenera Astro Session y guarda `use
 
 ## Creación y vinculación
 
-Si una identidad verificada no está vinculada, el producto debe elegir:
-
-1. Crear automáticamente un usuario con datos verificados.
-2. Mostrar un formulario para completar y confirmar el perfil.
+Si una identidad Google no está vinculada, se conserva temporalmente en Astro Sessions únicamente `provider`, `subject`, correo, nombre y vencimiento. La aplicación solicita nacimiento e identidad personal y después crea el usuario interno. El ID token nunca se persiste.
 
 No se debe vincular silenciosamente con una cuenta existente solo porque coincide el email. Para vincular otra identidad se recomienda que la persona:
 
@@ -256,11 +257,7 @@ Una transacción debe garantizar la unicidad de `(provider, subject)`.
 - `google`
 - `firebase`
 
-La versión inicial implementa únicamente `password`. Google y Firebase describen los contratos y variables de la integración futura. Si se selecciona un proveedor cuyo adaptador no está implementado, la composición debe fallar explícitamente al arrancar; nunca debe degradarse silenciosamente a contraseña.
-
-Cuando se añada un adaptador, el punto de composición lo seleccionará sin cambiar dominio, rutina, dieta, calorías ni Astro Sessions.
-
-La configuración actual selecciona un solo proveedor. Habilitar varios a la vez requerirá evolucionar a una lista y registrar una nueva decisión.
+`password` habilita solamente credenciales locales. `google` mantiene el acceso por contraseña y añade Google Identity Services, permitiendo vincular ambas identidades al mismo usuario. `firebase` continúa reservado y detiene el arranque porque su adaptador todavía no existe.
 
 ## Protección de peticiones
 
@@ -286,7 +283,7 @@ La configuración actual selecciona un solo proveedor. Habilitar varios a la vez
 - Dos hashes de la misma contraseña usan sales diferentes.
 - Contraseña correcta e incorrecta se verifican apropiadamente.
 - Registro y login regeneran sesión.
-- La sesión contiene únicamente `userId` y `sessionVersion`.
+- Una sesión autenticada contiene `userId` y `sessionVersion`; el alta con Google conserva claims mínimos durante un máximo de diez minutos.
 - Logout destruye la sesión.
 - Middleware destruye sesión de un usuario eliminado.
 - Ruta privada sin sesión redirige antes de renderizar.

@@ -5,7 +5,11 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { AuthUseCases } from '../../src/application/use-cases/auth';
 import { createCalorieCalculation } from '../../src/domain/calories/calorie';
 import { createDietPlan } from '../../src/domain/diet/diet';
-import { createRoutineExercise } from '../../src/domain/routine/routine';
+import {
+  createRoutineExercise,
+  createRoutinePlan,
+  ROUTINE_PLAN_DAYS,
+} from '../../src/domain/routine/routine';
 import {
   createSpecialistProfile,
   createSpecialistRequest,
@@ -131,6 +135,37 @@ describe('FileDataStore', () => {
 
     expect(await store.deleteRoutineExercise('user-1', 'exercise-2')).toBe(false);
     expect(await store.listRoutine('user-2')).toHaveLength(1);
+    await store.saveRoutinePlan(createRoutinePlan({
+      id: 'routine-2',
+      userId: 'user-2',
+      source: 'manual',
+      title: 'Rutina manual',
+      goal: 'general',
+      level: 'intermedio',
+      location: 'gimnasio',
+      sessionDurationMinutes: 60,
+      generationEngine: 'manual',
+      now: '2026-08-05T12:00:00.000Z',
+      days: ROUTINE_PLAN_DAYS.map((day) => ({
+        day,
+        title: day === 'viernes' ? 'Piernas' : 'Descanso',
+        focus: '',
+        isRestDay: day !== 'viernes',
+        exercises: day === 'viernes'
+          ? [{
+              name: 'Sentadilla',
+              muscle: 'Piernas',
+              prescriptionType: 'repetitions',
+              sets: 5,
+              reps: '5',
+              durationMinutes: null,
+              restSeconds: 120,
+              tempo: '',
+              notes: '',
+            }]
+          : [],
+      })),
+    }));
 
     await store.saveDiet(createDietPlan({
       id: 'diet-1',
@@ -156,11 +191,13 @@ describe('FileDataStore', () => {
     expect(await store.listCalorieCalculations('user-1')).toHaveLength(10);
     expect(await store.getSummary('user-1')).toEqual({
       exerciseCount: 0,
+      hasRoutine: false,
       hasDiet: true,
       calorieCalculationCount: 10,
     });
     expect(await store.getSummary('user-2')).toEqual({
       exerciseCount: 1,
+      hasRoutine: true,
       hasDiet: false,
       calorieCalculationCount: 0,
     });

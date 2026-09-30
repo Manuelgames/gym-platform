@@ -29,7 +29,6 @@ const successMessage = Astro.url.searchParams.get('saved') === 'specialist'
   description="Editor profesional de entrenamiento para una asesoría activa."
   {user}
   currentPath="/app/mi-trabajo"
-  footerText="Los documentos profesionales conservan relación, autoría y fecha de actualización."
 >
   <PageIntro eyebrow="Asesoría de entrenamiento activa" title={`Plan de ${context.client.name}`} lead="Programa de lunes a domingo con el mismo formato que recibe el usuario." compact />
   <div class="page-actions"><Button href="/app/mi-trabajo" variant="subtle" size="small">← Volver a asesorados</Button></div>
@@ -37,7 +36,7 @@ const successMessage = Astro.url.searchParams.get('saved') === 'specialist'
   <FormMessage message={errorMessage} tone="error" />
 
   <section class="client-context" aria-label="Datos del asesorado">
-    <Panel labelledby="training-client-title"><p class="eyebrow">Asesorado</p><h2 id="training-client-title">{context.client.name}</h2><p>{context.client.email}</p><small>Solicitud vinculada: <code>{context.requestId}</code></small></Panel>
+    <Panel labelledby="training-client-title"><p class="eyebrow">Asesorado</p><h2 id="training-client-title">{context.client.name}</h2><p>{context.client.email}</p></Panel>
     <Panel labelledby="training-format-title"><p class="eyebrow">Formato compatible</p><h2 id="training-format-title">Lunes a domingo</h2><p>Objetivo, nivel, descansos, ejercicios, series, repeticiones, pausas y tempo.</p></Panel>
   </section>
 
@@ -49,7 +48,7 @@ const successMessage = Astro.url.searchParams.get('saved') === 'specialist'
   )}
 
   <section class="section-flow" aria-labelledby="specialist-routine-editor-title">
-    <header class="editor-heading"><p class="eyebrow">{context.plan ? 'Actualizar documento' : 'Nuevo documento'}</p><h2 id="specialist-routine-editor-title">{context.plan ? 'Editar rutina asignada' : 'Crear rutina de especialista'}</h2><p>Al guardar se reflejará inmediatamente en la subsección Rutina de especialista de {context.client.name}.</p></header>
+    <header class="editor-heading"><p class="eyebrow">{context.plan ? 'Actualizar documento' : 'Nuevo documento'}</p><h2 id="specialist-routine-editor-title">{context.plan ? 'Editar rutina asignada' : 'Crear rutina de especialista'}</h2></header>
     <RoutinePlanEditor id="specialist-routine-editor" action="/api/routine/specialist/save" requestId={context.requestId} plan={context.plan} submitLabel="Asignar rutina al usuario" />
   </section>
 </ProtectedLayout>
@@ -59,7 +58,6 @@ const successMessage = Astro.url.searchParams.get('saved') === 'specialist'
   .client-context { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0 2.5rem; }
   .client-context h2 { margin: .4rem 0; font: 700 2.5rem var(--font-display); }
   .client-context p { color: var(--color-muted); }
-  code { color: var(--color-gold-light); overflow-wrap: anywhere; }
   .section-heading, .editor-heading h2 { margin: .4rem 0 1.2rem; font: 700 clamp(2.6rem, 5vw, 4rem) var(--font-display); }
   .editor-heading { max-width: 80rem; }
   .editor-heading p:last-child { color: var(--color-muted); }

@@ -14,7 +14,7 @@ const registered = Astro.url.searchParams.has('registered');
 ---
 
 <AuthLayout title="Confirmar correo" description="Activa tu cuenta mediante un enlace seguro enviado a tu correo.">
-  <AuthCard title="Confirma tu correo" description="Antes de iniciar sesión necesitamos comprobar que la dirección te pertenece.">
+  <AuthCard title="Confirma tu correo" description="Antes de iniciar sesión necesitamos comprobar que la dirección te pertenece." showBrand={false}>
     {sent && (
       <FormMessage
         tone="success"

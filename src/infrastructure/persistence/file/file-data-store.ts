@@ -301,6 +301,7 @@ export class FileDataStore implements UserRepository, FitnessRepository, Special
       exerciseCount: latestRoutine
         ? latestRoutine.days.reduce((total, day) => total + day.exercises.length, 0)
         : database.routineExercises.filter((item) => item.userId === userId).length,
+      hasRoutine: database.routinePlans.some((item) => item.userId === userId),
       hasDiet: database.dietPlans.some((item) => item.userId === userId),
       calorieCalculationCount: database.calorieCalculations.filter((item) => item.userId === userId).length,
     };

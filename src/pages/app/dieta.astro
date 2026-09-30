@@ -143,7 +143,6 @@ const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
       <Panel labelledby="ai-diet-form-title">
         <p class="eyebrow">Configuración</p>
         <h2 id="ai-diet-form-title">Generar dieta personalizada</h2>
-        <p>El motor utiliza tu gasto energético guardado y devuelve ingredientes con cantidades en gramos, mililitros o unidades claras.</p>
         <FormStack action="/api/diet/save" data-ai-diet-form>
           <FormField label="Objetivo" for="diet-goal" required error={invalidField === 'goal' ? errorMessage : undefined}>
             <select id="diet-goal" name="goal" required>
@@ -184,7 +183,6 @@ const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
             <Button slot="actions" href="/app/calculadora" size="small">Abrir calculadora</Button>
           </EmptyState>
         )}
-        <p class="calorie-snapshot__note">La dieta automática siempre toma estos datos del servidor; no pueden reemplazarse desde este formulario.</p>
       </aside>
     </div>
 
@@ -213,7 +211,6 @@ const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
     <header class="panel-intro">
       <p class="eyebrow">Tu estructura, tus elecciones</p>
       <h2>Crear mi dieta</h2>
-      <p>No existe un límite de cinco comidas en la interfaz. Define tantos momentos del día como necesites y detalla cada porción.</p>
     </header>
     {manualDiet && (
       <div class="diet-result diet-result--existing">

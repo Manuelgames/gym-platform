@@ -59,7 +59,7 @@ const Heading = headingLevel;
     margin: 20px 0;
     isolation: isolate;
     overflow: hidden;
-    padding: 5rem;
+    padding: 5rem var(--page-gutter);
     border: 1px solid var(--color-line);
     background: #151d18;
   }
@@ -90,7 +90,8 @@ const Heading = headingLevel;
   }
 
   .hero-media__content {
-    max-width: 72rem;
+    width: min(100%, var(--page-max));
+    margin-inline: auto;
   }
 
   .hero-media :global(.lead) {
@@ -108,7 +109,7 @@ const Heading = headingLevel;
     .hero-media,
     .hero-media--compact {
       min-height: 48rem;
-      padding: 3rem;
+      padding: 3rem var(--page-gutter);
     }
   }
 
@@ -116,7 +117,7 @@ const Heading = headingLevel;
     .hero-media,
     .hero-media--compact {
       min-height: 44rem;
-      padding: 2.3rem;
+      padding: 2.3rem var(--page-gutter);
     }
   }
 </style>

@@ -6,7 +6,12 @@ import {
 import { buildDietGuide, createDietPlan } from '../../src/domain/diet/diet';
 import { createRoutineExercise, groupRoutineByDay, WEEK_DAYS } from '../../src/domain/routine/routine';
 import { DomainValidationError } from '../../src/domain/shared/errors';
-import { createPasswordUser, normalizeEmail, validatePassword } from '../../src/domain/users/user';
+import {
+  createPasswordUser,
+  normalizeEmail,
+  validateNewPassword,
+  validatePassword,
+} from '../../src/domain/users/user';
 
 describe('reglas de usuario', () => {
   it('normaliza correo y nombre sin alterar datos autenticables', () => {
@@ -30,8 +35,19 @@ describe('reglas de usuario', () => {
     expect(normalizeEmail(' USUARIO@DOMINIO.MX ')).toBe('usuario@dominio.mx');
   });
 
-  it('rechaza contraseñas cortas y fechas futuras', () => {
+  it('separa credenciales heredadas de la política para contraseñas nuevas', () => {
     expect(() => validatePassword('1234567')).toThrow(DomainValidationError);
+    expect(validatePassword('claveheredada')).toBe('claveheredada');
+    expect(() => validateNewPassword('clave-segura')).toThrow(
+      expect.objectContaining({ field: 'password' }),
+    );
+    expect(() => validateNewPassword('ClaveSegura1')).toThrow(
+      expect.objectContaining({ field: 'password' }),
+    );
+    expect(validateNewPassword('Clave-Segura1')).toBe('Clave-Segura1');
+  });
+
+  it('rechaza fechas futuras', () => {
     expect(() => createPasswordUser({
       id: 'user-1',
       name: 'Ana',

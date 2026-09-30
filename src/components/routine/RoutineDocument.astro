@@ -11,7 +11,7 @@ export interface Props {
 
 const { plan, clientName, authorName, pdfHref } = Astro.props;
 const sourceLabel = plan.source === 'ai'
-  ? plan.generationEngine === 'openai' ? 'Generada con IA' : 'Generación automática local'
+  ? plan.generationEngine === 'openai' ? 'Generada con IA' : 'Generación automática'
   : plan.source === 'manual' ? 'Creada por ti' : 'Asignada por entrenador';
 const goalLabels = {
   fuerza: 'Ganar fuerza', hipertrofia: 'Hipertrofia', perdida_grasa: 'Pérdida de grasa',

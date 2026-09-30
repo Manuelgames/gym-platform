@@ -271,7 +271,7 @@ La composición selecciona:
 
 La creación, regeneración y destrucción de sesión se realiza en el borde HTTP mediante Astro Sessions. Los casos de uso devuelven el usuario autenticado y reciben `userId` desde el contexto seguro; no importan APIs de Astro.
 
-La versión inicial compone únicamente autenticación por contraseña. Los contratos de Google y Firebase documentan la extensión futura; elegir uno de esos valores sin su adaptador instalado produce un error explícito de arranque.
+La composición siempre conserva autenticación por contraseña. Con `AUTH_PROVIDER=google` añade el verificador oficial de Google y los casos de uso de alta y vinculación; Firebase continúa reservado y produce un error explícito de arranque.
 
 Los contratos se mantienen asíncronos aunque el archivo local pueda leerse de forma síncrona. Firestore y otros servicios remotos podrán implementarlos sin alterar llamadas.
 

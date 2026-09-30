@@ -12,6 +12,7 @@ import {
   SESSION_TTL_SECONDS,
   UPLOADS_DIRECTORY,
 } from 'astro:env/server';
+import { PUBLIC_GOOGLE_CLIENT_ID } from 'astro:env/client';
 import { loadServerEnvironment, type ServerEnvironment } from './environment';
 
 /**
@@ -36,6 +37,8 @@ export function loadAstroServerEnvironment(): ServerEnvironment {
     DATA_FILE_PATH: process.env.DATA_FILE_PATH ?? DATA_FILE_PATH,
     UPLOADS_DIRECTORY: process.env.UPLOADS_DIRECTORY ?? UPLOADS_DIRECTORY,
     AUTH_PROVIDER: process.env.AUTH_PROVIDER ?? AUTH_PROVIDER,
+    PUBLIC_GOOGLE_CLIENT_ID:
+      process.env.PUBLIC_GOOGLE_CLIENT_ID ?? PUBLIC_GOOGLE_CLIENT_ID,
     BREVO_API_KEY: process.env.BREVO_API_KEY ?? BREVO_API_KEY,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? OPENAI_API_KEY,
     OPENAI_MODEL: process.env.OPENAI_MODEL ?? OPENAI_MODEL,

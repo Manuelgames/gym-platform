@@ -86,16 +86,20 @@ describe('perfil de cuenta', () => {
     const { profile } = useCases(users);
 
     await expect(profile.changePassword('user-1', {
-      currentPassword: 'incorrecta', newPassword: 'nueva-segura', passwordConfirmation: 'nueva-segura',
+      currentPassword: 'incorrecta', newPassword: 'nueva-segura1', passwordConfirmation: 'nueva-segura1',
     })).rejects.toMatchObject({ code: 'CURRENT_PASSWORD_INVALID' });
     await expect(profile.changePassword('user-1', {
-      currentPassword: 'actual-segura', newPassword: 'nueva-segura', passwordConfirmation: 'otra-segura',
+      currentPassword: 'actual-segura', newPassword: 'nueva-segura1', passwordConfirmation: 'otra-segura1',
     })).rejects.toBeInstanceOf(DomainValidationError);
 
+    await expect(profile.changePassword('user-1', {
+      currentPassword: 'actual-segura', newPassword: 'NuevaSegura1', passwordConfirmation: 'NuevaSegura1',
+    })).rejects.toMatchObject({ field: 'newPassword' });
+
     await profile.changePassword('user-1', {
-      currentPassword: 'actual-segura', newPassword: 'nueva-segura', passwordConfirmation: 'nueva-segura',
+      currentPassword: 'actual-segura', newPassword: 'nueva-segura1', passwordConfirmation: 'nueva-segura1',
     });
-    expect(users.users[0]?.identities[0]).toMatchObject({ credentialHash: 'hash:nueva-segura' });
+    expect(users.users[0]?.identities[0]).toMatchObject({ credentialHash: 'hash:nueva-segura1' });
   });
 
   it('reemplaza la fotografía y permite verla desde otra cuenta autenticada', async () => {

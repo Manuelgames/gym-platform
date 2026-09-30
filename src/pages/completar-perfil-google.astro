@@ -1,0 +1,41 @@
+---
+import FieldRow from '../components/forms/FieldRow.astro';
+import FormField from '../components/forms/FormField.astro';
+import FormMessage from '../components/forms/FormMessage.astro';
+import FormStack from '../components/forms/FormStack.astro';
+import AuthCard from '../components/auth/AuthCard.astro';
+import Button from '../components/ui/Button.astro';
+import AuthLayout from '../layouts/AuthLayout.astro';
+import { readErrorMessage, readInvalidField } from '../presentation/feedback';
+
+const pending = await Astro.session?.get('pendingExternalRegistration');
+if (!pending || Date.parse(pending.expiresAt) <= Date.now()) {
+  Astro.session?.delete('pendingExternalRegistration');
+  return Astro.redirect('/iniciar-sesion?error=google-profile-expired');
+}
+const errorMessage = readErrorMessage(Astro.url);
+const invalidField = readInvalidField(Astro.url);
+const today = new Date().toISOString().slice(0, 10);
+---
+
+<AuthLayout title="Completar perfil" description="Completa los datos necesarios para personalizar tu experiencia.">
+  <AuthCard title="Completa tu perfil" description={`Continuarás con ${pending.email}.`}>
+    <FormStack action="/api/auth/google/complete" autocomplete="on">
+      <FieldRow>
+        <FormField label="Nacimiento" for="google-birth" required error={invalidField === 'birthDate' ? errorMessage : undefined}>
+          <input id="google-birth" name="birthDate" type="date" autocomplete="bday" required max={today} aria-invalid={invalidField === 'birthDate' ? 'true' : undefined} />
+        </FormField>
+        <FormField label="Identidad" for="google-sex" required error={invalidField === 'sex' ? errorMessage : undefined}>
+          <select id="google-sex" name="sex" required aria-invalid={invalidField === 'sex' ? 'true' : undefined}>
+            <option value="" selected disabled>Selecciona</option>
+            <option value="mujer">Mujer</option>
+            <option value="hombre">Hombre</option>
+            <option value="prefiero no decirlo">Prefiero no decirlo</option>
+          </select>
+        </FormField>
+      </FieldRow>
+      <FormMessage message={invalidField ? undefined : errorMessage} tone="error" />
+      <Button type="submit">Crear mi perfil</Button>
+    </FormStack>
+  </AuthCard>
+</AuthLayout>

@@ -93,6 +93,18 @@ export interface CreatePasswordUserInput {
   now: string;
 }
 
+/** Datos verificados necesarios para crear una cuenta sin contraseña local. */
+export interface CreateExternalUserInput {
+  id: string;
+  provider: Exclude<IdentityProvider, 'password'>;
+  subject: string;
+  name: string;
+  email: string;
+  birthDate: string;
+  sex: string;
+  now: string;
+}
+
 /** Normaliza un correo para búsquedas y restricciones de unicidad. */
 export function normalizeEmail(value: string): string {
   const email = value.trim().toLowerCase();
@@ -113,15 +125,27 @@ export function normalizePersonName(value: string): string {
 }
 
 /**
- * Valida una contraseña antes de enviarla al servicio de hash.
+ * Valida una credencial recibida para autenticación.
  *
- * El máximo limita trabajo y memoria innecesarios en scrypt. No se exigen
- * patrones artificiales; la longitud mínima aporta una regla comprensible.
+ * Esta regla conserva compatibilidad con cuentas creadas antes de endurecer la
+ * política. El máximo también limita trabajo y memoria innecesarios en scrypt.
  */
 export function validatePassword(value: string): string {
   assertDomain(value.length >= 8, 'password', 'La contraseña debe tener al menos 8 caracteres.');
   assertDomain(value.length <= 128, 'password', 'La contraseña no puede superar 128 caracteres.');
   return value;
+}
+
+/** Exige la política vigente al registrar, cambiar o recuperar una contraseña. */
+export function validateNewPassword(value: string): string {
+  const password = validatePassword(value);
+  assertDomain(/[0-9]/.test(password), 'password', 'La contraseña debe incluir al menos un número.');
+  assertDomain(
+    /[^\p{L}\p{N}\s]/u.test(password),
+    'password',
+    'La contraseña debe incluir al menos un carácter especial.',
+  );
+  return password;
 }
 
 /** Valida una fecha civil ISO y evita fechas de nacimiento futuras. */
@@ -178,6 +202,38 @@ export function createPasswordUser(input: CreatePasswordUserInput): User {
       credentialHash: input.passwordHash,
       createdAt: input.now,
     }],
+    createdAt: input.now,
+    updatedAt: input.now,
+  };
+}
+
+/** Crea un usuario a partir de una identidad externa ya verificada por el servidor. */
+export function createExternalUser(input: CreateExternalUserInput): User {
+  const name = normalizePersonName(input.name);
+  const email = normalizeEmail(input.email);
+  const birthDate = validateBirthDate(input.birthDate, input.now);
+  const sex = validateProfileSex(input.sex);
+  const id = input.id.trim();
+  const subject = input.subject.trim();
+  assertDomain(id.length > 0, 'id', 'El identificador de usuario es obligatorio.');
+  assertDomain(subject.length > 0 && subject.length <= 255, 'subject', 'La identidad externa no es válida.');
+
+  return {
+    id,
+    name,
+    email,
+    birthDate,
+    sex,
+    profilePhoto: null,
+    identities: [{
+      provider: input.provider,
+      subject,
+      createdAt: input.now,
+    }],
+    passwordReset: null,
+    emailVerification: null,
+    emailVerifiedAt: input.now,
+    sessionVersion: 0,
     createdAt: input.now,
     updatedAt: input.now,
   };

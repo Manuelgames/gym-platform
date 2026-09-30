@@ -32,6 +32,8 @@ const pathOnly = currentPath.split(/[?#]/, 1)[0] || "/";
 const normalizedPath = pathOnly !== "/" ? pathOnly.replace(/\/+$/, "") : "/";
 const firstName = user?.name.trim().split(/\s+/)[0] || "guerrero";
 const demoMode = accessMode === "demo";
+const compactMobileNavigation = variant === "app" || Boolean(user) || demoMode;
+const profileHref = user || demoMode ? "/app/perfil" : "/iniciar-sesion";
 
 const toolItems = [
   { href: "/app/rutina", label: "Rutina" },
@@ -48,7 +50,11 @@ const isProfileCurrent =
 const isImperioCurrent = variant === "app" && isCurrent("/app");
 ---
 
-<header class="site-header" data-site-header>
+<header
+  class="site-header"
+  class:list={{ "site-header--compact-mobile": compactMobileNavigation }}
+  data-site-header
+>
   <Brand href={variant === "app" ? "/app" : "/"} />
 
   <button
@@ -194,6 +200,26 @@ const isImperioCurrent = variant === "app" && isCurrent("/app");
         }
       </div>
     </details>
+
+    {
+      compactMobileNavigation && (
+        <Fragment>
+          <a
+            class="site-nav__mobile-link"
+            href={profileHref}
+            class:list={{ "is-current": isCurrent("/app/perfil") }}
+            aria-current={isCurrent("/app/perfil") ? "page" : undefined}
+          >
+            Perfil
+          </a>
+          {!demoMode && user && (
+            <form class="site-nav__mobile-logout" method="POST" action="/api/auth/logout">
+              <button type="submit">Cerrar sesión</button>
+            </form>
+          )}
+        </Fragment>
+      )
+    }
   </nav>
 </header>
 
@@ -403,6 +429,19 @@ const isImperioCurrent = variant === "app" && isCurrent("/app");
     cursor: pointer;
   }
 
+  .site-nav__mobile-link,
+  .site-nav__mobile-logout {
+    display: none;
+  }
+
+  .site-nav__mobile-logout {
+    margin: 0;
+  }
+
+  .site-nav__mobile-logout button {
+    cursor: pointer;
+  }
+
   @media (max-width: 900px) {
     .site-header {
       justify-content: flex-end;
@@ -447,10 +486,56 @@ const isImperioCurrent = variant === "app" && isCurrent("/app");
     }
 
     .site-nav > a,
-    .nav-menu > summary {
+    .nav-menu > summary,
+    .site-nav__mobile-link {
       width: 100%;
       justify-content: space-between;
       text-align: left;
+    }
+
+    .site-header--compact-mobile .nav-menu--tools,
+    .site-header--compact-mobile .nav-menu--profile {
+      display: none;
+    }
+
+    .site-header--compact-mobile .site-nav__mobile-link,
+    .site-header--compact-mobile .site-nav__mobile-logout {
+      display: flex;
+    }
+
+    .site-header--compact-mobile .site-nav__mobile-link {
+      align-items: center;
+      min-height: 4.4rem;
+      padding: 0.8rem 1.15rem;
+      border-radius: 1.4rem;
+      color: var(--color-muted);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .site-header--compact-mobile .site-nav__mobile-logout button {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      min-height: 4.4rem;
+      padding: 0.8rem 1.15rem;
+      border: 0;
+      border-radius: 1.4rem;
+      background: transparent;
+      color: var(--color-muted);
+      font: inherit;
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-align: left;
+    }
+
+    .site-header--compact-mobile .site-nav__mobile-link:hover,
+    .site-header--compact-mobile .site-nav__mobile-link.is-current,
+    .site-header--compact-mobile .site-nav__mobile-logout button:hover {
+      color: var(--color-paper);
+      background: rgb(214 166 66 / 12%);
     }
 
     .nav-menu__panel,

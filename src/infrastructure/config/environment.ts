@@ -12,6 +12,7 @@ export interface ServerEnvironment {
   dataFilePath: string;
   uploadsDirectory: string;
   authProvider: IdentityProvider;
+  googleClientId: string | null;
   sessionTtlSeconds: number;
   openAiApiKey: string | null;
   openAiModel: string;
@@ -73,6 +74,7 @@ export function loadServerEnvironment(
     dataFilePath: resolve(workingDirectory, dataFile),
     uploadsDirectory: resolve(workingDirectory, uploadsDirectory),
     authProvider: readAuthProvider(env.AUTH_PROVIDER),
+    googleClientId: env.PUBLIC_GOOGLE_CLIENT_ID?.trim() || null,
     sessionTtlSeconds: readPositiveInteger(env.SESSION_TTL_SECONDS, 60 * 60 * 24 * 7),
     openAiApiKey: env.OPENAI_API_KEY?.trim() || null,
     openAiModel: env.OPENAI_MODEL?.trim() || 'gpt-5.6-terra',

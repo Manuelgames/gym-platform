@@ -26,10 +26,43 @@ const { title, description, canonical } = Astro.props;
 </BaseLayout>
 
 <style is:global>
+  /* El encabezado y el formulario comparten el alto visible; así la tarjeta no
+     añade un segundo bloque de altura al documento. */
+  .auth-page {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    /* `svh` reserva el alto más pequeño de Safari móvil, incluso con sus
+       barras visibles, para que la pantalla no cambie de tamaño al navegar. */
+    min-block-size: 100vh;
+    min-block-size: 100svh;
+    block-size: 100vh;
+    block-size: 100svh;
+  }
+
   .auth-page .auth-shell {
     display: grid;
-    min-height: calc(100vh - 8rem);
     place-items: center;
-    padding: 2.4rem;
+    min-height: 0;
+    padding: clamp(1.6rem, 4vw, 2.4rem);
+  }
+
+  /* Mantiene visibles todos los controles en ventanas móviles compactas y
+     evita un desbordamiento vertical mínimo en la confirmación de correo. */
+  @media (max-height: 700px) {
+    .auth-page .auth-shell {
+      padding-block: 1.6rem;
+    }
+
+    .auth-page .auth-card {
+      padding-block: 2.4rem;
+    }
+
+    .auth-page .auth-card h1 {
+      margin-top: 2.4rem;
+    }
+
+    .auth-page .auth-card--without-brand h1 {
+      margin-top: 0;
+    }
   }
 </style>

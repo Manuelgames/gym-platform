@@ -52,6 +52,11 @@ function publicError(error: unknown): { error: string; field?: string } {
       case 'EMAIL_VERIFICATION_INVALID': return { error: 'email-verification-invalid' };
       case 'EMAIL_NOT_VERIFIED': return { error: 'email-not-verified' };
       case 'INVALID_CREDENTIALS': return { error: 'invalid-credentials' };
+      case 'EXTERNAL_AUTH_UNAVAILABLE': return { error: 'google-auth-unavailable' };
+      case 'EXTERNAL_IDENTITY_INVALID': return { error: 'google-auth-invalid' };
+      case 'EXTERNAL_ACCOUNT_LINK_REQUIRED': return { error: 'google-link-required' };
+      case 'EXTERNAL_PROFILE_EXPIRED': return { error: 'google-profile-expired' };
+      case 'EXTERNAL_IDENTITY_CONFLICT': return { error: 'google-identity-conflict' };
       case 'CURRENT_PASSWORD_INVALID': return { error: 'current-password-invalid', field: 'currentPassword' };
       case 'PASSWORD_CHANGE_UNAVAILABLE': return { error: 'password-change-unavailable' };
       case 'RECOVERY_UNAVAILABLE': return { error: 'recovery-unavailable' };

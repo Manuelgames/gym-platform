@@ -2,9 +2,12 @@
 
 declare global {
   namespace App {
-    /** Único dato funcional permitido dentro de Astro Sessions. */
+    /** Contexto mínimo de autenticación conservado por Astro Sessions. */
     interface SessionData {
-      userId: string;
+      userId?: string;
+      sessionVersion?: number;
+      pendingExternalRegistration?: import('./application/facade').PendingExternalRegistration;
+      googleLinkCsrf?: string;
     }
 
     /** Valores resueltos server-side y compartidos con páginas y endpoints. */

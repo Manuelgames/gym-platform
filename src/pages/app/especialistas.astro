@@ -188,7 +188,7 @@ const activeRoleLabels = view.myProfile?.roles.map((role) => (
     ) : (
       <Panel labelledby="application-title">
         <h2 id="application-title">Presenta tu perfil profesional</h2>
-        <p>Al completar el registro se generará un identificador único. Los roles quedan separados para poder cambiar su estado en una evolución posterior.</p>
+        <p>Al completar el registro se generará un identificador único.</p>
         <FormStack
           action="/api/specialists/profile/create"
           enctype="multipart/form-data"

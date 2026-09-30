@@ -36,7 +36,6 @@ const clientProfile = {
   description="Editor profesional de dieta para una asesoría nutricional activa."
   {user}
   currentPath="/app/mi-trabajo"
-  footerText="Los documentos profesionales conservan la relación, autoría y fecha de actualización."
 >
   <PageIntro
     eyebrow="Asesoría nutricional activa"
@@ -56,7 +55,6 @@ const clientProfile = {
       <p class="eyebrow">Asesorado</p>
       <h2 id="client-profile-title">{context.client.name}</h2>
       <p>{context.client.email}</p>
-      <small>Solicitud vinculada: <code>{context.requestId}</code></small>
     </Panel>
     <Panel labelledby="client-calories-title">
       <p class="eyebrow">Calculadora de calorías</p>
@@ -81,7 +79,6 @@ const clientProfile = {
     <header class="editor-heading">
       <p class="eyebrow">{context.plan ? 'Actualizar documento' : 'Nuevo documento'}</p>
       <h2 id="specialist-editor-title">{context.plan ? 'Editar dieta asignada' : 'Crear dieta de especialista'}</h2>
-      <p>Al guardar, el documento se reflejará inmediatamente en la subsección Dieta de especialista de {context.client.name}.</p>
     </header>
     <DietPlanEditor
       id="specialist-diet-editor"
@@ -97,8 +94,6 @@ const clientProfile = {
   .page-actions { display: flex; margin: 1.5rem 0; }
   :global(.form-message) { margin-top: 1rem; }
   .client-context { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; margin-top: 2rem; }
-  .client-context small { color: var(--color-muted); }
-  code { color: var(--color-gold-light); overflow-wrap: anywhere; }
   .section-heading, .editor-heading h2 { margin: 0 0 1.5rem; font: 700 clamp(2.8rem, 5vw, 4.2rem) var(--font-display); }
   .editor-heading { max-width: 78rem; margin-bottom: 2rem; }
   .editor-heading p:last-child { color: var(--color-muted); }

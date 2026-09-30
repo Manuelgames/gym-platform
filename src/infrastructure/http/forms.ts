@@ -1,12 +1,22 @@
+import { timingSafeEqual } from 'node:crypto';
 import { DomainValidationError } from '../../domain/shared/errors';
 
 const MAX_FORM_BYTES = 64 * 1024;
 
 /** Verifica origen cuando el navegador lo envía para reducir CSRF en POST. */
-export function assertTrustedFormOrigin(request: Request, appOrigin: string): void {
+export function assertTrustedFormOrigin(
+  request: Request,
+  appOrigin: string,
+  options: { allowedOrigins?: readonly string[]; allowMissingOrigin?: boolean } = {},
+): void {
   const origin = request.headers.get('origin');
   const configuredOrigin = new URL(appOrigin).origin;
-  if (origin !== configuredOrigin) {
+  if (!origin && options.allowMissingOrigin) return;
+  const allowedOrigins = new Set([
+    configuredOrigin,
+    ...(options.allowedOrigins ?? []).map((allowedOrigin) => new URL(allowedOrigin).origin),
+  ]);
+  if (!origin || !allowedOrigins.has(origin)) {
     throw new DomainValidationError('form', 'El origen del formulario no está permitido.');
   }
 }
@@ -31,6 +41,24 @@ export async function readServerForm(
     return await request.formData();
   } catch {
     throw new DomainValidationError('form', 'No se pudo interpretar el formulario.');
+  }
+}
+
+/** Aplica el double-submit cookie exigido por Google Identity Services. */
+export function assertGoogleCsrfToken(form: FormData, cookieToken: string | undefined): void {
+  const formToken = readTextField(form, 'g_csrf_token', { maxRawLength: 512 });
+  assertMatchingCsrfToken(cookieToken, formToken);
+}
+
+/** Compara tokens CSRF opacos sin revelar diferencias parciales. */
+export function assertMatchingCsrfToken(expected: string | undefined, received: string): void {
+  if (!expected || expected.length > 512 || expected.length !== received.length) {
+    throw new DomainValidationError('form', 'No fue posible validar la solicitud de Google.');
+  }
+  const expectedBytes = Buffer.from(expected);
+  const receivedBytes = Buffer.from(received);
+  if (expectedBytes.length !== receivedBytes.length || !timingSafeEqual(expectedBytes, receivedBytes)) {
+    throw new DomainValidationError('form', 'No fue posible validar la solicitud de Google.');
   }
 }
 

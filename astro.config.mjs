@@ -92,8 +92,6 @@ export default defineConfig({
         default: 'gpt-5.6-terra',
       }),
       PUBLIC_GOOGLE_CLIENT_ID: envField.string({ context: 'client', access: 'public', optional: true }),
-      GOOGLE_CLIENT_SECRET: envField.string({ context: 'server', access: 'secret', optional: true }),
-      GOOGLE_REDIRECT_URI: envField.string({ context: 'server', access: 'public', url: true, optional: true }),
       PUBLIC_FIREBASE_API_KEY: envField.string({ context: 'client', access: 'public', optional: true }),
       PUBLIC_FIREBASE_AUTH_DOMAIN: envField.string({ context: 'client', access: 'public', optional: true }),
       PUBLIC_FIREBASE_PROJECT_ID: envField.string({ context: 'client', access: 'public', optional: true }),

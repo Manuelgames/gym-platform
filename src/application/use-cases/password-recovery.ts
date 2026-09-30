@@ -1,5 +1,5 @@
 import { DomainValidationError } from '../../domain/shared/errors';
-import { findIdentity, normalizeEmail, validatePassword, type User } from '../../domain/users/user';
+import { findIdentity, normalizeEmail, validateNewPassword, type User } from '../../domain/users/user';
 import { ApplicationError } from '../errors';
 import type { UserRepository } from '../ports/repositories';
 import type { Clock, PasswordHasher, PasswordRecoveryMailer, RecoveryTokenService } from '../ports/services';
@@ -78,7 +78,7 @@ export class PasswordRecoveryUseCases {
     }
     let newPassword: string;
     try {
-      newPassword = validatePassword(password);
+      newPassword = validateNewPassword(password);
     } catch (error) {
       if (error instanceof DomainValidationError) throw new DomainValidationError('newPassword', error.message);
       throw error;
