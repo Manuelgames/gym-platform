@@ -1,6 +1,7 @@
 ---
 import type { RoutinePlan, RoutinePlanSource } from '../../domain/routine/routine';
 import Button from '../ui/Button.astro';
+import AppDialog from '../ui/AppDialog.astro';
 import EmptyState from '../ui/EmptyState.astro';
 
 export interface Props {
@@ -17,78 +18,88 @@ const goalLabels = {
   resistencia: 'Resistencia', movilidad: 'Movilidad', general: 'Condición general',
 };
 const dateFormatter = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', timeStyle: 'short' });
+const historyDialogId = (planId: string) => `routine-history-${source}-${planId.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
 ---
 
 <div class="routine-history">
   {plans.length === 0 ? (
     <EmptyState title="Aún no hay rutinas anteriores" message={`Cuando ${source === 'ai' ? 'generes' : 'guardes'} una nueva versión, la rutina reemplazada aparecerá aquí.`} />
   ) : plans.map((plan) => (
-    <details class="routine-history__item">
-      <summary>
+    <article class="routine-history__item">
+      <header class="routine-history__item-header">
         <div>
           <strong>{plan.title}</strong>
           <span>{goalLabels[plan.goal]} · {plan.level} · {plan.sessionDurationMinutes} min</span>
         </div>
         <time datetime={plan.updatedAt}>{dateFormatter.format(new Date(plan.updatedAt))}</time>
-        <span class="routine-history__expand">Ver rutina</span>
-      </summary>
-      <div class="routine-history__content">
-        <div class="routine-history__actions">
-          <form action={`/api/routine/history/reuse?tab=${source}`} method="post">
-            <input type="hidden" name="planId" value={plan.id} />
-            <Button type="submit" size="small">Volver a usar</Button>
-          </form>
-          <form action={`/api/routine/history/delete?tab=${source}`} method="post">
-            <input type="hidden" name="planId" value={plan.id} />
-            <Button type="submit" variant="danger" size="small">Eliminar</Button>
-          </form>
+        <Button class="routine-history__view" variant="ghost" size="small" data-dialog-open={historyDialogId(plan.id)}>Ver rutina</Button>
+      </header>
+
+      <AppDialog id={historyDialogId(plan.id)} class="routine-history-dialog" size="wide" title={plan.title} description={`Guardada el ${dateFormatter.format(new Date(plan.updatedAt))}`} closeLabel={`Cerrar ${plan.title}`}>
+        <div class="routine-history__content">
+          <div class="routine-history__actions">
+            <form action={`/api/routine/history/reuse?tab=${source}`} method="post">
+              <input type="hidden" name="planId" value={plan.id} />
+              <Button type="submit" size="small">Volver a usar</Button>
+            </form>
+            <form action={`/api/routine/history/delete?tab=${source}`} method="post">
+              <input type="hidden" name="planId" value={plan.id} />
+              <Button type="submit" variant="danger" size="small">Eliminar</Button>
+            </form>
+          </div>
+          <dl class="routine-history__parameters">
+            <div><dt>Lugar</dt><dd>{plan.location}</dd></div>
+            <div><dt>Nivel</dt><dd>{plan.level}</dd></div>
+            <div><dt>Objetivo</dt><dd>{goalLabels[plan.goal]}</dd></div>
+          </dl>
+          <section class="routine-history__schedule" aria-label="Distribución semanal de la rutina">
+            <h3>Semana completa</h3>
+            <div class="routine-history__week" tabindex="0" aria-label="Días de la semana">
+              {plan.days.map((day) => (
+                <article class:list={{ 'is-rest-day': day.isRestDay }}>
+                  <header><strong>{dayLabels[day.day]}</strong><span>{day.isRestDay ? 'Descanso' : `${day.exercises.length} ejercicios`}</span></header>
+                  <h4>{day.title}</h4>
+                  {!day.isRestDay && (
+                    <ol>
+                      {day.exercises.map((exercise) => (
+                        <li><span>{exercise.name}</span><small>{exercise.muscle} · {exercise.prescriptionType === 'duration' ? `${exercise.durationMinutes} min` : `${exercise.sets} × ${exercise.reps}`}</small></li>
+                      ))}
+                    </ol>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
         </div>
-        {plan.summary && <p class="routine-history__summary">{plan.summary}</p>}
-        <dl class="routine-history__parameters">
-          <div><dt>Lugar</dt><dd>{plan.location}</dd></div>
-          <div><dt>Nivel</dt><dd>{plan.level}</dd></div>
-          <div><dt>Objetivo</dt><dd>{goalLabels[plan.goal]}</dd></div>
-        </dl>
-        <div class="routine-history__week">
-          {plan.days.map((day) => (
-            <article class:list={{ 'is-rest-day': day.isRestDay }}>
-              <header><strong>{dayLabels[day.day]}</strong><span>{day.isRestDay ? 'Descanso' : `${day.exercises.length} ejercicios`}</span></header>
-              <h4>{day.title}</h4>
-              {!day.isRestDay && (
-                <ol>
-                  {day.exercises.map((exercise) => (
-                    <li><span>{exercise.name}</span><small>{exercise.muscle} · {exercise.prescriptionType === 'duration' ? `${exercise.durationMinutes} min` : `${exercise.sets} × ${exercise.reps}`}</small></li>
-                  ))}
-                </ol>
-              )}
-            </article>
-          ))}
-        </div>
-      </div>
-    </details>
+      </AppDialog>
+    </article>
   ))}
 </div>
 
 <style>
-  .routine-history { display: grid; gap: 1rem; }
+  .routine-history { display: grid; gap: 1rem; width: 100%; min-width: 0; padding: clamp(1.6rem, 3vw, 2.6rem); }
   .routine-history__item { border: 1px solid var(--color-line); background: rgb(9 15 11 / 62%); }
-  .routine-history__item > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 1.4rem; padding: 1.4rem 1.6rem; cursor: pointer; list-style: none; }
-  .routine-history__item > summary::-webkit-details-marker { display: none; }
-  .routine-history__item > summary > div { display: grid; gap: .35rem; min-width: 0; }
-  .routine-history__item > summary strong { color: var(--color-paper); font: 700 1.8rem var(--font-display); overflow-wrap: anywhere; }
-  .routine-history__item > summary span, .routine-history__item time { color: var(--color-muted); font-size: 1.05rem; }
-  .routine-history__expand { color: var(--color-gold-light) !important; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
-  .routine-history__item[open] .routine-history__expand { color: var(--color-success) !important; }
-  .routine-history__content { display: grid; gap: 1.5rem; padding: 1.6rem; border-top: 1px solid var(--color-line); }
-  .routine-history__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .8rem; }
-  .routine-history__summary { margin: 0; padding: 1rem 1.2rem; border-left: .3rem solid var(--color-gold); background: rgb(214 166 66 / 6%); color: var(--color-muted); }
+  .routine-history__item-header { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 1.4rem; padding: 1.4rem 1.6rem; }
+  .routine-history__item-header > div { display: grid; gap: .35rem; min-width: 0; }
+  .routine-history__item-header strong { color: var(--color-paper); font: 700 1.8rem var(--font-display); overflow-wrap: anywhere; }
+  .routine-history__item-header span, .routine-history__item-header time { color: var(--color-muted); font-size: 1.05rem; }
+  :global(.routine-history__view.button.button--ghost) { border: 0; background: transparent; color: var(--color-success); box-shadow: none; }
+  :global(.routine-history__view.button:hover), :global(.routine-history__view.button:focus-visible) { color: #b4e4b6; box-shadow: none; text-decoration: underline; text-underline-offset: .25rem; }
+  :global(.routine-history-dialog .dialog__surface) { overflow-x: hidden; }
+  :global(.routine-history-dialog .dialog__body) { min-width: 0; padding-top: 1.8rem; }
+  .routine-history__content { display: grid; min-width: 0; gap: 1.5rem; }
+  .routine-history__actions { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: .8rem; }
+  .routine-history__actions form { min-width: 0; }
   .routine-history__parameters { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0; border: 1px solid var(--color-line-soft); }
   .routine-history__parameters div { padding: 1rem; border-right: 1px solid var(--color-line-soft); }
   .routine-history__parameters div:last-child { border-right: 0; }
   .routine-history__parameters dt { color: var(--color-gold); font-size: .9rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
   .routine-history__parameters dd { margin: .3rem 0 0; color: var(--color-paper); text-transform: capitalize; }
-  .routine-history__week { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
-  .routine-history__week article { padding: 1.2rem; border: 1px solid var(--color-line-soft); background: rgb(255 255 255 / 2%); }
+  .routine-history__schedule { display: grid; min-width: 0; gap: 1rem; }
+  .routine-history__schedule h3 { margin: 0; color: var(--color-paper); font: 700 2rem var(--font-display); }
+  .routine-history__week { display: flex; flex-wrap: nowrap; align-items: stretch; gap: 1rem; width: 100%; min-width: 0; padding: .2rem .2rem 1.2rem; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-padding-inline: .2rem; scroll-snap-type: x mandatory; scrollbar-color: var(--color-gold) rgb(255 255 255 / 7%); scrollbar-width: thin; }
+  .routine-history__week:focus-visible { outline: .2rem solid var(--color-gold-light); outline-offset: .3rem; }
+  .routine-history__week article { flex: 0 0 min(30rem, calc(100% - .4rem)); min-width: 0; max-height: min(55dvh, 55rem); padding: 1.3rem; overflow-y: auto; border: 1px solid var(--color-line-soft); background: rgb(255 255 255 / 2%); scroll-snap-align: start; scrollbar-width: thin; }
   .routine-history__week article.is-rest-day { border-color: rgb(152 207 154 / 32%); }
   .routine-history__week header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
   .routine-history__week header strong { color: var(--color-gold-light); font: 700 1.5rem var(--font-display); }
@@ -99,13 +110,12 @@ const dateFormatter = new Intl.DateTimeFormat('es-MX', { dateStyle: 'medium', ti
   .routine-history__week li span, .routine-history__week li small { display: block; }
   .routine-history__week li small { margin-top: .15rem; color: var(--color-muted); }
   @media (max-width: 680px) {
-    .routine-history__item > summary { grid-template-columns: 1fr auto; }
-    .routine-history__item time { grid-column: 1; }
-    .routine-history__expand { grid-column: 2; grid-row: 1 / 3; }
-    .routine-history__parameters, .routine-history__week { grid-template-columns: 1fr; }
+    .routine-history__item-header { grid-template-columns: 1fr; }
+    .routine-history__item-header :global(.button) { width: 100%; }
+    .routine-history__parameters { grid-template-columns: 1fr; }
     .routine-history__parameters div { border-right: 0; border-bottom: 1px solid var(--color-line-soft); }
     .routine-history__parameters div:last-child { border-bottom: 0; }
-    .routine-history__actions { display: grid; }
-    .routine-history__actions :global(.button) { width: 100%; }
+    .routine-history__actions form { flex: 1 1 0; }
+    .routine-history__actions :global(.button) { width: 100%; padding-inline: .6rem; font-size: .95rem; }
   }
 </style>

@@ -1,6 +1,6 @@
 ---
 import FormField from '../../components/forms/FormField.astro';
-import FormMessage from '../../components/forms/FormMessage.astro';
+import TimedScrollAlert from '../../components/forms/TimedScrollAlert.astro';
 import FormStack from '../../components/forms/FormStack.astro';
 import DietDocument from '../../components/nutrition/DietDocument.astro';
 import DietPlanEditor from '../../components/nutrition/DietPlanEditor.astro';
@@ -67,8 +67,8 @@ const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
     compact
   />
 
-  <FormMessage message={successMessage} tone="success" />
-  <FormMessage message={errorMessage} tone="error" />
+  <TimedScrollAlert message={successMessage} tone="success" />
+  <TimedScrollAlert message={errorMessage} tone="error" />
 
   <nav class="diet-tabs" aria-label="Modalidades de dieta" role="tablist" data-diet-tabs>
     <a
@@ -286,7 +286,6 @@ const mealCount = automaticDiet?.plan.requestedMeals ?? 4;
 </script>
 
 <style>
-  :global(.form-message) { margin-top: 1.4rem; }
   .diet-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 3rem; border: 1px solid var(--color-line); background: rgb(9 15 11 / 62%); }
   .diet-tabs a { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; padding: 1.6rem; border-right: 1px solid var(--color-line); color: var(--color-muted); transition: background var(--transition-fast), color var(--transition-fast); }
   .diet-tabs a:last-child { border-right: 0; }

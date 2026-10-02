@@ -15,7 +15,7 @@
     "test:smoke": "node ./scripts/smoke.mjs"
   },
   "dependencies": {
-    "@astrojs/node": "11.0.3",
+    "@astrojs/node": "11.1.5",
     "astro": "7.3.5",
     "google-auth-library": "11.1.0",
     "pdf-lib": "^1.17.1"

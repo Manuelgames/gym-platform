@@ -1,0 +1,113 @@
+---
+export interface Props {
+  message?: string;
+  tone: 'success' | 'error';
+}
+
+const { message, tone } = Astro.props;
+---
+
+{message && (
+  <div
+    class:list={['scroll-alert', `scroll-alert--${tone}`]}
+    role={tone === 'error' ? 'alert' : 'status'}
+    aria-live={tone === 'error' ? 'assertive' : 'polite'}
+    data-timed-scroll-alert
+  >
+    <span class="scroll-alert__roller scroll-alert__roller--top" aria-hidden="true"></span>
+    <div class="scroll-alert__parchment">
+      <div class="scroll-alert__copy">
+        <span class="scroll-alert__heading">{tone === 'error' ? 'Atención' : 'Confirmación'}</span>
+        <p>{message}</p>
+      </div>
+    </div>
+    <span class="scroll-alert__roller scroll-alert__roller--bottom" aria-hidden="true"></span>
+  </div>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-timed-scroll-alert]').forEach((alert) => {
+    if (alert.dataset.alertReady === 'true') return;
+    alert.dataset.alertReady = 'true';
+
+    window.setTimeout(() => {
+      alert.classList.add('is-leaving');
+      window.setTimeout(() => alert.remove(), 300);
+    }, 6700);
+  });
+</script>
+
+<style>
+  .scroll-alert {
+    --scroll-accent: #456345;
+    position: fixed;
+    z-index: 19;
+    top: calc(var(--header-height) + 2.2rem);
+    right: var(--page-gutter);
+    width: min(calc(100vw - (var(--page-gutter) * 2)), 38rem);
+    margin: 0;
+    padding-block: .48rem;
+    filter: drop-shadow(0 .9rem 1.6rem rgb(0 0 0 / 24%));
+    animation: scroll-alert-enter 360ms ease-out both;
+  }
+  .scroll-alert--error { --scroll-accent: #91483a; }
+  .scroll-alert__parchment {
+    min-height: 6.3rem;
+    margin-inline: 1rem;
+    padding: 1rem 1.35rem;
+    border-inline: 1px solid #9d7441;
+    background:
+      radial-gradient(circle at 18% 24%, rgb(255 251 228 / 72%), transparent 36%),
+      linear-gradient(110deg, #dec296, #f1ddb7 46%, #ddbf8e);
+    box-shadow: inset .5rem 0 .9rem rgb(110 70 26 / 12%), inset -.5rem 0 .9rem rgb(110 70 26 / 12%);
+  }
+  .scroll-alert__heading { display: block; color: var(--scroll-accent); font: 800 .95rem var(--font-display); letter-spacing: .15em; text-transform: uppercase; }
+  .scroll-alert__copy p { margin: .25rem 0 0; color: #302719; font-size: 1.16rem; font-weight: 700; line-height: 1.38; }
+  .scroll-alert__roller {
+    position: absolute;
+    z-index: 1;
+    right: 0;
+    left: 0;
+    height: .92rem;
+    border: 1px solid #8f6026;
+    border-radius: 99rem;
+    background: linear-gradient(180deg, #fff0bb 0%, #d9a641 35%, #a66b26 78%, #f2ca67 100%);
+    box-shadow: 0 .2rem .4rem rgb(82 45 15 / 28%);
+  }
+  .scroll-alert__roller::before, .scroll-alert__roller::after {
+    position: absolute;
+    top: 50%;
+    width: .72rem;
+    height: 1.3rem;
+    border: 1px solid #794819;
+    border-radius: 40%;
+    background: linear-gradient(90deg, #7b4a20, #b77b39, #71411b);
+    content: '';
+    transform: translateY(-50%);
+  }
+  .scroll-alert__roller::before { left: -.15rem; }
+  .scroll-alert__roller::after { right: -.15rem; }
+  .scroll-alert__roller--top { top: 0; }
+  .scroll-alert__roller--bottom { bottom: 0; }
+  .scroll-alert.is-leaving { pointer-events: none; animation: scroll-alert-leave 300ms ease-in forwards; }
+  @keyframes scroll-alert-enter {
+    from { opacity: 0; transform: translateY(-.7rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scroll-alert-leave {
+    to { opacity: 0; transform: translateY(-.5rem); }
+  }
+  @media (max-width: 680px) {
+    .scroll-alert {
+      top: calc(var(--header-height) + 1.5rem);
+      right: 1.2rem;
+      left: 1.2rem;
+      width: auto;
+    }
+    .scroll-alert__parchment { margin-inline: .9rem; padding: 1rem 1.2rem; }
+    .scroll-alert__copy p { font-size: 1.18rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .scroll-alert, .scroll-alert.is-leaving { animation: none; }
+  }
+</style>

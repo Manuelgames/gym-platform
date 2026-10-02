@@ -6,7 +6,7 @@ import RoutinePlanEditor from '../../components/routine/RoutinePlanEditor.astro'
 import AppDialog from '../../components/ui/AppDialog.astro';
 import Button from '../../components/ui/Button.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
-import FormMessage from '../../components/forms/FormMessage.astro';
+import TimedScrollAlert from '../../components/forms/TimedScrollAlert.astro';
 import PageIntro from '../../components/ui/PageIntro.astro';
 import { getApplication } from '../../infrastructure/composition/container';
 import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
@@ -46,14 +46,22 @@ const successMessage = saved === 'ai'
 
 const aiManagerDialog = 'routine-ai-manager-dialog';
 const manualManagerDialog = 'routine-manual-manager-dialog';
-const aiAutoDialog = activeTab === 'ai' && (errorMessage || historyDeleted === 'ai' || !automaticRoutine)
-  ? aiManagerDialog
+const aiManager = 'routine-ai-manager';
+const manualManager = 'routine-manual-manager';
+const aiManagerInitialPanel = activeTab === 'ai'
+  ? historyDeleted === 'ai'
+    ? 'history'
+    : errorMessage
+      ? 'generation'
+      : undefined
   : undefined;
-const manualAutoDialog = activeTab === 'manual' && (errorMessage || historyDeleted === 'manual' || !manualRoutine)
-  ? manualManagerDialog
+const manualManagerInitialPanel = activeTab === 'manual'
+  ? historyDeleted === 'manual'
+    ? 'history'
+    : errorMessage
+      ? 'generation'
+      : undefined
   : undefined;
-const aiManagerInitialTab = historyDeleted === 'ai' ? 'history' : 'generation';
-const manualManagerInitialTab = historyDeleted === 'manual' ? 'history' : 'generation';
 ---
 
 <ProtectedLayout
@@ -65,8 +73,8 @@ const manualManagerInitialTab = historyDeleted === 'manual' ? 'history' : 'gener
 >
   <PageIntro eyebrow="Planificación semanal" title="Entrenamiento" compact />
 
-  <FormMessage message={successMessage} tone="success" />
-  <FormMessage message={errorMessage} tone="error" />
+  <TimedScrollAlert message={successMessage} tone="success" />
+  <TimedScrollAlert message={errorMessage} tone="error" />
 
   <nav class="routine-tabs" aria-label="Modalidades de rutina" role="tablist" data-routine-tabs>
     <a id="routine-tab-ai" href="?tab=ai" role="tab" aria-controls="routine-panel-ai" aria-selected={activeTab === 'ai' ? 'true' : 'false'} tabindex={activeTab === 'ai' ? 0 : -1} class:list={{ 'is-active': activeTab === 'ai' }} data-routine-tab="ai">
@@ -80,33 +88,57 @@ const manualManagerInitialTab = historyDeleted === 'manual' ? 'history' : 'gener
     </a>
   </nav>
 
-  <section id="routine-panel-ai" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-ai" hidden={activeTab !== 'ai'} data-routine-panel="ai" data-auto-dialog={aiAutoDialog}>
+  <section id="routine-panel-ai" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-ai" hidden={activeTab !== 'ai'} data-routine-panel="ai">
+    <div class="routine-plan-actions" aria-label="Acciones de rutina IA">
+      <Button data-dialog-open={aiManagerDialog}>Generador y administrador de rutina</Button>
+    </div>
+    <div
+      id={aiManager}
+      class="routine-inline-manager"
+      data-routine-manager
+      data-initial-manager-panel={aiManagerInitialPanel}
+      aria-hidden="true"
+    >
+      <div class="routine-inline-manager__reveal">
+        <section class="routine-inline-manager__panel" data-manager-panel="generation" aria-label="Generación y administración de Rutina IA" hidden>
+          <AutomaticRoutineForm id="routine-ai-manager-form" plan={automaticRoutine} submitLabel={automaticRoutine ? 'Guardar nueva versión' : 'Generar rutina'} errorMessage={errorMessage} invalidField={invalidField} />
+        </section>
+        <section class="routine-inline-manager__panel" data-manager-panel="history" aria-label="Historial de Rutina IA" hidden>
+          <RoutineHistory plans={automaticHistory} source="ai" />
+        </section>
+      </div>
+    </div>
     {automaticRoutine ? (
-      <>
-        <div class="routine-plan-actions" aria-label="Acciones de rutina IA">
-          <Button data-dialog-open={aiManagerDialog}>Generador y administrador de rutina</Button>
-        </div>
-        <div class="routine-result"><RoutineDocument plan={automaticRoutine} clientName={user.name} pdfHref="/api/routine/pdf/ai" /></div>
-      </>
+      <div class="routine-result"><RoutineDocument plan={automaticRoutine} clientName={user.name} pdfHref="/api/routine/pdf/ai" /></div>
     ) : (
-      <EmptyState title="Crea tu rutina IA" message="Configura objetivo, nivel, lugar, duración y días exactos de descanso.">
-        <Button slot="actions" data-dialog-open={aiManagerDialog}>Generador y administrador de rutina</Button>
-      </EmptyState>
+      <div class="routine-empty"><EmptyState title="Crea tu rutina IA" message="Configura objetivo, nivel, lugar, duración y días exactos de descanso." /></div>
     )}
   </section>
 
-  <section id="routine-panel-manual" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-manual" hidden={activeTab !== 'manual'} data-routine-panel="manual" data-auto-dialog={manualAutoDialog}>
+  <section id="routine-panel-manual" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-manual" hidden={activeTab !== 'manual'} data-routine-panel="manual">
+    <div class="routine-plan-actions" aria-label="Acciones de rutina manual">
+      <Button data-dialog-open={manualManagerDialog}>Generador y administrador de rutina</Button>
+    </div>
+    <div
+      id={manualManager}
+      class="routine-inline-manager"
+      data-routine-manager
+      data-initial-manager-panel={manualManagerInitialPanel}
+      aria-hidden="true"
+    >
+      <div class="routine-inline-manager__reveal">
+        <section class="routine-inline-manager__panel routine-inline-manager__panel--manual" data-manager-panel="generation" aria-label="Generación y administración de Rutina manual" hidden>
+          <RoutinePlanEditor id="manual-routine-manager-form" action="/api/routine/manual/save" plan={manualRoutine} submitLabel={manualRoutine ? 'Guardar nueva versión' : 'Guardar rutina completa'} />
+        </section>
+        <section class="routine-inline-manager__panel" data-manager-panel="history" aria-label="Historial de Rutina manual" hidden>
+          <RoutineHistory plans={manualHistory} source="manual" />
+        </section>
+      </div>
+    </div>
     {manualRoutine ? (
-      <>
-        <div class="routine-plan-actions" aria-label="Acciones de rutina manual">
-          <Button data-dialog-open={manualManagerDialog}>Generador y administrador de rutina</Button>
-        </div>
-        <div class="routine-result"><RoutineDocument plan={manualRoutine} clientName={user.name} pdfHref="/api/routine/pdf/manual" /></div>
-      </>
+      <div class="routine-result"><RoutineDocument plan={manualRoutine} clientName={user.name} pdfHref="/api/routine/pdf/manual" /></div>
     ) : (
-      <EmptyState title="Crea tu rutina manual" message="Define los parámetros generales y construye cada día de la semana.">
-        <Button slot="actions" data-dialog-open={manualManagerDialog}>Generador y administrador de rutina</Button>
-      </EmptyState>
+      <div class="routine-empty"><EmptyState title="Crea tu rutina manual" message="Define los parámetros generales y construye cada día de la semana." /></div>
     )}
   </section>
 
@@ -122,34 +154,32 @@ const manualManagerInitialTab = historyDeleted === 'manual' ? 'history' : 'gener
     )}
   </section>
 
-  <AppDialog id={aiManagerDialog} class="routine-dialog" size="wide" title="Rutina IA" description="Genera, modifica o recupera tus planificaciones anteriores.">
-    <div class="routine-manager" data-routine-manager data-initial-manager-tab={aiManagerInitialTab}>
-      <nav class="routine-manager__tabs" aria-label="Administración de Rutina IA" role="tablist">
-        <button type="button" role="tab" data-manager-tab="generation">Generación y administración</button>
-        <button type="button" role="tab" data-manager-tab="history">Historial de rutinas <span>{automaticHistory.length}</span></button>
-      </nav>
-      <section data-manager-panel="generation">
-        <AutomaticRoutineForm id="routine-ai-manager-form" plan={automaticRoutine} submitLabel={automaticRoutine ? 'Guardar nueva versión' : 'Generar rutina'} errorMessage={errorMessage} invalidField={invalidField} />
-      </section>
-      <section data-manager-panel="history" hidden>
-        <RoutineHistory plans={automaticHistory} source="ai" />
-      </section>
-    </div>
+  <AppDialog id={aiManagerDialog} class="routine-dialog" title="Rutina IA" description="Elige qué sección deseas mostrar debajo del administrador.">
+    <nav class="routine-manager__choices" aria-label="Opciones de Rutina IA">
+      <button type="button" data-manager-choice="generation" data-manager-target={aiManager} data-dialog-initial-focus>
+        <strong>Generación y administración</strong>
+        <span>Configura, genera o modifica tu rutina.</span>
+      </button>
+      <button type="button" data-manager-choice="history" data-manager-target={aiManager}>
+        <strong>Historial de rutinas</strong>
+        <span>Consulta tus versiones anteriores.</span>
+        <small>{automaticHistory.length}</small>
+      </button>
+    </nav>
   </AppDialog>
 
-  <AppDialog id={manualManagerDialog} class="routine-dialog" size="wide" title="Rutina manual" description="Crea, modifica o recupera tus planificaciones anteriores.">
-    <div class="routine-manager" data-routine-manager data-initial-manager-tab={manualManagerInitialTab}>
-      <nav class="routine-manager__tabs" aria-label="Administración de Rutina manual" role="tablist">
-        <button type="button" role="tab" data-manager-tab="generation">Generación y administración</button>
-        <button type="button" role="tab" data-manager-tab="history">Historial de rutinas <span>{manualHistory.length}</span></button>
-      </nav>
-      <section class="routine-manager__child-panel" data-manager-panel="generation">
-        <RoutinePlanEditor id="manual-routine-manager-form" action="/api/routine/manual/save" plan={manualRoutine} submitLabel={manualRoutine ? 'Guardar nueva versión' : 'Guardar rutina completa'} />
-      </section>
-      <section data-manager-panel="history" hidden>
-        <RoutineHistory plans={manualHistory} source="manual" />
-      </section>
-    </div>
+  <AppDialog id={manualManagerDialog} class="routine-dialog" title="Rutina manual" description="Elige qué sección deseas mostrar debajo del administrador.">
+    <nav class="routine-manager__choices" aria-label="Opciones de Rutina manual">
+      <button type="button" data-manager-choice="generation" data-manager-target={manualManager} data-dialog-initial-focus>
+        <strong>Generación y administración</strong>
+        <span>Configura y construye tu rutina semanal.</span>
+      </button>
+      <button type="button" data-manager-choice="history" data-manager-target={manualManager}>
+        <strong>Historial de rutinas</strong>
+        <span>Consulta tus versiones anteriores.</span>
+        <small>{manualHistory.length}</small>
+      </button>
+    </nav>
   </AppDialog>
 </ProtectedLayout>
 
@@ -159,7 +189,6 @@ const manualManagerInitialTab = historyDeleted === 'manual' ? 'history' : 'gener
 </script>
 
 <style>
-  :global(.form-message) { margin-top: 1.4rem; }
   .routine-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.6rem, 2vw, 1.2rem); margin-top: 2.4rem; }
   .routine-tabs a { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 5.4rem; padding: 1rem clamp(.6rem, 2vw, 1.4rem); border: 1px solid var(--color-line); border-radius: 1.2rem; background: rgb(9 15 11 / 62%); color: var(--color-muted); text-align: center; transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast); }
   .routine-tabs strong { color: var(--color-paper); font-size: clamp(1.05rem, 1.6vw, 1.3rem); line-height: 1.25; letter-spacing: .06em; text-transform: uppercase; }
@@ -169,25 +198,39 @@ const manualManagerInitialTab = historyDeleted === 'manual' ? 'history' : 'gener
   .routine-panel { margin-top: clamp(3rem, 6vw, 6rem); }
   .routine-plan-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; width: min(100%, 76rem); margin-inline: auto; }
   .routine-result { width: min(100%, 132rem); margin: clamp(4rem, 7vw, 7rem) auto; }
+  .routine-empty { width: min(100%, 76rem); margin: clamp(3rem, 6vw, 5rem) auto; }
   .routine-result--specialist { margin-top: 0; }
   :global(.routine-dialog .dialog__surface) { overflow-x: hidden; }
   :global(.routine-dialog .dialog__body) { width: 100%; min-width: 0; max-width: 100%; padding-top: 2rem; }
-  .routine-manager { display: grid; width: 100%; min-width: 0; max-width: 100%; gap: 1.8rem; }
-  .routine-manager > section { min-width: 0; max-width: 100%; }
-  .routine-manager__tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
-  .routine-manager__tabs button { display: flex; min-width: 0; min-height: 5rem; align-items: center; justify-content: center; gap: .8rem; padding: .9rem 1.2rem; border: 1px solid var(--color-line); border-radius: 1.2rem; background: rgb(9 15 11 / 62%); color: var(--color-paper); overflow-wrap: anywhere; font-size: 1.05rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
-  .routine-manager__tabs button.is-active { border-color: var(--color-gold); background: rgb(214 166 66 / 13%); color: var(--color-gold-light); }
-  .routine-manager__tabs span { display: grid; min-width: 2.3rem; height: 2.3rem; place-items: center; border-radius: 50%; background: rgb(214 166 66 / 16%); color: var(--color-gold-light); font-size: .95rem; }
-  .routine-manager > section[hidden] { display: none; }
-  .routine-manager__child-panel { width: 100%; min-width: 0; max-width: 100%; padding: clamp(1rem, 2.5vw, 1.8rem); border-top: .3rem solid var(--color-gold); background: linear-gradient(180deg, rgb(214 166 66 / 5%), rgb(6 11 8 / 28%)); }
+  .routine-manager__choices { display: grid; gap: 1rem; }
+  .routine-manager__choices button { position: relative; display: grid; min-width: 0; min-height: 8.4rem; align-content: center; gap: .45rem; padding: 1.5rem 5.2rem 1.5rem 1.6rem; border: 1px solid var(--color-line); border-radius: 1.2rem; background: rgb(9 15 11 / 62%); color: var(--color-paper); text-align: left; transition: border-color var(--transition-fast), background var(--transition-fast), transform var(--transition-fast); }
+  .routine-manager__choices button:hover, .routine-manager__choices button:focus-visible { border-color: var(--color-gold); background: rgb(214 166 66 / 10%); transform: translateY(-.15rem); }
+  .routine-manager__choices button[aria-pressed="true"] { border-color: var(--color-gold); background: rgb(214 166 66 / 13%); }
+  .routine-manager__choices strong { color: var(--color-gold-light); font-size: 1.16rem; letter-spacing: .055em; text-transform: uppercase; }
+  .routine-manager__choices span { color: var(--color-muted); line-height: 1.45; }
+  .routine-manager__choices small { position: absolute; top: 50%; right: 1.6rem; display: grid; width: 2.8rem; height: 2.8rem; place-items: center; border-radius: 50%; background: rgb(214 166 66 / 16%); color: var(--color-gold-light); font-weight: 800; transform: translateY(-50%); }
+  .routine-inline-manager { display: grid; grid-template-rows: 0fr; width: min(100%, 112rem); margin: 0 auto; opacity: 0; transform: translateY(-1.2rem); visibility: hidden; transition: grid-template-rows 440ms cubic-bezier(.22, 1, .36, 1), margin-top 440ms cubic-bezier(.22, 1, .36, 1), opacity 240ms ease, transform 440ms cubic-bezier(.22, 1, .36, 1), visibility 0s linear 440ms; }
+  .routine-inline-manager.is-open { grid-template-rows: 1fr; margin-top: clamp(2rem, 4vw, 3.2rem); opacity: 1; transform: translateY(0); visibility: visible; transition-delay: 0s; }
+  .routine-inline-manager__reveal { min-height: 0; overflow: hidden; }
+  .routine-inline-manager__panel { min-width: 0; max-width: 100%; padding: clamp(1.2rem, 3vw, 2.4rem); border-top: .3rem solid var(--color-gold); background: linear-gradient(145deg, rgb(34 45 39 / 94%), rgb(15 23 18 / 98%)); box-shadow: 0 1.8rem 4rem rgb(0 0 0 / 18%); animation: routine-manager-panel-in 440ms cubic-bezier(.22, 1, .36, 1); }
+  .routine-inline-manager__panel--manual { padding: clamp(.8rem, 2vw, 1.4rem); }
+  .routine-inline-manager__panel[hidden] { display: none; }
+  .routine-inline-manager__panel :global(.form-stack) { margin-top: 0; }
+  @keyframes routine-manager-panel-in {
+    from { opacity: 0; transform: translateY(-1.2rem); }
+    to { opacity: 1; transform: translateY(0); }
+  }
   @media (max-width: 850px) {
     .routine-tabs { gap: .7rem; }
   }
   @media (max-width: 600px) {
-    .routine-manager__tabs { grid-template-columns: 1fr; }
-    .routine-manager__child-panel { padding: .8rem; }
     .routine-plan-actions { display: grid; }
     .routine-plan-actions :global(.button) { width: 100%; }
     .routine-result { margin-block: 4rem; }
+    .routine-inline-manager__panel { padding: 1rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .routine-inline-manager, .routine-manager__choices button { transition-duration: 1ms; }
+    .routine-inline-manager__panel { animation-duration: 1ms; }
   }
 </style>
