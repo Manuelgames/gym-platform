@@ -5,12 +5,14 @@ import {
   ROUTINE_GOALS,
   ROUTINE_LEVELS,
   ROUTINE_LOCATIONS,
+  ROUTINE_PLAN_DAYS,
   ROUTINE_PLAN_SOURCES,
   type RoutineExercise,
   type RoutineGoal,
   type RoutineLevel,
   type RoutineLocation,
   type RoutinePlan,
+  type RoutinePlanDayName,
   type RoutinePlanSource,
 } from '../../domain/routine/routine';
 import { DomainValidationError } from '../../domain/shared/errors';
@@ -92,6 +94,16 @@ export class RoutineUseCases {
     return this.fitness.getRoutinePlan(userId, source);
   }
 
+  /** Lista solo las versiones anteriores; el documento vigente se presenta fuera del historial. */
+  async getHistory(userId: string, source: RoutinePlanSource): Promise<RoutinePlan[]> {
+    if (source === 'specialist') return [];
+    const [plans, current] = await Promise.all([
+      this.fitness.listRoutinePlans(userId),
+      this.fitness.getRoutinePlan(userId, source),
+    ]);
+    return plans.filter((plan) => plan.source === source && plan.id !== current?.id);
+  }
+
   /** Genera una semana de lunes a domingo con los parámetros elegidos. */
   async generate(userId: string, input: GenerateRoutineInput): Promise<RoutinePlan> {
     const goal = readGoal(input.goal);
@@ -100,16 +112,21 @@ export class RoutineUseCases {
     if (!Number.isInteger(input.sessionDurationMinutes) || input.sessionDurationMinutes < 15 || input.sessionDurationMinutes > 240) {
       throw new DomainValidationError('sessionDurationMinutes', 'La duración debe estar entre 15 y 240 minutos.');
     }
-    if (!Number.isInteger(input.restDaysCount) || input.restDaysCount < 0 || input.restDaysCount > 6) {
-      throw new DomainValidationError('restDays', 'Selecciona entre 0 y 6 días de descanso.');
+    const restDays = input.restDays as RoutinePlanDayName[];
+    if (
+      !Array.isArray(input.restDays)
+      || input.restDays.length > 6
+      || new Set(input.restDays).size !== input.restDays.length
+      || !restDays.every((day) => ROUTINE_PLAN_DAYS.includes(day))
+    ) {
+      throw new DomainValidationError('restDays', 'Selecciona hasta 6 días de descanso válidos.');
     }
     const draft = await this.generator.generate({
       goal,
       level,
       location,
       sessionDurationMinutes: input.sessionDurationMinutes,
-      restDaysCount: input.restDaysCount,
-      limitations: input.limitations,
+      restDays,
       safetyIdentifier: userId,
     });
     const plan = createRoutinePlan({
@@ -117,20 +134,59 @@ export class RoutineUseCases {
       userId,
       authorUserId: userId,
       source: 'ai',
-      title: draft.title,
+      title: input.title?.trim() || draft.title,
       summary: draft.summary,
       goal,
       level,
       location,
       sessionDurationMinutes: input.sessionDurationMinutes,
       availableEquipment: '',
-      limitations: input.limitations,
+      limitations: '',
       days: draft.days,
       specialistRequestId: null,
       generationEngine: draft.engine,
       now: this.clock.now(),
     });
     return this.fitness.saveRoutinePlan(plan);
+  }
+
+  /** Recupera una versión anterior creando una nueva versión vigente y conservando la trazabilidad. */
+  async reuse(userId: string, planId: string): Promise<RoutinePlan> {
+    const plans = await this.fitness.listRoutinePlans(userId);
+    const historical = plans.find((plan) => plan.id === planId && plan.source !== 'specialist');
+    if (!historical) {
+      throw new ApplicationError('ROUTINE_HISTORY_NOT_FOUND', 'No se encontró la rutina en el historial.');
+    }
+    const current = await this.fitness.getRoutinePlan(userId, historical.source);
+    if (current?.id === historical.id) {
+      throw new ApplicationError('ROUTINE_HISTORY_NOT_FOUND', 'La rutina seleccionada ya es la versión vigente.');
+    }
+    const restored = createRoutinePlan({
+      ...historical,
+      id: this.ids.next(),
+      authorUserId: userId,
+      specialistRequestId: null,
+      now: this.clock.now(),
+      createdAt: undefined,
+    });
+    return this.fitness.saveRoutinePlan(restored);
+  }
+
+  /** Elimina una versión anterior sin permitir que se borre por error el documento vigente. */
+  async deleteFromHistory(userId: string, planId: string): Promise<RoutinePlanSource> {
+    const plans = await this.fitness.listRoutinePlans(userId);
+    const historical = plans.find((plan) => plan.id === planId && plan.source !== 'specialist');
+    if (!historical) {
+      throw new ApplicationError('ROUTINE_HISTORY_NOT_FOUND', 'No se encontró la rutina en el historial.');
+    }
+    const current = await this.fitness.getRoutinePlan(userId, historical.source);
+    if (current?.id === historical.id) {
+      throw new ApplicationError('ROUTINE_CURRENT_DELETE_FORBIDDEN', 'La rutina vigente no se puede eliminar desde el historial.');
+    }
+    if (!(await this.fitness.deleteRoutinePlan(userId, historical.id))) {
+      throw new ApplicationError('ROUTINE_HISTORY_NOT_FOUND', 'No se encontró la rutina en el historial.');
+    }
+    return historical.source;
   }
 
   /** Guarda el documento libre que edita su propietario. */
@@ -147,7 +203,7 @@ export class RoutineUseCases {
       location: readLocation(input.location),
       sessionDurationMinutes: input.sessionDurationMinutes,
       availableEquipment: '',
-      limitations: input.limitations,
+      limitations: '',
       days: input.days,
       specialistRequestId: null,
       generationEngine: 'manual',
@@ -209,7 +265,7 @@ export class RoutineUseCases {
       location: readLocation(input.location),
       sessionDurationMinutes: input.sessionDurationMinutes,
       availableEquipment: '',
-      limitations: input.limitations,
+      limitations: '',
       days: input.days,
       specialistRequestId: request.id,
       generationEngine: 'specialist',

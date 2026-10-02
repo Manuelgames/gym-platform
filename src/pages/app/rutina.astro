@@ -1,15 +1,13 @@
 ---
-import FieldRow from '../../components/forms/FieldRow.astro';
-import FormField from '../../components/forms/FormField.astro';
-import FormMessage from '../../components/forms/FormMessage.astro';
-import FormStack from '../../components/forms/FormStack.astro';
+import AutomaticRoutineForm from '../../components/routine/AutomaticRoutineForm.astro';
 import RoutineDocument from '../../components/routine/RoutineDocument.astro';
+import RoutineHistory from '../../components/routine/RoutineHistory.astro';
 import RoutinePlanEditor from '../../components/routine/RoutinePlanEditor.astro';
+import AppDialog from '../../components/ui/AppDialog.astro';
 import Button from '../../components/ui/Button.astro';
 import EmptyState from '../../components/ui/EmptyState.astro';
+import FormMessage from '../../components/forms/FormMessage.astro';
 import PageIntro from '../../components/ui/PageIntro.astro';
-import Panel from '../../components/ui/Panel.astro';
-import { ROUTINE_SESSION_DURATION_OPTIONS } from '../../domain/routine/routine';
 import { getApplication } from '../../infrastructure/composition/container';
 import ProtectedLayout from '../../layouts/ProtectedLayout.astro';
 import { readErrorMessage, readInvalidField } from '../../presentation/feedback';
@@ -17,11 +15,13 @@ import { readErrorMessage, readInvalidField } from '../../presentation/feedback'
 const user = Astro.locals.user;
 if (!user) return Astro.redirect('/iniciar-sesion');
 const application = getApplication();
-const [automaticRoutine, manualRoutine, specialistRoutine, specialists] = await Promise.all([
+const [automaticRoutine, manualRoutine, specialistRoutine, specialists, automaticHistory, manualHistory] = await Promise.all([
   application.getRoutinePlan(user.id, 'ai'),
   application.getRoutinePlan(user.id, 'manual'),
   application.getRoutinePlan(user.id, 'specialist'),
   application.getSpecialistsPage(user.id),
+  application.getRoutineHistory(user.id, 'ai'),
+  application.getRoutineHistory(user.id, 'manual'),
 ]);
 const trainerRequest = specialists.activeRequests.trainer;
 const validTabs = ['ai', 'manual', 'specialist'];
@@ -30,119 +30,89 @@ const activeTab = validTabs.includes(requestedTab) ? requestedTab : 'ai';
 const errorMessage = readErrorMessage(Astro.url);
 const invalidField = readInvalidField(Astro.url);
 const saved = Astro.url.searchParams.get('saved');
+const reused = Astro.url.searchParams.get('reused');
+const historyDeleted = Astro.url.searchParams.get('historyDeleted');
 const successMessage = saved === 'ai'
-  ? 'Tu rutina automática quedó generada de lunes a domingo.'
+  ? 'Tu rutina IA quedó generada de lunes a domingo.'
   : saved === 'manual'
     ? 'Tu rutina manual quedó guardada.'
-    : undefined;
-const defaults = automaticRoutine ?? manualRoutine;
-const selectedDuration = defaults?.sessionDurationMinutes ?? 60;
-const durationOptions = ROUTINE_SESSION_DURATION_OPTIONS.includes(selectedDuration as never)
-  ? [...ROUTINE_SESSION_DURATION_OPTIONS]
-  : [...ROUTINE_SESSION_DURATION_OPTIONS, selectedDuration].sort((left, right) => left - right);
-const durationOptionLabel = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')} h ${String(minutes % 60).padStart(2, '0')} min`;
+    : reused === 'ai'
+      ? 'La rutina del historial volvió a quedar activa en Rutina IA.'
+      : reused === 'manual'
+        ? 'La rutina del historial volvió a quedar activa en Rutina manual.'
+        : historyDeleted
+          ? 'La rutina anterior se eliminó del historial.'
+          : undefined;
+
+const aiManagerDialog = 'routine-ai-manager-dialog';
+const manualManagerDialog = 'routine-manual-manager-dialog';
+const aiAutoDialog = activeTab === 'ai' && (errorMessage || historyDeleted === 'ai' || !automaticRoutine)
+  ? aiManagerDialog
+  : undefined;
+const manualAutoDialog = activeTab === 'manual' && (errorMessage || historyDeleted === 'manual' || !manualRoutine)
+  ? manualManagerDialog
+  : undefined;
+const aiManagerInitialTab = historyDeleted === 'ai' ? 'history' : 'generation';
+const manualManagerInitialTab = historyDeleted === 'manual' ? 'history' : 'generation';
 ---
 
 <ProtectedLayout
   title="Mi rutina"
-  description="Rutinas automáticas, manuales y asignadas por entrenador con formato semanal compatible."
+  description="Rutinas con IA, manuales y asignadas por entrenador con formato semanal compatible."
   {user}
   currentPath={Astro.url.pathname}
   footerText="Roman Colosseum · Entrena con intención, registra tu progreso y recupera con paciencia."
 >
-  <PageIntro
-    eyebrow="Planificación semanal"
-    title="Tu entrenamiento, de lunes a domingo"
-    lead="Genera una rutina con IA, diseña la tuya o recibe una de tu entrenador. Las tres modalidades comparten ejercicios, series, repeticiones, descansos y PDF."
-    compact
-  />
+  <PageIntro eyebrow="Planificación semanal" title="Entrenamiento" compact />
 
   <FormMessage message={successMessage} tone="success" />
   <FormMessage message={errorMessage} tone="error" />
 
   <nav class="routine-tabs" aria-label="Modalidades de rutina" role="tablist" data-routine-tabs>
     <a id="routine-tab-ai" href="?tab=ai" role="tab" aria-controls="routine-panel-ai" aria-selected={activeTab === 'ai' ? 'true' : 'false'} tabindex={activeTab === 'ai' ? 0 : -1} class:list={{ 'is-active': activeTab === 'ai' }} data-routine-tab="ai">
-      <span>01</span><strong>Rutina automática</strong><small>Personalizada con IA</small>
+      <strong>Rutina IA</strong>
     </a>
     <a id="routine-tab-manual" href="?tab=manual" role="tab" aria-controls="routine-panel-manual" aria-selected={activeTab === 'manual' ? 'true' : 'false'} tabindex={activeTab === 'manual' ? 0 : -1} class:list={{ 'is-active': activeTab === 'manual' }} data-routine-tab="manual">
-      <span>02</span><strong>Rutina manual</strong><small>Diseñada por ti</small>
+      <strong>Rutina manual</strong>
     </a>
     <a id="routine-tab-specialist" href="?tab=specialist" role="tab" aria-controls="routine-panel-specialist" aria-selected={activeTab === 'specialist' ? 'true' : 'false'} tabindex={activeTab === 'specialist' ? 0 : -1} class:list={{ 'is-active': activeTab === 'specialist' }} data-routine-tab="specialist">
-      <span>03</span><strong>Rutina de especialista</strong><small>Asignada por entrenador</small>
+      <strong>Rutina de especialista</strong>
     </a>
   </nav>
 
-  <section id="routine-panel-ai" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-ai" hidden={activeTab !== 'ai'} data-routine-panel="ai">
-    <div class="automatic-planner">
-      <Panel labelledby="automatic-routine-title">
-        <p class="eyebrow">Generación personalizada</p>
-        <h2 id="automatic-routine-title">Configura tu semana</h2>
-        <FormStack action="/api/routine/automatic/generate" data-ai-routine-form>
-          <FieldRow>
-            <FormField label="Objetivo de entrenamiento" for="routine-goal" required error={invalidField === 'goal' ? errorMessage : undefined}>
-              <select id="routine-goal" name="goal" required>
-                <option value="fuerza" selected={defaults?.goal === 'fuerza'}>Ganar fuerza</option>
-                <option value="hipertrofia" selected={!defaults || defaults.goal === 'hipertrofia'}>Hipertrofia / masa muscular</option>
-                <option value="perdida_grasa" selected={defaults?.goal === 'perdida_grasa'}>Pérdida de grasa</option>
-                <option value="resistencia" selected={defaults?.goal === 'resistencia'}>Resistencia</option>
-                <option value="movilidad" selected={defaults?.goal === 'movilidad'}>Movilidad</option>
-                <option value="general" selected={defaults?.goal === 'general'}>Condición física general</option>
-              </select>
-            </FormField>
-            <FormField label="Nivel" for="routine-level" required error={invalidField === 'level' ? errorMessage : undefined}>
-              <select id="routine-level" name="level" required>
-                <option value="principiante" selected={!defaults || defaults.level === 'principiante'}>Principiante</option>
-                <option value="intermedio" selected={defaults?.level === 'intermedio'}>Intermedio</option>
-                <option value="avanzado" selected={defaults?.level === 'avanzado'}>Avanzado</option>
-              </select>
-            </FormField>
-          </FieldRow>
-          <FieldRow>
-            <FormField label="Lugar de entrenamiento" for="routine-location" required error={invalidField === 'location' ? errorMessage : undefined}>
-              <select id="routine-location" name="location" required>
-                <option value="gimnasio" selected={!defaults || defaults.location === 'gimnasio'}>Gimnasio</option>
-                <option value="casa" selected={defaults?.location === 'casa'}>Casa</option>
-                <option value="mixto" selected={defaults?.location === 'mixto'}>Mixto</option>
-              </select>
-            </FormField>
-            <FormField label="Duración por sesión" for="routine-duration" hint="Selecciona una duración en horas y minutos." required error={invalidField === 'sessionDurationMinutes' ? errorMessage : undefined}>
-              <select id="routine-duration" name="sessionDurationMinutes" required>
-                {durationOptions.map((minutes) => <option value={minutes} selected={minutes === selectedDuration}>{durationOptionLabel(minutes)}</option>)}
-              </select>
-            </FormField>
-          </FieldRow>
-          <FormField label="Días de descanso, lunes a domingo" for="routine-rest" hint="Puedes entrenar el domingo o marcarlo como descanso." required error={invalidField === 'restDays' ? errorMessage : undefined}>
-            <input id="routine-rest" name="restDaysCount" type="number" min="0" max="6" step="1" required value={defaults?.days.filter((day) => day.isRestDay).length ?? 2} />
-          </FormField>
-          <FormField label="Limitaciones o consideraciones" for="routine-limitations" hint="No se utiliza para diagnóstico ni rehabilitación.">
-            <textarea id="routine-limitations" name="limitations" maxlength="500" rows="3" placeholder="Ej. Prefiero ejercicios de bajo impacto">{defaults?.limitations ?? ''}</textarea>
-          </FormField>
-          <Button type="submit" data-ai-routine-submit>{automaticRoutine ? 'Regenerar rutina' : 'Generar mi rutina'}</Button>
-        </FormStack>
-      </Panel>
-      <aside class="week-specification">
-        <p class="eyebrow">Formato del documento</p><h2>Semana compatible</h2>
-        <ol><li><strong>7 días visibles</strong><span>Lunes a domingo</span></li><li><strong>Grupos cubiertos</strong><span>Ejercicios para cada grupo anunciado</span></li><li><strong>Prescripción adecuada</strong><span>Repeticiones o tiempo según el ejercicio</span></li><li><strong>PDF real</strong><span>Misma información de pantalla</span></li></ol>
-      </aside>
-    </div>
-    <div class="routine-result">
-      {automaticRoutine ? <RoutineDocument plan={automaticRoutine} clientName={user.name} pdfHref="/api/routine/pdf/ai" /> : <EmptyState title="Tu rutina automática aparecerá aquí" message="Selecciona objetivo, descansos, duración y nivel para crear una semana completa." />}
-    </div>
+  <section id="routine-panel-ai" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-ai" hidden={activeTab !== 'ai'} data-routine-panel="ai" data-auto-dialog={aiAutoDialog}>
+    {automaticRoutine ? (
+      <>
+        <div class="routine-plan-actions" aria-label="Acciones de rutina IA">
+          <Button data-dialog-open={aiManagerDialog}>Generador y administrador de rutina</Button>
+        </div>
+        <div class="routine-result"><RoutineDocument plan={automaticRoutine} clientName={user.name} pdfHref="/api/routine/pdf/ai" /></div>
+      </>
+    ) : (
+      <EmptyState title="Crea tu rutina IA" message="Configura objetivo, nivel, lugar, duración y días exactos de descanso.">
+        <Button slot="actions" data-dialog-open={aiManagerDialog}>Generador y administrador de rutina</Button>
+      </EmptyState>
+    )}
   </section>
 
-  <section id="routine-panel-manual" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-manual" hidden={activeTab !== 'manual'} data-routine-panel="manual">
-    <header class="panel-intro"><p class="eyebrow">Tu propia programación</p><h2>Rutina manual</h2><p>Define cada día, descanso y ejercicio con la misma estructura que utiliza la IA y el entrenador.</p></header>
-    <details class="editor-disclosure" open={!manualRoutine}>
-      <summary>{manualRoutine ? 'Editar mi rutina manual' : 'Crear mi rutina manual'}</summary>
-      <div class="editor-disclosure__content"><RoutinePlanEditor id="manual-routine-editor" action="/api/routine/manual/save" plan={manualRoutine} submitLabel="Guardar mi rutina" /></div>
-    </details>
-    {manualRoutine && <div class="routine-result routine-result--existing"><RoutineDocument plan={manualRoutine} clientName={user.name} pdfHref="/api/routine/pdf/manual" /></div>}
+  <section id="routine-panel-manual" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-manual" hidden={activeTab !== 'manual'} data-routine-panel="manual" data-auto-dialog={manualAutoDialog}>
+    {manualRoutine ? (
+      <>
+        <div class="routine-plan-actions" aria-label="Acciones de rutina manual">
+          <Button data-dialog-open={manualManagerDialog}>Generador y administrador de rutina</Button>
+        </div>
+        <div class="routine-result"><RoutineDocument plan={manualRoutine} clientName={user.name} pdfHref="/api/routine/pdf/manual" /></div>
+      </>
+    ) : (
+      <EmptyState title="Crea tu rutina manual" message="Define los parámetros generales y construye cada día de la semana.">
+        <Button slot="actions" data-dialog-open={manualManagerDialog}>Generador y administrador de rutina</Button>
+      </EmptyState>
+    )}
   </section>
 
   <section id="routine-panel-specialist" class="routine-panel" role="tabpanel" aria-labelledby="routine-tab-specialist" hidden={activeTab !== 'specialist'} data-routine-panel="specialist">
-    <header class="panel-intro"><p class="eyebrow">Seguimiento profesional</p><h2>Rutina de especialista</h2><p>Solo el entrenador cuya solicitud fue aceptada puede crear o actualizar este documento.</p></header>
     {specialistRoutine ? (
-      <RoutineDocument plan={specialistRoutine} clientName={user.name} authorName={trainerRequest?.specialistName} pdfHref="/api/routine/pdf/specialist" />
+      <div class="routine-result routine-result--specialist"><RoutineDocument plan={specialistRoutine} clientName={user.name} authorName={trainerRequest?.specialistName} pdfHref="/api/routine/pdf/specialist" /></div>
     ) : trainerRequest?.status === 'accepted' ? (
       <EmptyState title="Tu entrenador aún no asigna una rutina" message={`${trainerRequest.specialistName} ya tiene acceso profesional para prepararla desde su lista de asesorados.`} />
     ) : trainerRequest?.status === 'pending' ? (
@@ -151,51 +121,73 @@ const durationOptionLabel = (minutes: number) => `${String(Math.floor(minutes / 
       <EmptyState title="Todavía no tienes entrenador asignado" message="Solicita un entrenador y espera su aceptación para habilitar esta modalidad."><Button slot="actions" href="/app/especialistas" size="small">Buscar entrenador</Button></EmptyState>
     )}
   </section>
+
+  <AppDialog id={aiManagerDialog} class="routine-dialog" size="wide" title="Rutina IA" description="Genera, modifica o recupera tus planificaciones anteriores.">
+    <div class="routine-manager" data-routine-manager data-initial-manager-tab={aiManagerInitialTab}>
+      <nav class="routine-manager__tabs" aria-label="Administración de Rutina IA" role="tablist">
+        <button type="button" role="tab" data-manager-tab="generation">Generación y administración</button>
+        <button type="button" role="tab" data-manager-tab="history">Historial de rutinas <span>{automaticHistory.length}</span></button>
+      </nav>
+      <section data-manager-panel="generation">
+        <AutomaticRoutineForm id="routine-ai-manager-form" plan={automaticRoutine} submitLabel={automaticRoutine ? 'Guardar nueva versión' : 'Generar rutina'} errorMessage={errorMessage} invalidField={invalidField} />
+      </section>
+      <section data-manager-panel="history" hidden>
+        <RoutineHistory plans={automaticHistory} source="ai" />
+      </section>
+    </div>
+  </AppDialog>
+
+  <AppDialog id={manualManagerDialog} class="routine-dialog" size="wide" title="Rutina manual" description="Crea, modifica o recupera tus planificaciones anteriores.">
+    <div class="routine-manager" data-routine-manager data-initial-manager-tab={manualManagerInitialTab}>
+      <nav class="routine-manager__tabs" aria-label="Administración de Rutina manual" role="tablist">
+        <button type="button" role="tab" data-manager-tab="generation">Generación y administración</button>
+        <button type="button" role="tab" data-manager-tab="history">Historial de rutinas <span>{manualHistory.length}</span></button>
+      </nav>
+      <section class="routine-manager__child-panel" data-manager-panel="generation">
+        <RoutinePlanEditor id="manual-routine-manager-form" action="/api/routine/manual/save" plan={manualRoutine} submitLabel={manualRoutine ? 'Guardar nueva versión' : 'Guardar rutina completa'} />
+      </section>
+      <section data-manager-panel="history" hidden>
+        <RoutineHistory plans={manualHistory} source="manual" />
+      </section>
+    </div>
+  </AppDialog>
 </ProtectedLayout>
 
 <script>
+  import '../../scripts/routine-manager';
   import '../../scripts/routine-tabs';
-  const form = document.querySelector<HTMLFormElement>('[data-ai-routine-form]');
-  form?.addEventListener('submit', () => {
-    const button = form.querySelector<HTMLButtonElement>('[data-ai-routine-submit]');
-    const status = form.querySelector<HTMLElement>('[data-ai-routine-status]');
-    if (button) { button.disabled = true; button.textContent = 'Generando semana...'; }
-    if (status) status.textContent = 'Estamos organizando sesiones, descansos y progresiones.';
-  });
 </script>
 
 <style>
   :global(.form-message) { margin-top: 1.4rem; }
-  .routine-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 3rem; border: 1px solid var(--color-line); background: rgb(9 15 11 / 62%); }
-  .routine-tabs a { display: grid; grid-template-columns: auto 1fr; column-gap: 1rem; padding: 1.6rem; border-right: 1px solid var(--color-line); color: var(--color-muted); transition: background var(--transition-fast), color var(--transition-fast); }
-  .routine-tabs a:last-child { border-right: 0; }
-  .routine-tabs a > span { grid-row: 1 / 3; color: var(--color-gold); font: 700 1.8rem var(--font-display); }
-  .routine-tabs strong { color: var(--color-paper); font-size: 1.3rem; letter-spacing: .07em; text-transform: uppercase; }
-  .routine-tabs small { font-size: 1.15rem; }
-  .routine-tabs a:hover, .routine-tabs a.is-active { background: rgb(214 166 66 / 9%); }
-  .routine-tabs a.is-active { box-shadow: inset 0 -.3rem var(--color-gold); }
-  .routine-tabs a.is-active strong, .routine-tabs a.is-active small { color: var(--color-gold-light); }
-  .routine-panel { margin-top: 2rem; }
-  .automatic-planner { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(27rem, .75fr); gap: 1.6rem; }
-  .automatic-planner h2, .week-specification h2 { margin: .3rem 0 1.5rem; font: 700 2.6rem var(--font-display); }
-  .week-specification { align-self: start; padding: 2rem; border: 1px solid var(--color-line); background: linear-gradient(150deg, rgb(214 166 66 / 8%), rgb(18 27 21 / 98%)); }
-  .week-specification ol { display: grid; gap: .8rem; margin: 0; padding: 0; list-style: none; }
-  .week-specification li { display: grid; padding: 1rem; border: 1px solid var(--color-line-soft); }
-  .week-specification strong { color: var(--color-gold-light); }
-  .week-specification span { color: var(--color-muted); font-size: 1.2rem; }
-  .routine-result { margin-top: 2rem; }
-  .routine-result--existing { margin: 2rem 0 0; }
-  .panel-intro { max-width: 78rem; padding: 1.2rem 0 2rem; }
-  .panel-intro h2 { margin: 0; font: 700 clamp(3rem, 5vw, 4.5rem) var(--font-display); }
-  .panel-intro > p:last-child { color: var(--color-muted); }
-  .editor-disclosure { border: 1px solid var(--color-line); }
-  .editor-disclosure > summary { padding: 1.5rem 1.8rem; background: rgb(214 166 66 / 7%); color: var(--color-gold-light); cursor: pointer; font-size: 1.2rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
-  .editor-disclosure__content { padding: 1.6rem; border-top: 1px solid var(--color-line); }
+  .routine-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(.6rem, 2vw, 1.2rem); margin-top: 2.4rem; }
+  .routine-tabs a { display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 5.4rem; padding: 1rem clamp(.6rem, 2vw, 1.4rem); border: 1px solid var(--color-line); border-radius: 1.2rem; background: rgb(9 15 11 / 62%); color: var(--color-muted); text-align: center; transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast); }
+  .routine-tabs strong { color: var(--color-paper); font-size: clamp(1.05rem, 1.6vw, 1.3rem); line-height: 1.25; letter-spacing: .06em; text-transform: uppercase; }
+  .routine-tabs a:hover { border-color: rgb(214 166 66 / 58%); background: rgb(214 166 66 / 7%); transform: translateY(-.1rem); }
+  .routine-tabs a.is-active { border-color: var(--color-gold); background: rgb(214 166 66 / 12%); box-shadow: inset 0 0 0 1px rgb(214 166 66 / 18%), 0 .8rem 2rem rgb(0 0 0 / 16%); }
+  .routine-tabs a.is-active strong { color: var(--color-gold-light); }
+  .routine-panel { margin-top: clamp(3rem, 6vw, 6rem); }
+  .routine-plan-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.2rem; width: min(100%, 76rem); margin-inline: auto; }
+  .routine-result { width: min(100%, 132rem); margin: clamp(4rem, 7vw, 7rem) auto; }
+  .routine-result--specialist { margin-top: 0; }
+  :global(.routine-dialog .dialog__surface) { overflow-x: hidden; }
+  :global(.routine-dialog .dialog__body) { width: 100%; min-width: 0; max-width: 100%; padding-top: 2rem; }
+  .routine-manager { display: grid; width: 100%; min-width: 0; max-width: 100%; gap: 1.8rem; }
+  .routine-manager > section { min-width: 0; max-width: 100%; }
+  .routine-manager__tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+  .routine-manager__tabs button { display: flex; min-width: 0; min-height: 5rem; align-items: center; justify-content: center; gap: .8rem; padding: .9rem 1.2rem; border: 1px solid var(--color-line); border-radius: 1.2rem; background: rgb(9 15 11 / 62%); color: var(--color-paper); overflow-wrap: anywhere; font-size: 1.05rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+  .routine-manager__tabs button.is-active { border-color: var(--color-gold); background: rgb(214 166 66 / 13%); color: var(--color-gold-light); }
+  .routine-manager__tabs span { display: grid; min-width: 2.3rem; height: 2.3rem; place-items: center; border-radius: 50%; background: rgb(214 166 66 / 16%); color: var(--color-gold-light); font-size: .95rem; }
+  .routine-manager > section[hidden] { display: none; }
+  .routine-manager__child-panel { width: 100%; min-width: 0; max-width: 100%; padding: clamp(1rem, 2.5vw, 1.8rem); border-top: .3rem solid var(--color-gold); background: linear-gradient(180deg, rgb(214 166 66 / 5%), rgb(6 11 8 / 28%)); }
   @media (max-width: 850px) {
-    .routine-tabs, .automatic-planner { grid-template-columns: 1fr; }
-    .routine-tabs a { border-right: 0; border-bottom: 1px solid var(--color-line); }
-    .routine-tabs a:last-child { border-bottom: 0; }
-    .routine-tabs a.is-active { box-shadow: inset .3rem 0 var(--color-gold); }
+    .routine-tabs { gap: .7rem; }
   }
-  @media (max-width: 600px) { .editor-disclosure__content { padding: .8rem; } }
+  @media (max-width: 600px) {
+    .routine-manager__tabs { grid-template-columns: 1fr; }
+    .routine-manager__child-panel { padding: .8rem; }
+    .routine-plan-actions { display: grid; }
+    .routine-plan-actions :global(.button) { width: 100%; }
+    .routine-result { margin-block: 4rem; }
+  }
 </style>

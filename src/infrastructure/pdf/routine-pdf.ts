@@ -121,7 +121,7 @@ export async function createRoutinePdf(plan: RoutinePlan, options: { clientName:
     page.drawCircle({ x: MARGIN + 20, y: headerTop - 24, size: 12, color: day.isRestDay ? colors.green : colors.navy });
     const number = String(dayIndex + 1);
     page.drawText(number, { x: MARGIN + 20 - bold.widthOfTextAtSize(number, 9) / 2, y: headerTop - 27, size: 9, font: bold, color: colors.white });
-    page.drawText(dayLabels[day.day].toUpperCase(), { x: MARGIN + 42, y: headerTop - 15, size: 7, font: bold, color: day.isRestDay ? colors.green : colors.blue });
+    page.drawText(dayLabels[day.day].toUpperCase(), { x: MARGIN + 42, y: headerTop - 15, size: 7, font: bold, color: colors.red });
     page.drawText(fitted(day.title, bold, 12, CONTENT_WIDTH - 175), { x: MARGIN + 42, y: headerTop - 31, size: 12, font: bold, color: colors.navy });
     const status = day.isRestDay ? 'RECUPERACIÓN' : `${day.exercises.length} EJERCICIOS`;
     page.drawText(status, { x: PAGE_WIDTH - MARGIN - bold.widthOfTextAtSize(status, 7.5) - 10, y: headerTop - 27, size: 7.5, font: bold, color: day.isRestDay ? colors.green : colors.red });
@@ -152,12 +152,6 @@ export async function createRoutinePdf(plan: RoutinePlan, options: { clientName:
     });
     y -= 12;
   });
-
-  ensure(90);
-  page.drawRectangle({ x: MARGIN, y: y - 76, width: CONTENT_WIDTH, height: 76, color: colors.paleGreen, borderColor: colors.green, borderWidth: .6 });
-  page.drawText('CONSIDERACIONES Y SEGURIDAD', { x: MARGIN + 12, y: y - 18, size: 9, font: bold, color: colors.green });
-  let noteY = y - 34;
-  wrap(plan.limitations || 'No se registraron limitaciones específicas para este plan.', regular, 8, CONTENT_WIDTH - 24).slice(0, 3).forEach((line) => { page.drawText(line, { x: MARGIN + 12, y: noteY, size: 8, font: regular, color: colors.ink }); noteY -= 10; });
 
   const pages = document.getPages();
   pages.forEach((current, index) => {

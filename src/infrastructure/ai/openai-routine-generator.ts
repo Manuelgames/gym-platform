@@ -100,7 +100,7 @@ export class OpenAIRoutineGenerator implements RoutineGenerator {
             content: [
               'Eres un asistente de planificación de entrenamiento físico educativo para adultos.',
               'Crea exactamente una semana de lunes a domingo en español de México.',
-              'Respeta el objetivo, nivel, ubicación, duración y número exacto de días de descanso.',
+              'Respeta el objetivo, nivel, ubicación, duración y los días exactos de descanso elegidos.',
               'Los días de descanso deben tener exercises vacío; todos los demás días deben incluir ejercicios.',
               'En cada día activo, title debe nombrar todos y solamente los grupos musculares que se entrenan usando los nombres permitidos del campo muscle.',
               'Incluye al menos un ejercicio para cada grupo muscular nombrado en title y no agregues ejercicios de grupos que el título no anuncie.',
@@ -109,7 +109,6 @@ export class OpenAIRoutineGenerator implements RoutineGenerator {
               'En ejercicios por duración usa tempo para indicar el ritmo o intensidad y evita tratarlos como series y repeticiones.',
               'Usa progresiones razonables, técnica conservadora y descansos expresados en segundos.',
               'No diagnostiques lesiones, no prescribas rehabilitación y no prometas resultados.',
-              'Si existen limitaciones declaradas, evita movimientos incompatibles y recomienda valoración profesional cuando corresponda.',
             ].join(' '),
           },
           {
@@ -120,8 +119,7 @@ export class OpenAIRoutineGenerator implements RoutineGenerator {
               lugar: input.location,
               duracionPorSesionMinutos: input.sessionDurationMinutes,
               duracionPorSesionLegible: formatRoutineDuration(input.sessionDurationMinutes),
-              diasDeDescansoEntreLunesYDomingo: input.restDaysCount,
-              consideracionesDeclaradas: input.limitations || 'Ninguna',
+              diasExactosDeDescanso: input.restDays,
               idioma: 'es-MX',
             }),
           },
@@ -161,14 +159,17 @@ export class OpenAIRoutineGenerator implements RoutineGenerator {
         location: input.location,
         sessionDurationMinutes: input.sessionDurationMinutes,
         availableEquipment: '',
-        limitations: input.limitations,
+        limitations: '',
         days: Array.isArray(candidate.days) ? candidate.days : [],
         generationEngine: 'openai',
         now: new Date(0).toISOString(),
       });
-      const restDays = validated.days.filter((day) => day.isRestDay).length;
-      if (restDays !== input.restDaysCount) {
-        throw new Error('La respuesta no respetó el número solicitado de días de descanso.');
+      const generatedRestDays = validated.days.filter((day) => day.isRestDay).map((day) => day.day);
+      if (
+        generatedRestDays.length !== input.restDays.length
+        || input.restDays.some((day) => !generatedRestDays.includes(day))
+      ) {
+        throw new Error('La respuesta no respetó los días exactos de descanso solicitados.');
       }
       if (!validated.days.every(hasConsistentMuscleCoverage)) {
         throw new Error('La respuesta no incluyó ejercicios para todos los grupos musculares anunciados.');

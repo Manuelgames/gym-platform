@@ -13,12 +13,12 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const user = requireAuthenticatedUser(locals.user);
     const form = await readServerForm(request);
     await getApplication().generateRoutine(user.id, {
+      title: readTextField(form, 'title', { optional: true, maxRawLength: 120 }),
       goal: readTextField(form, 'goal', { maxRawLength: 32 }),
       level: readTextField(form, 'level', { maxRawLength: 24 }),
       location: readTextField(form, 'location', { maxRawLength: 24 }),
       sessionDurationMinutes: readNumberField(form, 'sessionDurationMinutes'),
-      restDaysCount: readNumberField(form, 'restDaysCount'),
-      limitations: readTextField(form, 'limitations', { optional: true, maxRawLength: 500 }),
+      restDays: form.getAll('restDays').filter((value): value is string => typeof value === 'string'),
     });
     return redirectAfterPost(request, '/app/rutina', { tab: 'ai', saved: 'ai' });
   } catch (error) {

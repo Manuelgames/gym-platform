@@ -1,0 +1,132 @@
+---
+import type { RoutinePlan } from '../../domain/routine/routine';
+import { ROUTINE_PLAN_DAYS, ROUTINE_SESSION_DURATION_OPTIONS } from '../../domain/routine/routine';
+import FieldRow from '../forms/FieldRow.astro';
+import FormField from '../forms/FormField.astro';
+import FormStack from '../forms/FormStack.astro';
+import Button from '../ui/Button.astro';
+
+export interface Props {
+  id: string;
+  plan?: RoutinePlan | null;
+  submitLabel?: string;
+  errorMessage?: string;
+  invalidField?: string;
+}
+
+const {
+  id,
+  plan = null,
+  submitLabel = 'Generar rutina',
+  errorMessage,
+  invalidField,
+} = Astro.props;
+const selectedDuration = plan?.sessionDurationMinutes ?? 60;
+const durationOptions = ROUTINE_SESSION_DURATION_OPTIONS.includes(selectedDuration as never)
+  ? [...ROUTINE_SESSION_DURATION_OPTIONS]
+  : [...ROUTINE_SESSION_DURATION_OPTIONS, selectedDuration].sort((left, right) => left - right);
+const durationOptionLabel = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')} h ${String(minutes % 60).padStart(2, '0')} min`;
+const restDayLabels = {
+  lunes: { short: 'Lun', full: 'Lunes' },
+  martes: { short: 'Mar', full: 'Martes' },
+  miercoles: { short: 'Mié', full: 'Miércoles' },
+  jueves: { short: 'Jue', full: 'Jueves' },
+  viernes: { short: 'Vie', full: 'Viernes' },
+  sabado: { short: 'Sáb', full: 'Sábado' },
+  domingo: { short: 'Dom', full: 'Domingo' },
+} as const;
+const selectedRestDays = new Set(
+  plan
+    ? plan.days.filter((day) => day.isRestDay).map((day) => day.day)
+    : ['miercoles', 'sabado'],
+);
+---
+
+<FormStack id={id} action="/api/routine/automatic/generate" data-ai-routine-form>
+  <FormField label="Nombre de la rutina" for={`${id}-title`} required error={invalidField === 'title' ? errorMessage : undefined}>
+    <input id={`${id}-title`} name="title" required minlength="2" maxlength="120" value={plan?.title ?? 'Mi rutina IA'} placeholder="Ej. Fuerza y resistencia · Octubre" />
+  </FormField>
+  <FieldRow>
+    <FormField label="Objetivo de entrenamiento" for={`${id}-goal`} required error={invalidField === 'goal' ? errorMessage : undefined}>
+      <select id={`${id}-goal`} name="goal" required>
+        <option value="fuerza" selected={plan?.goal === 'fuerza'}>Ganar fuerza</option>
+        <option value="hipertrofia" selected={!plan || plan.goal === 'hipertrofia'}>Hipertrofia / masa muscular</option>
+        <option value="perdida_grasa" selected={plan?.goal === 'perdida_grasa'}>Pérdida de grasa</option>
+        <option value="resistencia" selected={plan?.goal === 'resistencia'}>Resistencia</option>
+        <option value="movilidad" selected={plan?.goal === 'movilidad'}>Movilidad</option>
+        <option value="general" selected={plan?.goal === 'general'}>Condición física general</option>
+      </select>
+    </FormField>
+    <FormField label="Nivel" for={`${id}-level`} required error={invalidField === 'level' ? errorMessage : undefined}>
+      <select id={`${id}-level`} name="level" required>
+        <option value="principiante" selected={!plan || plan.level === 'principiante'}>Principiante</option>
+        <option value="intermedio" selected={plan?.level === 'intermedio'}>Intermedio</option>
+        <option value="avanzado" selected={plan?.level === 'avanzado'}>Avanzado</option>
+      </select>
+    </FormField>
+  </FieldRow>
+  <FieldRow>
+    <FormField label="Lugar de entrenamiento" for={`${id}-location`} required error={invalidField === 'location' ? errorMessage : undefined}>
+      <select id={`${id}-location`} name="location" required>
+        <option value="gimnasio" selected={!plan || plan.location === 'gimnasio'}>Gimnasio</option>
+        <option value="casa" selected={plan?.location === 'casa'}>Casa</option>
+        <option value="mixto" selected={plan?.location === 'mixto'}>Mixto</option>
+      </select>
+    </FormField>
+    <FormField label="Duración por sesión" for={`${id}-duration`} required error={invalidField === 'sessionDurationMinutes' ? errorMessage : undefined}>
+      <select id={`${id}-duration`} name="sessionDurationMinutes" required>
+        {durationOptions.map((minutes) => <option value={minutes} selected={minutes === selectedDuration}>{durationOptionLabel(minutes)}</option>)}
+      </select>
+    </FormField>
+  </FieldRow>
+  <fieldset class="rest-day-selector" aria-describedby={invalidField === 'restDays' ? `${id}-rest-error` : undefined}>
+    <legend>Días de descanso</legend>
+    <div class="rest-day-selector__options">
+      {ROUTINE_PLAN_DAYS.map((day) => (
+        <label class="rest-day-option" title={restDayLabels[day].full}>
+          <input type="checkbox" name="restDays" value={day} checked={selectedRestDays.has(day)} data-rest-day />
+          <span aria-hidden="true">{restDayLabels[day].short}</span>
+          <span class="sr-only">{restDayLabels[day].full}</span>
+        </label>
+      ))}
+    </div>
+    {invalidField === 'restDays' && errorMessage && <small class="rest-day-selector__error" id={`${id}-rest-error`}>{errorMessage}</small>}
+  </fieldset>
+  <Button type="submit" data-ai-routine-submit>{submitLabel}</Button>
+</FormStack>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-ai-routine-form]').forEach((form) => {
+    if (form.dataset.routineReady === 'true') return;
+    form.dataset.routineReady = 'true';
+    const restDays = [...form.querySelectorAll<HTMLInputElement>('[data-rest-day]')];
+    const synchronizeRestDays = (): void => {
+      const selectedCount = restDays.filter((input) => input.checked).length;
+      restDays.forEach((input) => {
+        input.disabled = !input.checked && selectedCount >= 6;
+      });
+    };
+    restDays.forEach((input) => input.addEventListener('change', synchronizeRestDays));
+    synchronizeRestDays();
+    form.addEventListener('submit', () => {
+      const button = form.querySelector<HTMLButtonElement>('[data-ai-routine-submit]');
+      if (button) {
+        button.disabled = true;
+        button.textContent = 'Generando semana...';
+      }
+    });
+  });
+</script>
+
+<style>
+  .rest-day-selector { min-width: 0; margin: 0; padding: 0; border: 0; }
+  .rest-day-selector legend { margin-bottom: .8rem; color: var(--color-muted); font-size: 1.05rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+  .rest-day-selector__options { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: clamp(.45rem, 1.3vw, 1rem); }
+  .rest-day-option { position: relative; display: grid; min-width: 0; min-height: 4.8rem; place-items: center; border: 1px solid var(--color-line); border-radius: 1.2rem; background: rgb(9 15 11 / 62%); color: var(--color-paper); cursor: pointer; font-size: clamp(1rem, 2.5vw, 1.25rem); font-weight: 800; letter-spacing: .04em; transition: border-color var(--transition-fast), background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast); }
+  .rest-day-option:hover { border-color: rgb(214 166 66 / 58%); transform: translateY(-.1rem); }
+  .rest-day-option:has(input:checked) { border-color: var(--color-gold); background: linear-gradient(135deg, #edcf70, #b87d20); color: #171208; box-shadow: 0 .7rem 1.8rem rgb(0 0 0 / 18%); }
+  .rest-day-option:has(input:focus-visible) { outline: .2rem solid var(--color-gold-light); outline-offset: .3rem; }
+  .rest-day-option:has(input:disabled) { cursor: not-allowed; opacity: .42; transform: none; }
+  .rest-day-option input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .rest-day-selector__error { display: block; margin-top: .8rem; color: var(--color-danger); font-size: 1.15rem; }
+</style>

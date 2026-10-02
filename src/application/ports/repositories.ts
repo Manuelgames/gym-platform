@@ -48,7 +48,9 @@ export interface FitnessRepository {
   getRoutinePlan(userId: string, source?: RoutinePlanSource): Promise<RoutinePlan | null>;
   /** Lista las modalidades semanales existentes del usuario. */
   listRoutinePlans(userId: string): Promise<RoutinePlan[]>;
-  /** Crea o reemplaza únicamente la modalidad indicada. */
+  /** Elimina un documento semanal solo si pertenece al usuario. */
+  deleteRoutinePlan(userId: string, planId: string): Promise<boolean>;
+  /** Guarda una versión de usuario o reemplaza la asignación profesional vigente. */
   saveRoutinePlan(plan: RoutinePlan): Promise<RoutinePlan>;
   /** Obtiene el plan vigente del usuario para un origen; IA es el valor histórico. */
   getDiet(userId: string, source?: DietPlanSource): Promise<DietPlan | null>;

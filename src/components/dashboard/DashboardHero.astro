@@ -17,7 +17,6 @@ export interface Props {
 
 const {
   name,
-  eyebrow = "El camino de todo guerrero comienza con un paso",
   lead,
   summaryTitle = "Disciplina antes que gloria.",
   summary = "Los pequeños actos repetidos son el mapa para cruzar cualquier mar.",
@@ -28,7 +27,6 @@ const firstName = name.trim().split(/\s+/)[0] || "guerrero";
 
 <section class="dashboard-hero" aria-labelledby="dashboard-greeting">
   <div class="dashboard-hero__copy">
-    <p class="eyebrow">{eyebrow}</p>
     <h1 class="display-title" id="dashboard-greeting">Construye, {firstName}.</h1>
     <p class="lead">{lead}</p>
     {Astro.slots.has("actions") && <div class="dashboard-hero__actions"><slot name="actions" /></div>}
@@ -56,9 +54,6 @@ const firstName = name.trim().split(/\s+/)[0] || "guerrero";
   }
 
   .dashboard-hero__copy {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
     padding: 4.5rem;
     border: 1px solid var(--color-line);
     background:
@@ -174,6 +169,10 @@ const firstName = name.trim().split(/\s+/)[0] || "guerrero";
     .dashboard-hero__copy,
     .today-card {
       padding: 2.8rem;
+    }
+
+    .dashboard-hero__copy {
+      min-height: auto;
     }
   }
 </style>

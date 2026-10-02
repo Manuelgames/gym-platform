@@ -93,12 +93,12 @@ export interface AddRoutineExerciseInput {
 
 /** Parámetros que personalizan la generación automática de entrenamiento. */
 export interface GenerateRoutineInput {
+  title?: string;
   goal: string;
   level: string;
   location: string;
   sessionDurationMinutes: number;
-  restDaysCount: number;
-  limitations: string;
+  restDays: string[];
 }
 
 /** Documento escrito desde el editor común de usuario o entrenador. */
@@ -109,7 +109,6 @@ export interface SaveEditableRoutineInput {
   level: string;
   location: string;
   sessionDurationMinutes: number;
-  limitations: string;
   days: RoutinePlanDayInput[];
 }
 
@@ -269,8 +268,11 @@ export interface ApplicationFacade {
   addRoutineExercise(userId: string, input: AddRoutineExerciseInput): Promise<RoutineExercise>;
   deleteRoutineExercise(userId: string, exerciseId: string): Promise<void>;
   getRoutinePlan(userId: string, source?: RoutinePlanSource): Promise<RoutinePlan | null>;
+  getRoutineHistory(userId: string, source: RoutinePlanSource): Promise<RoutinePlan[]>;
   generateRoutine(userId: string, input: GenerateRoutineInput): Promise<RoutinePlan>;
   saveManualRoutine(userId: string, input: SaveEditableRoutineInput): Promise<RoutinePlan>;
+  reuseRoutinePlan(userId: string, planId: string): Promise<RoutinePlan>;
+  deleteRoutinePlanFromHistory(userId: string, planId: string): Promise<RoutinePlanSource>;
   getTrainingClientRoutine(specialistUserId: string, requestId: string): Promise<TrainingClientRoutineView>;
   saveSpecialistRoutine(
     specialistUserId: string,

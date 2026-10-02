@@ -5,6 +5,7 @@ export interface Props {
   description?: string;
   /** Etiqueta del botón iconográfico; permite contextualizar diálogos especializados. */
   closeLabel?: string;
+  size?: "regular" | "wide";
   class?: string;
 }
 
@@ -13,6 +14,7 @@ const {
   title,
   description,
   closeLabel = "Cerrar diálogo",
+  size = "regular",
   class: className = "",
 } = Astro.props;
 const titleId = `${id}-title`;
@@ -21,7 +23,7 @@ const descriptionId = description ? `${id}-description` : undefined;
 
 <dialog
   id={id}
-  class:list={["dialog", className]}
+  class:list={["dialog", `dialog--${size}`, className]}
   aria-labelledby={titleId}
   aria-describedby={descriptionId}
   data-app-dialog
@@ -57,6 +59,15 @@ const descriptionId = description ? `${id}-description` : undefined;
     background: #1a241f;
     color: var(--color-paper);
     box-shadow: 0 2rem 6rem rgb(0 0 0 / 60%);
+  }
+
+  .dialog--wide {
+    width: min(calc(100% - 3rem), 112rem);
+    max-height: 94dvh;
+  }
+
+  .dialog--wide .dialog__surface {
+    max-height: 94dvh;
   }
 
   .dialog::backdrop {

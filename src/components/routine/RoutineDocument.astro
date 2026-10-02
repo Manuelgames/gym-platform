@@ -24,6 +24,12 @@ const restCount = plan.days.filter((day) => day.isRestDay).length;
 const totalExercises = plan.days.reduce((total, day) => total + day.exercises.length, 0);
 ---
 
+{pdfHref && (
+  <div class="routine-sheet__download-bar">
+    <Button class="routine-sheet__download" href={pdfHref} size="regular">Descargar PDF</Button>
+  </div>
+)}
+
 <article class="routine-sheet">
   <img
     class="routine-sheet__watermark"
@@ -43,7 +49,6 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
       <small>Actualizado el {updated}{authorName ? ` · Elaborado por ${authorName}` : ''}</small>
     </div>
     <div class="routine-sheet__mark" aria-hidden="true"><span></span><span></span><span></span></div>
-    {pdfHref && <Button class="routine-sheet__download" href={pdfHref} variant="ghost" size="small">Descargar PDF</Button>}
   </header>
 
   {plan.summary && <p class="routine-sheet__summary">{plan.summary}</p>}
@@ -99,13 +104,13 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
 
   <section class="routine-sheet__notes">
     <article><h3>Preparación</h3><ul><li>Realiza calentamiento progresivo antes de las series efectivas.</li><li>Conserva la técnica antes de aumentar carga o repeticiones.</li><li>Registra sensaciones para ajustar la siguiente semana.</li></ul></article>
-    <article><h3>Consideraciones</h3><p>{plan.limitations || 'No se registraron limitaciones específicas para este plan.'}</p><small>Suspende el ejercicio ante dolor agudo, mareo o malestar inusual y solicita valoración profesional.</small></article>
   </section>
 
   <footer><span>RC</span><p>Plan educativo de entrenamiento. No sustituye una valoración médica, fisioterapéutica o profesional individual.</p></footer>
 </article>
 
 <style>
+  .routine-sheet__download-bar { display: flex; justify-content: flex-start; margin-bottom: 2rem; }
   .routine-sheet { --sheet-blue: #123c66; --sheet-blue-mid: #28629b; --sheet-red: #a33232; --sheet-line: #c9d5df; position: relative; display: grid; gap: 1.5rem; width: 100%; padding: clamp(2rem, 5vw, 4.4rem); overflow: hidden; border: 1px solid #d8e0e6; border-radius: 1.2rem; background: linear-gradient(135deg, rgb(248 251 253 / 98%), rgb(255 255 255 / 98%)); box-shadow: 0 2.5rem 6rem rgb(0 0 0 / 24%); color: #18232d; }
   .routine-sheet > :not(.routine-sheet__watermark) { position: relative; z-index: 1; }
   .routine-sheet__watermark { position: absolute; z-index: 0; top: 50%; left: 50%; width: 20px; height: 20px; border-radius: 15px; opacity: .05; object-fit: cover; pointer-events: none; transform: translate(-50%, -50%); user-select: none; }
@@ -118,7 +123,6 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
   .routine-sheet__mark { position: absolute; top: .2rem; right: 0; display: flex; align-items: center; gap: .5rem; height: 5rem; }
   .routine-sheet__mark span { display: block; width: 1.2rem; height: 3rem; border-radius: .4rem; background: var(--sheet-red); }
   .routine-sheet__mark span:nth-child(2) { width: 2.4rem; height: .7rem; }
-  :global(.routine-sheet__download.button) { grid-column: 2; margin-top: 5.4rem; border-color: #8ba8c0; background: #fff; color: var(--sheet-blue); }
   .routine-sheet__summary { margin: 0; padding: 1.2rem 1.4rem; border-left: .35rem solid var(--sheet-red); background: #f3f6f8; color: #44515b; font-size: 1.3rem; }
   .routine-profile { display: grid; grid-template-columns: 1.3fr repeat(4, 1fr); margin: 0; overflow: hidden; border: 1px solid #8faac0; border-radius: 1rem; }
   .routine-profile > div { min-width: 0; padding: 1.2rem 1rem; border-right: 1px solid #d8e0e6; text-align: center; }
@@ -139,7 +143,7 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
   .routine-day--rest .routine-day__header { background: #eaf2e6; }
   .routine-day__header > span { display: grid; width: 3.5rem; height: 3.5rem; place-items: center; border-radius: 50%; background: var(--sheet-blue); color: #fff; font-weight: 900; }
   .routine-day--rest .routine-day__header > span { background: #4b7744; }
-  .routine-day__header p { margin: 0; color: var(--sheet-blue-mid); font-size: 1rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+  .routine-day__header p { margin: 0; color: var(--sheet-red); font-size: 1rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
   .routine-day__header h3 { margin: .15rem 0; color: #182b3a; font: 800 1.8rem var(--font-display); }
   .routine-day__header small { color: #62717c; }
   .routine-day__header > strong { color: var(--sheet-red); font-size: 1rem; letter-spacing: .07em; text-transform: uppercase; }
@@ -156,7 +160,7 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
   .routine-day__recovery { display: flex; align-items: center; gap: 1rem; padding: 1.4rem; }
   .routine-day__recovery span { display: grid; width: 4rem; height: 4rem; place-items: center; border-radius: 50%; background: #dbe9d4; color: #41693c; font-weight: 900; }
   .routine-day__recovery p { margin: 0; color: #536550; }
-  .routine-sheet__notes { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .routine-sheet__notes { display: grid; grid-template-columns: 1fr; gap: 1rem; }
   .routine-sheet__notes article { padding: 1.4rem; border: 1px solid #c9d5df; background: #f7f9fa; }
   .routine-sheet__notes h3 { margin: 0 0 .8rem; color: var(--sheet-blue); font: 800 1.8rem var(--font-display); }
   .routine-sheet__notes ul, .routine-sheet__notes p { margin: 0; color: #475761; }
@@ -174,7 +178,8 @@ const totalExercises = plan.days.reduce((total, day) => total + day.exercises.le
   }
   @media (max-width: 650px) {
     .routine-sheet__masthead { grid-template-columns: 1fr; padding-right: 5rem; }
-    :global(.routine-sheet__download.button) { grid-column: 1; width: fit-content; margin-top: 0; }
+    .routine-sheet__download-bar { justify-content: stretch; }
+    :global(.routine-sheet__download.button) { width: 100%; }
     .routine-profile, .routine-metrics, .routine-sheet__notes { grid-template-columns: 1fr 1fr; }
     .routine-day__header { grid-template-columns: auto 1fr; }
     .routine-day__header > strong { grid-column: 2; }

@@ -22,6 +22,7 @@ export const MUSCLE_GROUPS = [
   'Hombros',
   'Brazos',
   'Core',
+  'Abdomen',
   'Cardio',
   'Acondicionamiento',
 ] as const;
@@ -256,8 +257,7 @@ export interface AutomaticRoutineGenerationInput {
   level: RoutineLevel;
   location: RoutineLocation;
   sessionDurationMinutes: number;
-  restDaysCount: number;
-  limitations: string;
+  restDays: RoutinePlanDayName[];
 }
 
 function normalizedRoutineText(
@@ -434,6 +434,7 @@ const GYM_EXERCISES: Record<MuscleGroup, readonly string[]> = {
   Hombros: ['Press militar', 'Elevaciones laterales', 'Pájaros con mancuernas', 'Face pull'],
   Brazos: ['Curl con barra', 'Extensión de tríceps', 'Curl martillo', 'Fondos asistidos'],
   Core: ['Plancha frontal', 'Pallof press', 'Elevación de rodillas', 'Dead bug'],
+  Abdomen: ['Crunch en polea', 'Elevación de piernas', 'Rueda abdominal', 'Crunch inverso'],
   Cardio: ['Bicicleta estática', 'Caminata inclinada', 'Remo ergómetro', 'Intervalos en elíptica'],
   Acondicionamiento: ['Empuje de trineo', 'Cuerdas de batalla', 'Circuito con kettlebell', 'Farmer walk'],
 };
@@ -445,6 +446,7 @@ const HOME_EXERCISES: Record<MuscleGroup, readonly string[]> = {
   Hombros: ['Press con banda', 'Elevaciones laterales con botellas', 'Flexiones pica', 'Pájaros con banda'],
   Brazos: ['Curl con banda', 'Fondos en silla estable', 'Curl martillo con mochila', 'Extensión de tríceps con banda'],
   Core: ['Plancha frontal', 'Plancha lateral', 'Dead bug', 'Escaladores controlados'],
+  Abdomen: ['Crunch controlado', 'Elevación de piernas', 'Crunch inverso', 'Toques de talón'],
   Cardio: ['Marcha rápida', 'Jumping jacks de bajo impacto', 'Escaladores', 'Circuito de pasos laterales'],
   Acondicionamiento: ['Circuito de sentadilla y empuje', 'Marcha con carga', 'Circuito de cuerpo completo', 'Subidas a escalón'],
 };
@@ -468,17 +470,19 @@ function localExercisePrescription(
 
 /** Respaldo determinista cuando la integración externa no está configurada o falla. */
 export function buildLocalAutomaticRoutine(input: AutomaticRoutineGenerationInput): GeneratedRoutineDraft {
-  assertDomain(Number.isInteger(input.restDaysCount) && input.restDaysCount >= 0 && input.restDaysCount <= 6, 'restDays', 'Selecciona entre 0 y 6 días de descanso.');
+  assertDomain(Array.isArray(input.restDays), 'restDays', 'Selecciona días de descanso válidos.');
+  assertDomain(input.restDays.length <= 6, 'restDays', 'Selecciona como máximo 6 días de descanso.');
+  assertDomain(new Set(input.restDays).size === input.restDays.length, 'restDays', 'No se pueden repetir días de descanso.');
+  assertDomain(input.restDays.every((day) => ROUTINE_PLAN_DAYS.includes(day)), 'restDays', 'Selecciona días de descanso válidos.');
   assertDomain(Number.isInteger(input.sessionDurationMinutes) && input.sessionDurationMinutes >= 15 && input.sessionDurationMinutes <= 240, 'sessionDurationMinutes', 'La duración no es válida.');
-  const restPriority = [2, 5, 6, 3, 1, 4] as const;
-  const restIndexes = new Set<number>(restPriority.slice(0, input.restDaysCount));
+  const restDays = new Set<RoutinePlanDayName>(input.restDays);
   const splits = TRAINING_SPLITS[input.goal];
   const exerciseCount = Math.max(2, Math.min(8, Math.round(input.sessionDurationMinutes / 15)));
   const dayLabels: Record<RoutinePlanDayName, string> = {
     lunes: 'Lunes', martes: 'Martes', miercoles: 'Miércoles', jueves: 'Jueves', viernes: 'Viernes', sabado: 'Sábado', domingo: 'Domingo',
   };
   const days: RoutinePlanDayInput[] = ROUTINE_PLAN_DAYS.map((day, index) => {
-    if (restIndexes.has(index)) {
+    if (restDays.has(day)) {
       return { day, title: 'Descanso y recuperación', focus: 'Movilidad suave, hidratación y sueño suficiente.', isRestDay: true, exercises: [] };
     }
     const primary = splits[index]!;
@@ -513,7 +517,7 @@ export function buildLocalAutomaticRoutine(input: AutomaticRoutineGenerationInpu
   });
   return {
     title: `Rutina semanal de ${input.goal.replace('_', ' ')}`,
-    summary: `Plan de lunes a domingo para nivel ${input.level}, con ${input.restDaysCount} ${input.restDaysCount === 1 ? 'día' : 'días'} de descanso y sesiones aproximadas de ${formatRoutineDuration(input.sessionDurationMinutes)}.`,
+    summary: `Plan de lunes a domingo para nivel ${input.level}, con ${input.restDays.length} ${input.restDays.length === 1 ? 'día' : 'días'} de descanso y sesiones aproximadas de ${formatRoutineDuration(input.sessionDurationMinutes)}.`,
     days,
     engine: 'local',
   };

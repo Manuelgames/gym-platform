@@ -726,7 +726,9 @@ export function parsePersistedDatabase(value: unknown): PersistedDatabase {
     && unique(identities)
     && unique(routineExercises.map((item) => item.id))
     && unique(routinePlans.map((item) => item.id))
-    && unique(routinePlans.map((item) => `${item.userId}\u0000${item.source}`))
+    && unique(routinePlans
+      .filter((item) => item.source === 'specialist')
+      .map((item) => `${item.userId}\u0000${item.source}`))
     && unique(dietPlans.map((item) => item.id))
     && unique(dietPlans.map((item) => `${item.userId}\u0000${item.source}`))
     && unique(calorieCalculations.map((item) => item.id))

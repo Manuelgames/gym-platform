@@ -5,6 +5,16 @@ export {};
 if (tabList) {
   const tabs = [...tabList.querySelectorAll<HTMLAnchorElement>('[data-routine-tab]')];
   const panels = [...document.querySelectorAll<HTMLElement>('[data-routine-panel]')];
+  const openAutomaticDialog = (panel: HTMLElement | undefined): void => {
+    const dialogId = panel?.dataset.autoDialog;
+    const dialog = dialogId ? document.getElementById(dialogId) : null;
+    if (dialog instanceof HTMLDialogElement && !dialog.open) {
+      dialog.showModal();
+      requestAnimationFrame(() => {
+        dialog.querySelector<HTMLElement>('[autofocus], input, select, button')?.focus();
+      });
+    }
+  };
   const activate = (name: string, updateHistory: boolean): void => {
     if (!tabs.some((tab) => tab.dataset.routineTab === name)) return;
     tabs.forEach((tab) => {
@@ -23,6 +33,7 @@ if (tabList) {
       url.searchParams.set('tab', name);
       history.replaceState(null, '', `${url.pathname}${url.search}`);
     }
+    openAutomaticDialog(panels.find((panel) => panel.dataset.routinePanel === name));
   };
 
   tabs.forEach((tab, index) => {
@@ -41,4 +52,6 @@ if (tabList) {
       }
     });
   });
+
+  openAutomaticDialog(panels.find((panel) => !panel.hidden));
 }

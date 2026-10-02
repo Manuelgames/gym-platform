@@ -27,7 +27,7 @@ type GlobalContainer = typeof globalThis & {
 
 // El contrato usa un bloque propio y suma el esquema vigente. Así un cambio de
 // persistencia invalida automáticamente el singleton que sobrevive al hot reload.
-const APPLICATION_FACADE_VERSION = 5_000 + DATA_SCHEMA_VERSION;
+const APPLICATION_FACADE_VERSION = 6_000 + DATA_SCHEMA_VERSION;
 
 function shouldReplaceApplicationFacade(
   storedVersion: number | undefined,
@@ -51,6 +51,9 @@ function isCurrentApplicationFacade(
     && typeof facade.changePassword === 'function'
     && typeof facade.getProfilePhoto === 'function'
     && typeof facade.generateRoutine === 'function'
+    && typeof facade.getRoutineHistory === 'function'
+    && typeof facade.reuseRoutinePlan === 'function'
+    && typeof facade.deleteRoutinePlanFromHistory === 'function'
     && typeof facade.saveManualRoutine === 'function'
     && typeof facade.saveSpecialistRoutine === 'function'
     && typeof facade.saveManualDiet === 'function'
@@ -151,8 +154,11 @@ function composeApplication(): ApplicationFacade {
     addRoutineExercise: routine.add.bind(routine),
     deleteRoutineExercise: routine.delete.bind(routine),
     getRoutinePlan: routine.getPlan.bind(routine),
+    getRoutineHistory: routine.getHistory.bind(routine),
     generateRoutine: routine.generate.bind(routine),
     saveManualRoutine: routine.saveManual.bind(routine),
+    reuseRoutinePlan: routine.reuse.bind(routine),
+    deleteRoutinePlanFromHistory: routine.deleteFromHistory.bind(routine),
     getTrainingClientRoutine: routine.getTrainingClient.bind(routine),
     saveSpecialistRoutine: routine.saveSpecialist.bind(routine),
     getRoutineForDownload: routine.getForDownload.bind(routine),

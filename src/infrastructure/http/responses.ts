@@ -64,6 +64,8 @@ function publicError(error: unknown): { error: string; field?: string } {
       case 'PROFILE_UPDATE_CONFLICT': return { error: 'profile-update-conflict' };
       case 'ROUTINE_EXERCISE_NOT_FOUND': return { error: 'exercise-not-found' };
       case 'ROUTINE_PLAN_NOT_FOUND': return { error: 'routine-plan-not-found' };
+      case 'ROUTINE_HISTORY_NOT_FOUND': return { error: 'routine-history-not-found' };
+      case 'ROUTINE_CURRENT_DELETE_FORBIDDEN': return { error: 'routine-current-delete-forbidden' };
       case 'TRAINING_RELATION_REQUIRED': return { error: 'training-relation-required' };
       case 'CALORIE_CALCULATION_NOT_FOUND': return { error: 'calculation-not-found' };
       case 'CALORIE_PROFILE_REQUIRED': return { error: 'calorie-profile-required' };

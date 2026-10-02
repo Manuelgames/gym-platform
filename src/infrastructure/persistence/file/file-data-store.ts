@@ -166,7 +166,11 @@ export class FileDataStore implements UserRepository, FitnessRepository, Special
   /** Obtiene el documento semanal vigente de una modalidad. */
   async getRoutinePlan(userId: string, source: RoutinePlanSource = 'ai'): Promise<RoutinePlan | null> {
     const database = await this.readConsistentDatabase();
-    const plan = database.routinePlans.find((item) => item.userId === userId && item.source === source);
+    const plan = database.routinePlans.reduce<RoutinePlan | null>((latest, item) => {
+      if (item.userId !== userId || item.source !== source) return latest;
+      if (!latest || item.updatedAt >= latest.updatedAt) return item;
+      return latest;
+    }, null);
     return plan ? clone(plan) : null;
   }
 
@@ -175,19 +179,35 @@ export class FileDataStore implements UserRepository, FitnessRepository, Special
     const database = await this.readConsistentDatabase();
     return clone(database.routinePlans
       .filter((item) => item.userId === userId)
-      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)));
+      .map((item, index) => ({ item, index }))
+      .sort((left, right) => right.item.updatedAt.localeCompare(left.item.updatedAt) || right.index - left.index)
+      .map(({ item }) => item));
   }
 
-  /** Reemplaza solo una modalidad y conserva su identidad mientras la relación no cambie. */
+  /** Elimina por id y propietario sin aceptar referencias cruzadas. */
+  deleteRoutinePlan(userId: string, planId: string): Promise<boolean> {
+    return this.mutate(async (database) => {
+      const index = database.routinePlans.findIndex((plan) => plan.id === planId && plan.userId === userId);
+      if (index < 0) return false;
+      database.routinePlans.splice(index, 1);
+      return true;
+    });
+  }
+
+  /** Conserva versiones de IA/manual y reemplaza solo la asignación profesional vigente. */
   saveRoutinePlan(plan: RoutinePlan): Promise<RoutinePlan> {
     return this.mutate(async (database) => {
+      if (database.routinePlans.some((item) => item.id === plan.id)) {
+        throw new Error(`Identificador de rutina duplicado: ${plan.id}.`);
+      }
+      if (plan.source !== 'specialist') {
+        database.routinePlans.push(clone(plan));
+        return clone(plan);
+      }
       const index = database.routinePlans.findIndex((item) => (
         item.userId === plan.userId && item.source === plan.source
       ));
       if (index < 0) {
-        if (database.routinePlans.some((item) => item.id === plan.id)) {
-          throw new Error(`Identificador de rutina duplicado: ${plan.id}.`);
-        }
         database.routinePlans.push(clone(plan));
         return clone(plan);
       }

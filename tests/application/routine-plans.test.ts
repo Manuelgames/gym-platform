@@ -62,13 +62,13 @@ describe('modalidades de rutina', () => {
     await store.create(user('client-1'));
     const plan = await useCases.generate('client-1', {
       goal: 'hipertrofia', level: 'intermedio', location: 'gimnasio',
-      sessionDurationMinutes: 60, restDaysCount: 2,
-      limitations: '',
+      sessionDurationMinutes: 60, restDays: ['miercoles', 'sabado'],
     });
 
     expect(plan).toMatchObject({ source: 'ai', generationEngine: 'local', goal: 'hipertrofia' });
     expect(plan.days.map((day) => day.day)).toEqual([...ROUTINE_PLAN_DAYS]);
-    expect(plan.days.filter((day) => day.isRestDay)).toHaveLength(2);
+    expect(plan.days.filter((day) => day.isRestDay).map((day) => day.day))
+      .toEqual(['miercoles', 'sabado']);
     for (const day of plan.days.filter((candidate) => !candidate.isRestDay)) {
       const groups = new Set(day.exercises.map((exercise) => exercise.muscle));
       expect(groups.size).toBeGreaterThanOrEqual(2);
@@ -93,13 +93,39 @@ describe('modalidades de rutina', () => {
     await store.create(user('client-1'));
     const plan = await useCases.saveManual('client-1', {
       title: 'Mi semana', summary: 'Rutina personal.', goal: 'general', level: 'principiante',
-      location: 'casa', sessionDurationMinutes: 45, limitations: '',
+      location: 'casa', sessionDurationMinutes: 45,
       days: editableDays(),
     });
 
     expect(plan).toMatchObject({ source: 'manual', authorUserId: 'client-1', generationEngine: 'manual' });
     expect(await store.getRoutinePlan('client-1', 'manual')).toEqual(plan);
     expect(await store.getRoutinePlan('client-1', 'ai')).toBeNull();
+  });
+
+  it('conserva versiones anteriores, permite reutilizarlas y protege la rutina vigente', async () => {
+    const { store, useCases } = await fixture();
+    await store.create(user('client-1'));
+    const first = await useCases.generate('client-1', {
+      title: 'Rutina inicial', goal: 'fuerza', level: 'principiante', location: 'casa',
+      sessionDurationMinutes: 45, restDays: ['domingo'],
+    });
+    const second = await useCases.generate('client-1', {
+      title: 'Rutina actual', goal: 'resistencia', level: 'intermedio', location: 'gimnasio',
+      sessionDurationMinutes: 60, restDays: ['miercoles', 'sabado'],
+    });
+
+    expect((await useCases.getPlan('client-1', 'ai'))?.id).toBe(second.id);
+    expect(await useCases.getHistory('client-1', 'ai')).toEqual([first]);
+
+    const restored = await useCases.reuse('client-1', first.id);
+    expect(restored).toMatchObject({ title: 'Rutina inicial', source: 'ai' });
+    expect(restored.id).not.toBe(first.id);
+    expect((await useCases.getPlan('client-1', 'ai'))?.id).toBe(restored.id);
+
+    await useCases.deleteFromHistory('client-1', second.id);
+    expect((await useCases.getHistory('client-1', 'ai')).map((plan) => plan.id)).toEqual([first.id]);
+    await expect(useCases.deleteFromHistory('client-1', restored.id))
+      .rejects.toEqual(expect.objectContaining({ code: 'ROUTINE_CURRENT_DELETE_FORBIDDEN' }));
   });
 
   it('solo permite al entrenador aceptado asignar la rutina profesional', async () => {
@@ -124,7 +150,7 @@ describe('modalidades de rutina', () => {
     await store.updateSpecialistRequest({ ...request, status: 'accepted' }, 'pending');
     const input = {
       title: 'Plan del entrenador', summary: 'Progresión profesional.', goal: 'fuerza', level: 'intermedio',
-      location: 'gimnasio', sessionDurationMinutes: 75, limitations: '',
+      location: 'gimnasio', sessionDurationMinutes: 75,
       days: editableDays(),
     };
 

@@ -19,6 +19,8 @@ const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   'profile-update-conflict': 'Tu perfil cambió en otra petición. Recarga la página e inténtalo de nuevo.',
   'exercise-not-found': 'El ejercicio ya no existe o no pertenece a tu cuenta.',
   'routine-plan-not-found': 'La rutina solicitada todavía no existe.',
+  'routine-history-not-found': 'Esa rutina ya no se encuentra en tu historial.',
+  'routine-current-delete-forbidden': 'La rutina vigente no se puede eliminar desde el historial.',
   'training-relation-required': 'La asesoría de entrenamiento ya no está activa o no te pertenece.',
   'calculation-not-found': 'El cálculo ya no existe o no pertenece a tu cuenta.',
   'calorie-profile-required': 'Completa primero peso, altura y edad en la Calculadora de calorías.',
